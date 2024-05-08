@@ -331,6 +331,9 @@ public interface GL30 extends GL20 {
 	public final int GL_NUM_SAMPLE_COUNTS = 0x9380;
 	public final int GL_TEXTURE_IMMUTABLE_LEVELS = 0x82DF;
 
+	// MS
+	public final int GL_COMPUTE_SHADER = 0x91B9;
+
 	// C function void glReadBuffer ( GLenum mode )
 
 	public void glReadBuffer (int mode);
@@ -1403,4 +1406,9 @@ public interface GL30 extends GL20 {
 	/** In OpenGl core profiles (3.1+), passing a pointer to client memory is not valid. Use the other version of this function
 	 * instead, pass a zero-based offset which references the buffer currently bound to GL_ARRAY_BUFFER. */
 	void glVertexAttribPointer (int indx, int size, int type, boolean normalized, int stride, Buffer ptr);
+
+	void glDispatchCompute(int num_groups_x, int num_groups_y, int num_groups_z);
+	void glMemoryBarrier(int barriers);
+	void glBindImageTexture(int unit, int texture, int level, boolean layered, int layer, int access, int format);
+
 }

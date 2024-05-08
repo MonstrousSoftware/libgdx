@@ -37,6 +37,8 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.SharedLibraryLoader;
 
+import static java.lang.Thread.currentThread;
+
 public class Lwjgl3Window implements Disposable {
 	private long windowHandle;
 	final ApplicationListener listener;
@@ -428,6 +430,7 @@ public class Lwjgl3Window implements Disposable {
 		Gdx.gl = Gdx.gl20;
 		Gdx.input = input;
 
+//		System.out.println(""+windowHandle+" "+currentThread().getId());
 		GLFW.glfwMakeContextCurrent(windowHandle);
 	}
 

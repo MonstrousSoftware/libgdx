@@ -244,4 +244,19 @@ public class IOSGLES30 extends IOSGLES20 implements GL30 {
 
 	public native void glInvalidateSubFramebuffer (int target, int numAttachments, IntBuffer attachments, int x, int y, int width,
 		int height);
+
+	@Override
+	public void glDispatchCompute(int num_groups_x, int num_groups_y, int num_groups_z) {
+
+	}
+
+	@Override
+	public void glMemoryBarrier(int barriers) {
+
+	}
+
+	@Override
+	public void glBindImageTexture(int unit, int texture, int level, boolean layered, int layer, int access, int format) {
+
+	}
 }

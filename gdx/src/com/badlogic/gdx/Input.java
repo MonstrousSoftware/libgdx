@@ -272,11 +272,14 @@ public interface Input {
 
 		public static final int MAX_KEYCODE = 255;
 
+
+
 		/** @return a human readable representation of the keycode. The returned value can be used in
 		 *         {@link Input.Keys#valueOf(String)} */
 		public static String toString (int keycode) {
 			if (keycode < 0) throw new IllegalArgumentException("keycode cannot be negative, keycode: " + keycode);
 			if (keycode > MAX_KEYCODE) throw new IllegalArgumentException("keycode cannot be greater than 255, keycode: " + keycode);
+
 			switch (keycode) {
 			// META* variables should not be used with this method.
 			case UNKNOWN:
@@ -638,6 +641,9 @@ public interface Input {
 			}
 		}
 	}
+
+	// MS
+	//public String toLocalizedString(int keycode );
 
 	/** Enumeration of potentially available peripherals. Use with {@link Input#isPeripheralAvailable(Peripheral)}.
 	 * @author mzechner */

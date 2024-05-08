@@ -692,6 +692,21 @@ public class GwtGL30 extends GwtGL20 implements GL30 {
 	}
 
 	@Override
+	public void glDispatchCompute(int num_groups_x, int num_groups_y, int num_groups_z) {
+		// todo
+	}
+
+	@Override
+	public void glMemoryBarrier(int barriers) {
+		// todo
+	}
+
+	@Override
+	public void glBindImageTexture(int unit, int texture, int level, boolean layered, int layer, int access, int format) {
+		// todo
+	}
+
+	@Override
 	public boolean glIsQuery (int id) {
 		return gl.isQuery(queries.get(id));
 	}

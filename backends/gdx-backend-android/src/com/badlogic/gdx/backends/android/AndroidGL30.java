@@ -851,6 +851,21 @@ public class AndroidGL30 extends AndroidGL20 implements GL30 {
 		GLES30.glInvalidateSubFramebuffer(target, numAttachments, attachments, x, y, width, height);
 	}
 
+	@Override
+	public void glDispatchCompute(int num_groups_x, int num_groups_y, int num_groups_z) {
+		// todo
+	}
+
+	@Override
+	public void glMemoryBarrier(int barriers) {
+		// todo
+	}
+
+	@Override
+	public void glBindImageTexture(int unit, int texture, int level, boolean layered, int layer, int access, int format) {
+		// todo
+	}
+
 // @Override
 // public void glTexStorage2D(int target, int levels, int internalformat, int width, int height) {
 // GLES30.glTexStorage2D(target, levels, internalformat, width, height);

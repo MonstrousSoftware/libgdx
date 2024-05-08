@@ -161,6 +161,7 @@ public class DefaultLwjgl3Input extends AbstractInput implements Lwjgl3Input {
 		}
 	}
 
+
 	@Override
 	public void resetPollingStates () {
 		justTouched = false;
@@ -359,6 +360,19 @@ public class DefaultLwjgl3Input extends AbstractInput implements Lwjgl3Input {
 			return '\n';
 		}
 		return 0;
+	}
+
+	private int getGlfwKeyCode(int keycode){
+		return keycode;
+	}
+
+
+	public String toLocalizedString(int keycode ){
+		String keyName = GLFW.glfwGetKeyName(getGlfwKeyCode(keycode), 0);
+		if(keyName != null && !keyName.equals("")) {
+			return keyName.toUpperCase();
+		}
+		return Input.Keys.toString(keycode);
 	}
 
 	public int getGdxKeyCode (int lwjglKeyCode) {
