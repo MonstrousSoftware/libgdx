@@ -25,18 +25,7 @@ import java.util.Map;
 import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
-import com.badlogic.gdx.graphics.glutils.IndexArray;
-import com.badlogic.gdx.graphics.glutils.IndexBufferObject;
-import com.badlogic.gdx.graphics.glutils.IndexBufferObjectSubData;
-import com.badlogic.gdx.graphics.glutils.IndexData;
-import com.badlogic.gdx.graphics.glutils.InstanceBufferObject;
-import com.badlogic.gdx.graphics.glutils.InstanceData;
-import com.badlogic.gdx.graphics.glutils.ShaderProgram;
-import com.badlogic.gdx.graphics.glutils.VertexArray;
-import com.badlogic.gdx.graphics.glutils.VertexBufferObject;
-import com.badlogic.gdx.graphics.glutils.VertexBufferObjectSubData;
-import com.badlogic.gdx.graphics.glutils.VertexBufferObjectWithVAO;
-import com.badlogic.gdx.graphics.glutils.VertexData;
+import com.badlogic.gdx.graphics.glutils.*;
 import com.badlogic.gdx.math.Matrix3;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
@@ -198,12 +187,22 @@ public class Mesh implements Disposable {
 	public Mesh enableInstancedRendering (boolean isStatic, int maxInstances, VertexAttribute... attributes) {
 		if (!isInstanced) {
 			isInstanced = true;
-			instances = new InstanceBufferObject(isStatic, maxInstances, attributes);
+//			instances = new InstanceBufferObject(isStatic, maxInstances, attributes);
+			instances = makeInstanceBuffer(isStatic, maxInstances, attributes);
 		} else {
 			throw new GdxRuntimeException("Trying to enable InstancedRendering on same Mesh instance twice."
 				+ " Use disableInstancedRendering to clean up old InstanceData first");
 		}
 		return this;
+	}
+
+	private InstanceData makeInstanceBuffer (boolean isStatic, int maxVertices, VertexAttribute[] attributes) {
+		Gdx.app.log("debug", "makeInstanceBuffer");
+		if (Gdx.gl30 != null) {
+			return new InstanceBufferObjectWithVAO(isStatic, maxVertices, attributes);
+		} else {
+			return new InstanceBufferObject(isStatic, maxVertices, attributes);
+		}
 	}
 
 	public Mesh disableInstancedRendering () {
