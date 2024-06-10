@@ -31,10 +31,10 @@ import java.nio.IntBuffer;
  * VertexBufferObjectWithVAO objects must be disposed via the {@link #dispose()} method when no longer needed
  * </p>
  *
- * Code adapted from {@link VertexBufferObject}.
- * @author mzechner, Dave Clayton <contact@redskyforge.com>, Nate Austin <nate.austin gmail> */
+ * Code adapted from {@link VertexBufferObjectWithVAO}.
+ * @author Monstrous Software */
 public class InstanceBufferObjectWithVAO implements InstanceData {
-	final static IntBuffer tmpHandle = BufferUtils.newIntBuffer(1);
+//	final static IntBuffer tmpHandle = BufferUtils.newIntBuffer(1);
 
 	final VertexAttributes attributes;
 	final FloatBuffer buffer;
@@ -45,40 +45,46 @@ public class InstanceBufferObjectWithVAO implements InstanceData {
 	private int usage;
 	boolean isDirty = false;
 	boolean isBound = false;
-	int vaoHandle = -1;
+//	int vaoHandle = -1;
 	IntArray cachedLocations = new IntArray();
 
-	/** Constructs a new interleaved VertexBufferObjectWithVAO.
+	/** Constructs a new interleaved InstanceBufferObjectWithVAO.
 	 *
 	 * @param isStatic whether the vertex data is static.
-	 * @param numVertices the maximum number of vertices
-	 * @param attributes the {@link VertexAttribute}s. */
-	public InstanceBufferObjectWithVAO(boolean isStatic, int numVertices, VertexAttribute... attributes) {
-		this(isStatic, numVertices, new VertexAttributes(attributes));
+	 * @param numInstances the maximum number of instances
+	 * @param instanceAttributes the {@link VertexAttribute}s. */
+	public InstanceBufferObjectWithVAO(boolean isStatic, int numInstances, VertexAttribute... instanceAttributes) {
+		this(isStatic, numInstances, new VertexAttributes(instanceAttributes));
 	}
 
-	/** Constructs a new interleaved VertexBufferObjectWithVAO.
+	/** Constructs a new interleaved InstanceBufferObjectWithVAO.
 	 *
 	 * @param isStatic whether the vertex data is static.
-	 * @param numVertices the maximum number of vertices
-	 * @param attributes the {@link VertexAttributes}. */
-	public InstanceBufferObjectWithVAO(boolean isStatic, int numVertices, VertexAttributes attributes) {
-		this.isStatic = isStatic;
-		this.attributes = attributes;
+	 * @param numInstances the maximum number of instances
+	 * @param instanceAttributes the {@link VertexAttributes}. */
+	public InstanceBufferObjectWithVAO(boolean isStatic, int numInstances, VertexAttributes instanceAttributes) {
+		if (Gdx.gl30 == null)
+			throw new GdxRuntimeException("InstanceBufferObjectWithVAO requires a device running with GLES 3.0 compatibilty");
 
-		byteBuffer = BufferUtils.newUnsafeByteBuffer(this.attributes.vertexSize * numVertices);
+		this.isStatic = isStatic;
+		this.attributes = instanceAttributes;
+
+		byteBuffer = BufferUtils.newUnsafeByteBuffer(this.attributes.vertexSize * numInstances);
 		buffer = byteBuffer.asFloatBuffer();
 		ownsBuffer = true;
 		((Buffer)buffer).flip();
 		((Buffer)byteBuffer).flip();
 		bufferHandle = Gdx.gl20.glGenBuffer();
 		usage = isStatic ? GL20.GL_STATIC_DRAW : GL20.GL_DYNAMIC_DRAW;
-		createVAO();
+//		createVAO();
 	}
 
-	public InstanceBufferObjectWithVAO(boolean isStatic, ByteBuffer unmanagedBuffer, VertexAttributes attributes) {
+	public InstanceBufferObjectWithVAO(boolean isStatic, ByteBuffer unmanagedBuffer, VertexAttributes instanceAttributes) {
+		if (Gdx.gl30 == null)
+			throw new GdxRuntimeException("InstanceBufferObjectWithVAO requires a device running with GLES 3.0 compatibilty");
+
 		this.isStatic = isStatic;
-		this.attributes = attributes;
+		this.attributes = instanceAttributes;
 
 		byteBuffer = unmanagedBuffer;
 		ownsBuffer = false;
@@ -87,7 +93,8 @@ public class InstanceBufferObjectWithVAO implements InstanceData {
 		((Buffer)byteBuffer).flip();
 		bufferHandle = Gdx.gl20.glGenBuffer();
 		usage = isStatic ? GL20.GL_STATIC_DRAW : GL20.GL_DYNAMIC_DRAW;
-		createVAO();
+		// rely on VAO created by VertexBufferObjectWithVAO
+//		createVAO();
 	}
 
 	@Override
@@ -192,7 +199,7 @@ public class InstanceBufferObjectWithVAO implements InstanceData {
 	public void bind (ShaderProgram shader, int[] locations) {
 		GL30 gl = Gdx.gl30;
 
-		gl.glBindVertexArray(vaoHandle);
+		//gl.glBindVertexArray(vaoHandle);
 
 		bindAttributes(shader, locations);
 
@@ -282,8 +289,8 @@ public class InstanceBufferObjectWithVAO implements InstanceData {
 
 	@Override
 	public void unbind (final ShaderProgram shader, final int[] locations) {
-		GL30 gl = Gdx.gl30;
-		gl.glBindVertexArray(0);
+//		GL30 gl = Gdx.gl30;
+//		gl.glBindVertexArray(0);
 		isBound = false;
 	}
 
@@ -291,7 +298,7 @@ public class InstanceBufferObjectWithVAO implements InstanceData {
 	@Override
 	public void invalidate () {
 		bufferHandle = Gdx.gl30.glGenBuffer();
-		createVAO();
+//		createVAO();
 		isDirty = true;
 	}
 
@@ -306,22 +313,22 @@ public class InstanceBufferObjectWithVAO implements InstanceData {
 		if (ownsBuffer) {
 			BufferUtils.disposeUnsafeByteBuffer(byteBuffer);
 		}
-		deleteVAO();
+//		deleteVAO();
 	}
 
-	private void createVAO () {
-		((Buffer)tmpHandle).clear();
-		Gdx.gl30.glGenVertexArrays(1, tmpHandle);
-		vaoHandle = tmpHandle.get();
-	}
-
-	private void deleteVAO () {
-		if (vaoHandle != -1) {
-			((Buffer)tmpHandle).clear();
-			tmpHandle.put(vaoHandle);
-			((Buffer)tmpHandle).flip();
-			Gdx.gl30.glDeleteVertexArrays(1, tmpHandle);
-			vaoHandle = -1;
-		}
-	}
+//	private void createVAO () {
+//		((Buffer)tmpHandle).clear();
+//		Gdx.gl30.glGenVertexArrays(1, tmpHandle);
+//		vaoHandle = tmpHandle.get();
+//	}
+//
+//	private void deleteVAO () {
+//		if (vaoHandle != -1) {
+//			((Buffer)tmpHandle).clear();
+//			tmpHandle.put(vaoHandle);
+//			((Buffer)tmpHandle).flip();
+//			Gdx.gl30.glDeleteVertexArrays(1, tmpHandle);
+//			vaoHandle = -1;
+//		}
+//	}
 }

@@ -198,11 +198,12 @@ public class Mesh implements Disposable {
 
 	private InstanceData makeInstanceBuffer (boolean isStatic, int maxVertices, VertexAttribute[] attributes) {
 		Gdx.app.log("debug", "makeInstanceBuffer");
-		if (Gdx.gl30 != null) {
+
+//		if (Gdx.gl30 != null) {
 			return new InstanceBufferObjectWithVAO(isStatic, maxVertices, attributes);
-		} else {
-			return new InstanceBufferObject(isStatic, maxVertices, attributes);
-		}
+//		} else {
+//			return new InstanceBufferObject(isStatic, maxVertices, attributes);
+//		}
 	}
 
 	public Mesh disableInstancedRendering () {
