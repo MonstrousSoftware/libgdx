@@ -182,6 +182,8 @@ public class VertexBufferObjectWithVAO implements VertexData {
 			} else {
 				stillValid = locations.length == this.cachedLocations.size;
 				for (int i = 0; stillValid && i < numAttributes; i++) {
+					if(locations[i] == -1)
+						continue;
 					stillValid = locations[i] == this.cachedLocations.get(i);
 				}
 			}
