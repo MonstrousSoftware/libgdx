@@ -130,6 +130,7 @@ public class Mesh implements Disposable {
 	}
 
 	private VertexData makeVertexBuffer (boolean isStatic, int maxVertices, VertexAttributes vertexAttributes) {
+		Gdx.app.log("debug", "makeVertexBuffer");
 		if (Gdx.gl30 != null) {
 			return new VertexBufferObjectWithVAO(isStatic, maxVertices, vertexAttributes);
 		} else {
