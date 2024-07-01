@@ -83,6 +83,8 @@ public class Mesh implements Disposable {
 
 	InstanceData instances;
 	boolean isInstanced = false;
+	boolean hasVAO = false;
+	boolean indicesAreBound = false;
 
 	protected Mesh (VertexData vertices, IndexData indices, boolean isVertexArray) {
 		this.vertices = vertices;
@@ -142,6 +144,7 @@ public class Mesh implements Disposable {
 
 	private VertexData makeVertexBuffer (boolean isStatic, int maxVertices, VertexAttributes vertexAttributes) {
 		if (Gdx.gl30 != null) {
+			hasVAO = true;
 			return new VertexBufferObjectWithVAO(isStatic, maxVertices, vertexAttributes);
 		} else {
 			return new VertexBufferObject(isStatic, maxVertices, vertexAttributes);
@@ -183,6 +186,7 @@ public class Mesh implements Disposable {
 			vertices = new VertexBufferObjectWithVAO(isStatic, maxVertices, attributes);
 			indices = new IndexBufferObjectSubData(isStatic, maxIndices);
 			isVertexArray = false;
+			hasVAO = true;
 			break;
 		case VertexArray:
 		default:
@@ -514,7 +518,12 @@ public class Mesh implements Disposable {
 	public void bind (final ShaderProgram shader, final int[] locations, final int[] instanceLocations) {
 		vertices.bind(shader, locations);
 		if (instances != null && instances.getNumInstances() > 0) instances.bind(shader, instanceLocations);
-		if (indices.getNumIndices() > 0) indices.bind();
+		if (indices.getNumIndices() > 0) {
+			if(!hasVAO || !indicesAreBound) {
+				indices.bind();
+				indicesAreBound = true;
+			}
+		}
 	}
 
 	/** Unbinds the underlying {@link VertexBufferObject} and {@link IndexBufferObject} is indices were given. Use this with OpenGL
