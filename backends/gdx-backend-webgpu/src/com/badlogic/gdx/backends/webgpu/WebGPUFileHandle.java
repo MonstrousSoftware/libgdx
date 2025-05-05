@@ -25,11 +25,11 @@ import java.io.File;
 /** @author mzechner
  * @author Nathan Sweet */
 public final class WebGPUFileHandle extends FileHandle {
-	public WebGPUFileHandle(String fileName, FileType type) {
+	public WebGPUFileHandle (String fileName, FileType type) {
 		super(fileName, type);
 	}
 
-	public WebGPUFileHandle(File file, FileType type) {
+	public WebGPUFileHandle (File file, FileType type) {
 		super(file, type);
 	}
 

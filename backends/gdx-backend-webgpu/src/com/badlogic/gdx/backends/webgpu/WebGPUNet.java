@@ -30,7 +30,7 @@ public class WebGPUNet implements Net {
 
 	NetJavaImpl netJavaImpl;
 
-	public WebGPUNet(WebGPUApplicationConfiguration configuration) {
+	public WebGPUNet (WebGPUApplicationConfiguration configuration) {
 		netJavaImpl = new NetJavaImpl(configuration.maxNetThreads);
 	}
 
