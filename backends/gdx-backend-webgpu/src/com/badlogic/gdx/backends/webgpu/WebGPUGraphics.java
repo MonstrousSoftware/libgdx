@@ -17,7 +17,6 @@
 package com.badlogic.gdx.backends.webgpu;
 
 import com.badlogic.gdx.AbstractGraphics;
-import com.badlogic.gdx.Application;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.Cursor.SystemCursor;
 import com.badlogic.gdx.graphics.glutils.GLVersion;
@@ -28,7 +27,6 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWFramebufferSizeCallback;
-import org.lwjgl.opengl.GL11;
 import org.lwjgl.system.Configuration;
 
 import java.nio.IntBuffer;
@@ -71,12 +69,12 @@ public class WebGPUGraphics extends AbstractGraphics implements Disposable {
 					return;
 				}
 				window.makeCurrent();
-				//gl20.glViewport(0, 0, backBufferWidth, backBufferHeight);
+				// gl20.glViewport(0, 0, backBufferWidth, backBufferHeight);
 				window.getListener().resize(getWidth(), getHeight());
 				update();
 				window.renderFrame();
-				//window.getListener().render();
-				//GLFW.glfwSwapBuffers(windowHandle);
+				// window.getListener().render();
+				// GLFW.glfwSwapBuffers(windowHandle);
 			} else {
 				window.asyncResized = true;
 			}
@@ -101,40 +99,40 @@ public class WebGPUGraphics extends AbstractGraphics implements Disposable {
 // }
 // this.gl30 = null;
 // }
-		this.gl20 = null; //new WebGPUGL20();
+		this.gl20 = null; // new WebGPUGL20();
 		this.gl30 = null;
 		this.gl31 = null;
 		this.gl32 = null;
 		updateFramebufferInfo();
-		//initiateGL();
+		// initiateGL();
 		GLFW.glfwSetFramebufferSizeCallback(window.getWindowHandle(), resizeCallback);
 	}
 
-//	private void initiateGL () {
-//		String versionString = gl20.glGetString(GL11.GL_VERSION);
-//		String vendorString = gl20.glGetString(GL11.GL_VENDOR);
-//		String rendererString = gl20.glGetString(GL11.GL_RENDERER);
-//		glVersion = new GLVersion(Application.ApplicationType.Desktop, versionString, vendorString, rendererString);
-//		if (supportsCubeMapSeamless()) {
-//			enableCubeMapSeamless(true);
-//		}
-//	}
+// private void initiateGL () {
+// String versionString = gl20.glGetString(GL11.GL_VERSION);
+// String vendorString = gl20.glGetString(GL11.GL_VENDOR);
+// String rendererString = gl20.glGetString(GL11.GL_RENDERER);
+// glVersion = new GLVersion(Application.ApplicationType.Desktop, versionString, vendorString, rendererString);
+// if (supportsCubeMapSeamless()) {
+// enableCubeMapSeamless(true);
+// }
+// }
 
-//	/** @return whether cubemap seamless feature is supported. */
-//	public boolean supportsCubeMapSeamless () {
-//		return glVersion.isVersionEqualToOrHigher(3, 2) || supportsExtension("GL_ARB_seamless_cube_map");
-//	}
+// /** @return whether cubemap seamless feature is supported. */
+// public boolean supportsCubeMapSeamless () {
+// return glVersion.isVersionEqualToOrHigher(3, 2) || supportsExtension("GL_ARB_seamless_cube_map");
+// }
 //
-//	/** Enable or disable cubemap seamless feature. Default is true if supported. Should only be called if this feature is
-//	 * supported. (see {@link #supportsCubeMapSeamless()})
-//	 * @param enable */
-//	public void enableCubeMapSeamless (boolean enable) {
-//		if (enable) {
-//			gl20.glEnable(org.lwjgl.opengl.GL32.GL_TEXTURE_CUBE_MAP_SEAMLESS);
-//		} else {
-//			gl20.glDisable(org.lwjgl.opengl.GL32.GL_TEXTURE_CUBE_MAP_SEAMLESS);
-//		}
-//	}
+// /** Enable or disable cubemap seamless feature. Default is true if supported. Should only be called if this feature is
+// * supported. (see {@link #supportsCubeMapSeamless()})
+// * @param enable */
+// public void enableCubeMapSeamless (boolean enable) {
+// if (enable) {
+// gl20.glEnable(org.lwjgl.opengl.GL32.GL_TEXTURE_CUBE_MAP_SEAMLESS);
+// } else {
+// gl20.glDisable(org.lwjgl.opengl.GL32.GL_TEXTURE_CUBE_MAP_SEAMLESS);
+// }
+// }
 
 	public WebGPUWindow getWindow () {
 		return window;

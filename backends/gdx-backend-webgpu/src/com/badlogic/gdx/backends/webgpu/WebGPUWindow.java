@@ -395,7 +395,7 @@ public class WebGPUWindow implements Disposable {
 	}
 
 	boolean update () {
-		this.webGPU = application.getWebGPU();	// not yet available in Window constructor
+		this.webGPU = application.getWebGPU(); // not yet available in Window constructor
 		this.surface = application.getSurface();
 
 		if (!listenerInitialized) {
@@ -422,22 +422,21 @@ public class WebGPUWindow implements Disposable {
 		if (asyncResized) {
 			asyncResized = false;
 			graphics.updateFramebufferInfo();
-			//graphics.gl20.glViewport(0, 0, graphics.getBackBufferWidth(), graphics.getBackBufferHeight());
+			// graphics.gl20.glViewport(0, 0, graphics.getBackBufferWidth(), graphics.getBackBufferHeight());
 			listener.resize(graphics.getWidth(), graphics.getHeight());
 			graphics.update();
-			//listener.render();
-			//GLFW.glfwSwapBuffers(windowHandle);
+			// listener.render();
+			// GLFW.glfwSwapBuffers(windowHandle);
 			renderFrame();
 			return true;
 		}
 
 		if (shouldRender) {
 			graphics.update();
-			//listener.render();
+			// listener.render();
 			renderFrame();
 
-
-			//GLFW.glfwSwapBuffers(windowHandle);
+			// GLFW.glfwSwapBuffers(windowHandle);
 		}
 
 		if (!iconified) input.prepareNext();
@@ -445,25 +444,25 @@ public class WebGPUWindow implements Disposable {
 		return shouldRender;
 	}
 
-	public void renderFrame() {
+	public void renderFrame () {
 
 		Pointer targetView = getNextSurfaceTextureView();
 		if (targetView.address() == 0) {
 			System.out.println("*** Invalid target view");
 			return;
 		}
-		application.setTargetView(targetView);		// use app to pass this pointer to user code, bah
+		application.setTargetView(targetView); // use app to pass this pointer to user code, bah
 
-//		Pointer commandEncoder = prepareEncoder();
-//		Pointer renderPass = prepareRenderPass(commandEncoder, targetView);
+// Pointer commandEncoder = prepareEncoder();
+// Pointer renderPass = prepareRenderPass(commandEncoder, targetView);
 
 		listener.render();
-		//render(renderPass); // do some rendering in this render pass
+		// render(renderPass); // do some rendering in this render pass
 
-//		webGPU.wgpuRenderPassEncoderEnd(renderPass);
-//		webGPU.wgpuRenderPassEncoderRelease(renderPass);
+// webGPU.wgpuRenderPassEncoderEnd(renderPass);
+// webGPU.wgpuRenderPassEncoderRelease(renderPass);
 //
-//		finishEncoder(commandEncoder);
+// finishEncoder(commandEncoder);
 
 		// At the end of the frame
 		webGPU.wgpuTextureViewRelease(targetView);
@@ -471,13 +470,12 @@ public class WebGPUWindow implements Disposable {
 		application.setTargetView(null);
 	}
 
-
-	private Pointer getNextSurfaceTextureView() {
+	private Pointer getNextSurfaceTextureView () {
 		// [...] Get the next surface texture
 		WGPUSurfaceTexture surfaceTexture = WGPUSurfaceTexture.createDirect();
 		webGPU.wgpuSurfaceGetCurrentTexture(surface, surfaceTexture);
-		//System.out.println("get current texture: "+surfaceTexture.status.get());
-		if(surfaceTexture.getStatus() != WGPUSurfaceGetCurrentTextureStatus.Success){
+		// System.out.println("get current texture: "+surfaceTexture.status.get());
+		if (surfaceTexture.getStatus() != WGPUSurfaceGetCurrentTextureStatus.Success) {
 			System.out.println("*** No current texture");
 			return JavaWebGPU.createNullPointer();
 		}
@@ -487,7 +485,7 @@ public class WebGPUWindow implements Disposable {
 		viewDescriptor.setLabel("Surface texture view");
 		Pointer tex = surfaceTexture.getTexture();
 		WGPUTextureFormat format = webGPU.wgpuTextureGetFormat(tex);
-		//System.out.println("Set format "+format);
+		// System.out.println("Set format "+format);
 		viewDescriptor.setFormat(format);
 		viewDescriptor.setDimension(WGPUTextureViewDimension._2D);
 		viewDescriptor.setBaseMipLevel(0);
@@ -495,15 +493,12 @@ public class WebGPUWindow implements Disposable {
 		viewDescriptor.setBaseArrayLayer(0);
 		viewDescriptor.setArrayLayerCount(1);
 		viewDescriptor.setAspect(WGPUTextureAspect.All);
-		Pointer view =  webGPU.wgpuTextureCreateView(surfaceTexture.getTexture(), viewDescriptor);
+		Pointer view = webGPU.wgpuTextureCreateView(surfaceTexture.getTexture(), viewDescriptor);
 
 		// we can release the texture now as the texture view now has its own reference to it
 		webGPU.wgpuTextureRelease(surfaceTexture.getTexture());
 		return view;
 	}
-
-
-
 
 	void requestRendering () {
 		synchronized (this) {
@@ -533,14 +528,14 @@ public class WebGPUWindow implements Disposable {
 
 	void makeCurrent () {
 		Gdx.graphics = graphics;
-//		Gdx.gl32 = graphics.getGL32();
-//		Gdx.gl31 = Gdx.gl32 != null ? Gdx.gl32 : graphics.getGL31();
-//		Gdx.gl30 = Gdx.gl31 != null ? Gdx.gl31 : graphics.getGL30();
-//		Gdx.gl20 = Gdx.gl30 != null ? Gdx.gl30 : graphics.getGL20();
-//		Gdx.gl = Gdx.gl20;
+// Gdx.gl32 = graphics.getGL32();
+// Gdx.gl31 = Gdx.gl32 != null ? Gdx.gl32 : graphics.getGL31();
+// Gdx.gl30 = Gdx.gl31 != null ? Gdx.gl31 : graphics.getGL30();
+// Gdx.gl20 = Gdx.gl30 != null ? Gdx.gl30 : graphics.getGL20();
+// Gdx.gl = Gdx.gl20;
 		Gdx.input = input;
 
-//		GLFW.glfwMakeContextCurrent(windowHandle);
+// GLFW.glfwMakeContextCurrent(windowHandle);
 	}
 
 	@Override
