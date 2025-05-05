@@ -17,10 +17,9 @@
 package com.badlogic.gdx.backends.webgpu;
 
 import com.badlogic.gdx.*;
-import com.badlogic.gdx.backends.webgpu.WebGPUApplicationConfiguration.GLEmulation;
-import com.badlogic.gdx.backends.webgpu.audio.WebGPUAudio;
-import com.badlogic.gdx.backends.webgpu.audio.OpenALLwjgl3Audio;
-import com.badlogic.gdx.backends.webgpu.audio.mock.MockAudio;
+import com.badlogic.gdx.backends.lwjgl3.audio.Lwjgl3Audio;
+import com.badlogic.gdx.backends.lwjgl3.audio.OpenALLwjgl3Audio;
+import com.badlogic.gdx.backends.lwjgl3.audio.mock.MockAudio;
 import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;
 import com.badlogic.gdx.graphics.glutils.GLVersion;
@@ -47,7 +46,7 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 	private final WebGPUApplicationConfiguration config;
 	final Array<WebGPUWindow> windows = new Array<WebGPUWindow>();
 	private volatile WebGPUWindow currentWindow;
-	private WebGPUAudio audio;
+	private Lwjgl3Audio audio;
 	private final Files files;
 	private final Net net;
 	private final ObjectMap<String, Preferences> preferences = new ObjectMap<String, Preferences>();
@@ -410,7 +409,7 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 	}
 
 	@Override
-	public WebGPUAudio createAudio (WebGPUApplicationConfiguration config) {
+	public Lwjgl3Audio createAudio (WebGPUApplicationConfiguration config) {
 		return new OpenALLwjgl3Audio(config.audioDeviceSimultaneousSources, config.audioDeviceBufferCount,
 			config.audioDeviceBufferSize);
 	}
