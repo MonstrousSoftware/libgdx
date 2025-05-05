@@ -32,11 +32,11 @@ public class WebGPUPreferences implements Preferences {
 	private final Properties properties = new Properties();
 	private final FileHandle file;
 
-	public WebGPUPreferences(String name, String directory) {
+	public WebGPUPreferences (String name, String directory) {
 		this(new WebGPUFileHandle(new File(directory, name), FileType.External));
 	}
 
-	public WebGPUPreferences(FileHandle file) {
+	public WebGPUPreferences (FileHandle file) {
 		this.file = file;
 		if (!file.exists()) return;
 		InputStream in = null;

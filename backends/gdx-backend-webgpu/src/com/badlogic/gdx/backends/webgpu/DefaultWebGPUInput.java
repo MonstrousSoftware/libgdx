@@ -120,7 +120,7 @@ public class DefaultWebGPUInput extends AbstractInput implements WebGPUInput {
 		}
 	};
 
-	public DefaultWebGPUInput(WebGPUWindow window) {
+	public DefaultWebGPUInput (WebGPUWindow window) {
 		this.window = window;
 		windowHandleChanged(window.getWindowHandle());
 	}

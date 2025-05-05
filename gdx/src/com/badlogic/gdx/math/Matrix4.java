@@ -571,8 +571,6 @@ public class Matrix4 implements Serializable {
 		return this;
 	}
 
-
-
 	/** Sets the matrix to an orthographic projection like glOrtho (http://www.opengl.org/sdk/docs/man/xhtml/glOrtho.xml) following
 	 * the OpenGL equivalent
 	 * @param left The left clipping plane

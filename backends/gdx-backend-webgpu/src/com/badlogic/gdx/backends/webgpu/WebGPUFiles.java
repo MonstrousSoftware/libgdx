@@ -17,7 +17,6 @@
 package com.badlogic.gdx.backends.webgpu;
 
 import com.badlogic.gdx.Files;
-import com.badlogic.gdx.backends.webgpu.WebGPUFileHandle;
 import com.badlogic.gdx.files.FileHandle;
 
 import java.io.File;

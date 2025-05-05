@@ -16,8 +16,8 @@ import java.nio.IntBuffer;
 
 /**
  * <p>
- * A {@link InstanceData} implementation that uses vertex buffer objects and vertex array objects. (This is required for OpenGL 3.0+
- * core profiles. In particular, the default VAO has been deprecated, as has the use of client memory for passing vertex
+ * A {@link InstanceData} implementation that uses vertex buffer objects and vertex array objects. (This is required for OpenGL
+ * 3.0+ core profiles. In particular, the default VAO has been deprecated, as has the use of client memory for passing vertex
  * attributes.) Use of VAOs should give a slight performance benefit since you don't have to bind the attributes on every draw
  * anymore.
  * </p>
@@ -52,7 +52,7 @@ public class InstanceBufferObjectWithVAO implements InstanceData {
 	 * @param isStatic whether the vertex data is static.
 	 * @param numVertices the maximum number of vertices
 	 * @param attributes the {@link VertexAttribute}s. */
-	public InstanceBufferObjectWithVAO(boolean isStatic, int numVertices, VertexAttribute... attributes) {
+	public InstanceBufferObjectWithVAO (boolean isStatic, int numVertices, VertexAttribute... attributes) {
 		this(isStatic, numVertices, new VertexAttributes(attributes));
 	}
 
@@ -61,7 +61,7 @@ public class InstanceBufferObjectWithVAO implements InstanceData {
 	 * @param isStatic whether the vertex data is static.
 	 * @param numVertices the maximum number of vertices
 	 * @param attributes the {@link VertexAttributes}. */
-	public InstanceBufferObjectWithVAO(boolean isStatic, int numVertices, VertexAttributes attributes) {
+	public InstanceBufferObjectWithVAO (boolean isStatic, int numVertices, VertexAttributes attributes) {
 		this.isStatic = isStatic;
 		this.attributes = attributes;
 
@@ -75,7 +75,7 @@ public class InstanceBufferObjectWithVAO implements InstanceData {
 		createVAO();
 	}
 
-	public InstanceBufferObjectWithVAO(boolean isStatic, ByteBuffer unmanagedBuffer, VertexAttributes attributes) {
+	public InstanceBufferObjectWithVAO (boolean isStatic, ByteBuffer unmanagedBuffer, VertexAttributes attributes) {
 		this.isStatic = isStatic;
 		this.attributes = attributes;
 
@@ -136,15 +136,13 @@ public class InstanceBufferObjectWithVAO implements InstanceData {
 	}
 
 	@Override
-	public void setInstanceData(FloatBuffer data, int count) {
+	public void setInstanceData (FloatBuffer data, int count) {
 		isDirty = true;
 		BufferUtils.copy(data, byteBuffer, count);
 		((Buffer)buffer).position(0);
 		((Buffer)buffer).limit(count);
 		bufferChanged();
 	}
-
-
 
 	@Override
 	public void updateInstanceData (int targetOffset, float[] vertices, int sourceOffset, int count) {
@@ -158,7 +156,7 @@ public class InstanceBufferObjectWithVAO implements InstanceData {
 	}
 
 	@Override
-	public void updateInstanceData(int targetOffset, FloatBuffer data, int sourceOffset, int count) {
+	public void updateInstanceData (int targetOffset, FloatBuffer data, int sourceOffset, int count) {
 		isDirty = true;
 		final int pos = byteBuffer.position();
 		((Buffer)byteBuffer).position(targetOffset * 4);
