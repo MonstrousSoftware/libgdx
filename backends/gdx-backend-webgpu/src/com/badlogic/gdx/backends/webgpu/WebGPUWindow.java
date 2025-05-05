@@ -180,8 +180,8 @@ public class WebGPUWindow implements Disposable {
 		}
 	};
 
-	WebGPUWindow(ApplicationListener listener, Array<LifecycleListener> lifecycleListeners, WebGPUApplicationConfiguration config,
-                 WebGPUApplicationBase application) {
+	WebGPUWindow (ApplicationListener listener, Array<LifecycleListener> lifecycleListeners, WebGPUApplicationConfiguration config,
+		WebGPUApplicationBase application) {
 		this.listener = listener;
 		this.lifecycleListeners = lifecycleListeners;
 		this.windowListener = config.windowListener;
@@ -297,9 +297,8 @@ public class WebGPUWindow implements Disposable {
 
 	/** Sets the icon that will be used in the window's title bar. Has no effect in macOS, which doesn't use window icons.
 	 * @param image One or more images. The one closest to the system's desired size will be scaled. Good sizes include 16x16,
-	 *           32x32 and 48x48. Pixmap format {@link Pixmap.Format#RGBA8888 RGBA8888} is preferred so
-	 *           the images will not have to be copied and converted. The chosen image is copied, and the provided Pixmaps are not
-	 *           disposed. */
+	 *           32x32 and 48x48. Pixmap format {@link Pixmap.Format#RGBA8888 RGBA8888} is preferred so the images will not have to
+	 *           be copied and converted. The chosen image is copied, and the provided Pixmaps are not disposed. */
 	public void setIcon (Pixmap... image) {
 		setIcon(windowHandle, image);
 	}

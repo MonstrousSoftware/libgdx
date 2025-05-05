@@ -53,7 +53,7 @@ class Sync {
 	private RunningAvg sleepDurations = new RunningAvg(10);
 	private RunningAvg yieldDurations = new RunningAvg(10);
 
-	public Sync() {
+	public Sync () {
 
 	}
 
