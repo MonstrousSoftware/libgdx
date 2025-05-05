@@ -18,3 +18,4 @@ How to deal with multiple platforms? We are now tied to the LWJGL3 one.
 
 5/5/2025:
 Created tests/gdx-tests-webgpu based on gdx-tests-lwjgl3.
+
