@@ -56,30 +56,30 @@ public class WebGPUTestStarter {
 		WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
 		config.setWindowedMode(640, 480);
 
-		if (options.gl30 || options.gl31 || options.gl32) {
-			ShaderProgram.prependVertexCode = "#version 140\n#define varying out\n#define attribute in\n";
-			ShaderProgram.prependFragmentCode = "#version 140\n#define varying in\n#define texture2D texture\n#define gl_FragColor fragColor\nout vec4 fragColor;\n";
-		}
-
-		if (options.gl32) {
-			config.setOpenGLEmulation(WebGPUApplicationConfiguration.GLEmulation.GL32, 4, 6);
-		} else if (options.gl31) {
-			config.setOpenGLEmulation(WebGPUApplicationConfiguration.GLEmulation.GL31, 4, 5);
-		} else if (options.gl30) {
-			if (SharedLibraryLoader.os == Os.MacOsX) {
-				config.setOpenGLEmulation(WebGPUApplicationConfiguration.GLEmulation.GL30, 3, 2);
-			} else {
-				config.setOpenGLEmulation(WebGPUApplicationConfiguration.GLEmulation.GL30, 4, 3);
-			}
-		} else if (options.angle) {
-			config.setOpenGLEmulation(WebGPUApplicationConfiguration.GLEmulation.ANGLE_GLES20, 0, 0);
-			// Use CPU sync if ANGLE is enabled on macOS, otherwise the framerate gets halfed
-			// by each new open window.
-			if (SharedLibraryLoader.os == Os.MacOsX) {
-				config.useVsync(false);
-				config.setForegroundFPS(60);
-			}
-		}
+//		if (options.gl30 || options.gl31 || options.gl32) {
+//			ShaderProgram.prependVertexCode = "#version 140\n#define varying out\n#define attribute in\n";
+//			ShaderProgram.prependFragmentCode = "#version 140\n#define varying in\n#define texture2D texture\n#define gl_FragColor fragColor\nout vec4 fragColor;\n";
+//		}
+//
+//		if (options.gl32) {
+//			config.setOpenGLEmulation(WebGPUApplicationConfiguration.GLEmulation.GL32, 4, 6);
+//		} else if (options.gl31) {
+//			config.setOpenGLEmulation(WebGPUApplicationConfiguration.GLEmulation.GL31, 4, 5);
+//		} else if (options.gl30) {
+//			if (SharedLibraryLoader.os == Os.MacOsX) {
+//				config.setOpenGLEmulation(WebGPUApplicationConfiguration.GLEmulation.GL30, 3, 2);
+//			} else {
+//				config.setOpenGLEmulation(WebGPUApplicationConfiguration.GLEmulation.GL30, 4, 3);
+//			}
+//		} else if (options.angle) {
+//			config.setOpenGLEmulation(WebGPUApplicationConfiguration.GLEmulation.ANGLE_GLES20, 0, 0);
+//			// Use CPU sync if ANGLE is enabled on macOS, otherwise the framerate gets halfed
+//			// by each new open window.
+//			if (SharedLibraryLoader.os == Os.MacOsX) {
+//				config.useVsync(false);
+//				config.setForegroundFPS(60);
+//			}
+//		}
 
 		if (options.startupTestName != null) {
 			ApplicationListener test = GdxTests.newTest(options.startupTestName);
@@ -98,8 +98,8 @@ public class WebGPUTestStarter {
 		TextButton lastClickedTestButton;
 
 		public void create () {
-			System.out.println("OpenGL renderer: " + Gdx.graphics.getGLVersion().getRendererString());
-			System.out.println("OpenGL vendor: " + Gdx.graphics.getGLVersion().getVendorString());
+//			System.out.println("OpenGL renderer: " + Gdx.graphics.getGLVersion().getRendererString());
+//			System.out.println("OpenGL vendor: " + Gdx.graphics.getGLVersion().getVendorString());
 
 			final Preferences prefs = Gdx.app.getPreferences("webgpu-tests");
 

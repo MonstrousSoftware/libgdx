@@ -21,18 +21,27 @@ import com.badlogic.gdx.backends.webgpu.WebGPUApplicationConfiguration.GLEmulati
 import com.badlogic.gdx.backends.webgpu.audio.WebGPUAudio;
 import com.badlogic.gdx.backends.webgpu.audio.OpenALLwjgl3Audio;
 import com.badlogic.gdx.backends.webgpu.audio.mock.MockAudio;
+import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
+import com.badlogic.gdx.backends.webgpu.webgpu.*;
 import com.badlogic.gdx.graphics.glutils.GLVersion;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.utils.*;
+import jnr.ffi.Pointer;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
+import org.lwjgl.glfw.GLFWNativeWin32;
+import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.*;
 import org.lwjgl.system.Callback;
+import org.lwjgl.system.MemoryStack;
 
 import java.io.File;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
 import java.nio.IntBuffer;
+
+import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.system.MemoryStack.stackPush;
 
 public class WebGPUApplication implements WebGPUApplicationBase {
 	private final WebGPUApplicationConfiguration config;
@@ -54,6 +63,17 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 	private static Callback glDebugCallback;
 	private final Sync sync;
 
+	private final WGPUBackendType backend = WGPUBackendType.Undefined;//.D3D12;        // or Vulkan, etc.
+	private final boolean vsyncEnabled = true;
+
+	private WebGPU_JNI webGPU;
+	private Pointer surface;
+	private WGPUTextureFormat surfaceFormat;
+	private Pointer device;
+	private Pointer queue;
+	//private Pointer pipeline;
+	private Pointer targetView;
+
 	static void initializeGlfw () {
 		if (errorCallback == null) {
 			WebGPUNativesLoader.load();
@@ -68,36 +88,12 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 		}
 	}
 
-	static void loadANGLE () {
-		try {
-			Class angleLoader = Class.forName("com.badlogic.gdx.backends.lwjgl3.angle.ANGLELoader");
-			Method load = angleLoader.getMethod("load");
-			load.invoke(angleLoader);
-		} catch (ClassNotFoundException t) {
-			return;
-		} catch (Throwable t) {
-			throw new GdxRuntimeException("Couldn't load ANGLE.", t);
-		}
-	}
-
-	static void postLoadANGLE () {
-		try {
-			Class angleLoader = Class.forName("com.badlogic.gdx.backends.lwjgl3.angle.ANGLELoader");
-			Method load = angleLoader.getMethod("postGlfwInit");
-			load.invoke(angleLoader);
-		} catch (ClassNotFoundException t) {
-			return;
-		} catch (Throwable t) {
-			throw new GdxRuntimeException("Couldn't load ANGLE.", t);
-		}
-	}
-
 	public WebGPUApplication (ApplicationListener listener) {
 		this(listener, new WebGPUApplicationConfiguration());
 	}
 
 	public WebGPUApplication (ApplicationListener listener, WebGPUApplicationConfiguration config) {
-		if (config.glEmulation == WebGPUApplicationConfiguration.GLEmulation.ANGLE_GLES20) loadANGLE();
+
 		initializeGlfw();
 		setApplicationLogger(new WebGPUApplicationLogger());
 
@@ -123,8 +119,12 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 		this.sync = new Sync();
 
 		WebGPUWindow window = createWindow(config, listener, 0);
-		if (config.glEmulation == WebGPUApplicationConfiguration.GLEmulation.ANGLE_GLES20) postLoadANGLE();
 		windows.add(window);
+
+		long windowHandle = GLFWNativeWin32.glfwGetWin32Window(window.getWindowHandle());
+
+		initWebGPU(windowHandle, window.getGraphics().getWidth(), window.getGraphics().getHeight());
+
 		try {
 			loop();
 			cleanupWindows();
@@ -136,6 +136,7 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 		} finally {
 			cleanup();
 		}
+		exitWebGPU();
 	}
 
 	protected void loop () {
@@ -160,6 +161,7 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 					closedWindows.add(window);
 				}
 			}
+			webGPU.wgpuDeviceTick(device);
 			GLFW.glfwPollEvents();
 
 			boolean shouldRequestRendering;
@@ -244,6 +246,34 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 	@Override
 	public Graphics getGraphics () {
 		return currentWindow.getGraphics();
+	}
+
+	public WebGPU_JNI getWebGPU(){
+		return webGPU;
+	}
+
+	public Pointer getSurface(){
+		return surface;
+	}
+
+	public Pointer getDevice(){
+		return device;
+	}
+
+	public Pointer getQueue(){
+		return queue;
+	}
+
+	public void setTargetView(Pointer targetView){
+		this.targetView = targetView;
+	}
+
+	public Pointer getTargetView(){
+		return targetView;
+	}
+
+	public WGPUTextureFormat getSurfaceFormat(){
+		return surfaceFormat;
 	}
 
 	@Override
@@ -428,12 +458,12 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 		window.create(windowHandle);
 		window.setVisible(config.initialVisible);
 
-		for (int i = 0; i < 2; i++) {
-			window.getGraphics().gl20.glClearColor(config.initialBackgroundColor.r, config.initialBackgroundColor.g,
-				config.initialBackgroundColor.b, config.initialBackgroundColor.a);
-			window.getGraphics().gl20.glClear(GL11.GL_COLOR_BUFFER_BIT);
-			GLFW.glfwSwapBuffers(windowHandle);
-		}
+//		for (int i = 0; i < 2; i++) {
+//			window.getGraphics().gl20.glClearColor(config.initialBackgroundColor.r, config.initialBackgroundColor.g,
+//				config.initialBackgroundColor.b, config.initialBackgroundColor.a);
+//			window.getGraphics().gl20.glClear(GL11.GL_COLOR_BUFFER_BIT);
+//			GLFW.glfwSwapBuffers(windowHandle);
+//		}
 
 		if (currentWindow != null) {
 			// the call above to createGlfwWindow switches the OpenGL context to the newly created window,
@@ -449,42 +479,45 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 		GLFW.glfwWindowHint(GLFW.GLFW_MAXIMIZED, config.windowMaximized ? GLFW.GLFW_TRUE : GLFW.GLFW_FALSE);
 		GLFW.glfwWindowHint(GLFW.GLFW_AUTO_ICONIFY, config.autoIconify ? GLFW.GLFW_TRUE : GLFW.GLFW_FALSE);
 
-		GLFW.glfwWindowHint(GLFW.GLFW_RED_BITS, config.r);
-		GLFW.glfwWindowHint(GLFW.GLFW_GREEN_BITS, config.g);
-		GLFW.glfwWindowHint(GLFW.GLFW_BLUE_BITS, config.b);
-		GLFW.glfwWindowHint(GLFW.GLFW_ALPHA_BITS, config.a);
-		GLFW.glfwWindowHint(GLFW.GLFW_STENCIL_BITS, config.stencil);
-		GLFW.glfwWindowHint(GLFW.GLFW_DEPTH_BITS, config.depth);
-		GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, config.samples);
+		GLFW.glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);       // because we will use webgpu
 
-		if (config.glEmulation == WebGPUApplicationConfiguration.GLEmulation.GL30
-			|| config.glEmulation == WebGPUApplicationConfiguration.GLEmulation.GL31
-			|| config.glEmulation == WebGPUApplicationConfiguration.GLEmulation.GL32) {
-			GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, config.gles30ContextMajorVersion);
-			GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, config.gles30ContextMinorVersion);
-			if (SharedLibraryLoader.os == Os.MacOsX) {
-				// hints mandatory on OS X for GL 3.2+ context creation, but fail on Windows if the
-				// WGL_ARB_create_context extension is not available
-				// see: http://www.glfw.org/docs/latest/compat.html
-				GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, GLFW.GLFW_TRUE);
-				GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_PROFILE, GLFW.GLFW_OPENGL_CORE_PROFILE);
-			}
-		} else {
-			if (config.glEmulation == WebGPUApplicationConfiguration.GLEmulation.ANGLE_GLES20) {
-				GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_CREATION_API, GLFW.GLFW_EGL_CONTEXT_API);
-				GLFW.glfwWindowHint(GLFW.GLFW_CLIENT_API, GLFW.GLFW_OPENGL_ES_API);
-				GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 2);
-				GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 0);
-			}
-		}
 
-		if (config.transparentFramebuffer) {
-			GLFW.glfwWindowHint(GLFW.GLFW_TRANSPARENT_FRAMEBUFFER, GLFW.GLFW_TRUE);
-		}
-
-		if (config.debug) {
-			GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_DEBUG_CONTEXT, GLFW.GLFW_TRUE);
-		}
+//		GLFW.glfwWindowHint(GLFW.GLFW_RED_BITS, config.r);
+//		GLFW.glfwWindowHint(GLFW.GLFW_GREEN_BITS, config.g);
+//		GLFW.glfwWindowHint(GLFW.GLFW_BLUE_BITS, config.b);
+//		GLFW.glfwWindowHint(GLFW.GLFW_ALPHA_BITS, config.a);
+//		GLFW.glfwWindowHint(GLFW.GLFW_STENCIL_BITS, config.stencil);
+//		GLFW.glfwWindowHint(GLFW.GLFW_DEPTH_BITS, config.depth);
+//		GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, config.samples);
+//
+//		if (config.glEmulation == WebGPUApplicationConfiguration.GLEmulation.GL30
+//			|| config.glEmulation == WebGPUApplicationConfiguration.GLEmulation.GL31
+//			|| config.glEmulation == WebGPUApplicationConfiguration.GLEmulation.GL32) {
+//			GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, config.gles30ContextMajorVersion);
+//			GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, config.gles30ContextMinorVersion);
+//			if (SharedLibraryLoader.os == Os.MacOsX) {
+//				// hints mandatory on OS X for GL 3.2+ context creation, but fail on Windows if the
+//				// WGL_ARB_create_context extension is not available
+//				// see: http://www.glfw.org/docs/latest/compat.html
+//				GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, GLFW.GLFW_TRUE);
+//				GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_PROFILE, GLFW.GLFW_OPENGL_CORE_PROFILE);
+//			}
+//		} else {
+//			if (config.glEmulation == WebGPUApplicationConfiguration.GLEmulation.ANGLE_GLES20) {
+//				GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_CREATION_API, GLFW.GLFW_EGL_CONTEXT_API);
+//				GLFW.glfwWindowHint(GLFW.GLFW_CLIENT_API, GLFW.GLFW_OPENGL_ES_API);
+//				GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 2);
+//				GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 0);
+//			}
+//		}
+//
+//		if (config.transparentFramebuffer) {
+//			GLFW.glfwWindowHint(GLFW.GLFW_TRANSPARENT_FRAMEBUFFER, GLFW.GLFW_TRUE);
+//		}
+//
+//		if (config.debug) {
+//			GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_DEBUG_CONTEXT, GLFW.GLFW_TRUE);
+//		}
 
 		long windowHandle = 0;
 
@@ -493,23 +526,12 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 			windowHandle = GLFW.glfwCreateWindow(config.fullscreenMode.width, config.fullscreenMode.height, config.title,
 				config.fullscreenMode.getMonitor(), sharedContextWindow);
 
-			// On Ubuntu >= 22.04 with Nvidia GPU drivers and X11 display server there's a bug with EGL Context API
-			// If the windows creation has failed for this reason try to create it again with the native context
-			if (windowHandle == 0 && config.glEmulation == WebGPUApplicationConfiguration.GLEmulation.ANGLE_GLES20) {
-				GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_CREATION_API, GLFW.GLFW_NATIVE_CONTEXT_API);
-				windowHandle = GLFW.glfwCreateWindow(config.fullscreenMode.width, config.fullscreenMode.height, config.title,
-					config.fullscreenMode.getMonitor(), sharedContextWindow);
-			}
+
 		} else {
 			GLFW.glfwWindowHint(GLFW.GLFW_DECORATED, config.windowDecorated ? GLFW.GLFW_TRUE : GLFW.GLFW_FALSE);
 			windowHandle = GLFW.glfwCreateWindow(config.windowWidth, config.windowHeight, config.title, 0, sharedContextWindow);
 
-			// On Ubuntu >= 22.04 with Nvidia GPU drivers and X11 display server there's a bug with EGL Context API
-			// If the windows creation has failed for this reason try to create it again with the native context
-			if (windowHandle == 0 && config.glEmulation == WebGPUApplicationConfiguration.GLEmulation.ANGLE_GLES20) {
-				GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_CREATION_API, GLFW.GLFW_NATIVE_CONTEXT_API);
-				windowHandle = GLFW.glfwCreateWindow(config.windowWidth, config.windowHeight, config.title, 0, sharedContextWindow);
-			}
+
 		}
 		if (windowHandle == 0) {
 			throw new GdxRuntimeException("Couldn't create window");
@@ -544,114 +566,179 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 		if (config.windowIconPaths != null) {
 			WebGPUWindow.setIcon(windowHandle, config.windowIconPaths, config.windowIconFileType);
 		}
-		GLFW.glfwMakeContextCurrent(windowHandle);
-		GLFW.glfwSwapInterval(config.vSyncEnabled ? 1 : 0);
-		if (config.glEmulation == WebGPUApplicationConfiguration.GLEmulation.ANGLE_GLES20) {
-			try {
-				Class gles = Class.forName("org.lwjgl.opengles.GLES");
-				gles.getMethod("createCapabilities").invoke(gles);
-			} catch (Throwable e) {
-				throw new GdxRuntimeException("Couldn't initialize GLES", e);
-			}
-		} else {
-			GL.createCapabilities();
-		}
 
-		initiateGL(config.glEmulation == WebGPUApplicationConfiguration.GLEmulation.ANGLE_GLES20);
-		if (!glVersion.isVersionEqualToOrHigher(2, 0))
-			throw new GdxRuntimeException("OpenGL 2.0 or higher with the FBO extension is required. OpenGL version: "
-				+ glVersion.getVersionString() + "\n" + glVersion.getDebugVersionString());
-
-		if (config.glEmulation != WebGPUApplicationConfiguration.GLEmulation.ANGLE_GLES20 && !supportsFBO()) {
-			throw new GdxRuntimeException("OpenGL 2.0 or higher with the FBO extension is required. OpenGL version: "
-				+ glVersion.getVersionString() + ", FBO extension: false\n" + glVersion.getDebugVersionString());
-		}
-
-		if (config.debug) {
-			if (config.glEmulation == GLEmulation.ANGLE_GLES20) {
-				throw new IllegalStateException(
-					"ANGLE currently can't be used with with WebGPUApplicationConfiguration#enableGLDebugOutput");
-			}
-			glDebugCallback = GLUtil.setupDebugMessageCallback(config.debugStream);
-			setGLDebugMessageControl(GLDebugMessageSeverity.NOTIFICATION, false);
-		}
 
 		return windowHandle;
 	}
 
-	private static void initiateGL (boolean useGLES20) {
-		if (!useGLES20) {
-			String versionString = GL11.glGetString(GL11.GL_VERSION);
-			String vendorString = GL11.glGetString(GL11.GL_VENDOR);
-			String rendererString = GL11.glGetString(GL11.GL_RENDERER);
-			glVersion = new GLVersion(ApplicationType.Desktop, versionString, vendorString, rendererString);
-		} else {
-			try {
-				Class gles = Class.forName("org.lwjgl.opengles.GLES20");
-				Method getString = gles.getMethod("glGetString", int.class);
-				String versionString = (String)getString.invoke(gles, GL11.GL_VERSION);
-				String vendorString = (String)getString.invoke(gles, GL11.GL_VENDOR);
-				String rendererString = (String)getString.invoke(gles, GL11.GL_RENDERER);
-				glVersion = new GLVersion(ApplicationType.Desktop, versionString, vendorString, rendererString);
-			} catch (Throwable e) {
-				throw new GdxRuntimeException("Couldn't get GLES version string.", e);
-			}
-		}
+
+
+	private void initWebGPU(long windowHandle, int width, int height) {
+		webGPU = JavaWebGPU.init();
+
+		Pointer instance = webGPU.wgpuCreateInstance(null);
+
+		surface = JavaWebGPU.getUtils().glfwGetWGPUSurface(instance, windowHandle);	// todo support multiple windows
+
+		device = initDevice(instance, surface);
+
+		webGPU.wgpuInstanceRelease(instance);       // we can release the instance now that we have the device
+
+		queue = webGPU.wgpuDeviceGetQueue(device);
+
+		initSwapChain(width, height);
 	}
 
-	private static boolean supportsFBO () {
-		// FBO is in core since OpenGL 3.0, see https://www.opengl.org/wiki/Framebuffer_Object
-		return glVersion.isVersionEqualToOrHigher(3, 0) || GLFW.glfwExtensionSupported("GL_EXT_framebuffer_object")
-			|| GLFW.glfwExtensionSupported("GL_ARB_framebuffer_object");
+
+	private Pointer getAdapterSync(Pointer instance, WGPURequestAdapterOptions options){
+
+		Pointer userBuf = JavaWebGPU.createLongArrayPointer(new long[1]);
+		WGPURequestAdapterCallback callback = (WGPURequestAdapterStatus status, Pointer adapter, String message, Pointer userdata) -> {
+			if(status == WGPURequestAdapterStatus.Success)
+				userdata.putPointer(0, adapter);
+			else
+				System.out.println("Could not get adapter: "+message);
+		};
+		webGPU.wgpuInstanceRequestAdapter(instance, options, callback, userBuf);
+		// on native implementations, we don't have to wait for asynchronous operation. It returns result immediately.
+		return  userBuf.getPointer(0);
 	}
 
-	public enum GLDebugMessageSeverity {
-		HIGH(GL43.GL_DEBUG_SEVERITY_HIGH, KHRDebug.GL_DEBUG_SEVERITY_HIGH, ARBDebugOutput.GL_DEBUG_SEVERITY_HIGH_ARB,
-			AMDDebugOutput.GL_DEBUG_SEVERITY_HIGH_AMD), MEDIUM(GL43.GL_DEBUG_SEVERITY_MEDIUM, KHRDebug.GL_DEBUG_SEVERITY_MEDIUM,
-				ARBDebugOutput.GL_DEBUG_SEVERITY_MEDIUM_ARB, AMDDebugOutput.GL_DEBUG_SEVERITY_MEDIUM_AMD), LOW(
-					GL43.GL_DEBUG_SEVERITY_LOW, KHRDebug.GL_DEBUG_SEVERITY_LOW, ARBDebugOutput.GL_DEBUG_SEVERITY_LOW_ARB,
-					AMDDebugOutput.GL_DEBUG_SEVERITY_LOW_AMD), NOTIFICATION(GL43.GL_DEBUG_SEVERITY_NOTIFICATION,
-						KHRDebug.GL_DEBUG_SEVERITY_NOTIFICATION, -1, -1);
+	private Pointer getDeviceSync(Pointer adapter, WGPUDeviceDescriptor deviceDescriptor){
 
-		final int gl43, khr, arb, amd;
-
-		GLDebugMessageSeverity (int gl43, int khr, int arb, int amd) {
-			this.gl43 = gl43;
-			this.khr = khr;
-			this.arb = arb;
-			this.amd = amd;
-		}
+		Pointer userBuf = JavaWebGPU.createLongArrayPointer(new long[1]);
+		WGPURequestDeviceCallback callback = (WGPURequestDeviceStatus status, Pointer device, String message, Pointer userdata) -> {
+			if(status == WGPURequestDeviceStatus.Success)
+				userdata.putPointer(0, device);
+			else
+				System.out.println("Could not get device: "+message);
+		};
+		webGPU.wgpuAdapterRequestDevice(adapter, deviceDescriptor, callback, userBuf);
+		// on native implementations, we don't have to wait for asynchronous operation. It returns result immediately.
+		return  userBuf.getPointer(0);
 	}
 
-	/** Enables or disables GL debug messages for the specified severity level. Returns false if the severity level could not be
-	 * set (e.g. the NOTIFICATION level is not supported by the ARB and AMD extensions).
-	 *
-	 * See {@link WebGPUApplicationConfiguration#enableGLDebugOutput(boolean, PrintStream)} */
-	public static boolean setGLDebugMessageControl (GLDebugMessageSeverity severity, boolean enabled) {
-		GLCapabilities caps = GL.getCapabilities();
-		final int GL_DONT_CARE = 0x1100; // not defined anywhere yet
+	private Pointer initDevice( Pointer instance, Pointer surface) {
 
-		if (caps.OpenGL43) {
-			GL43.glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, severity.gl43, (IntBuffer)null, enabled);
-			return true;
-		}
+		// Select an Adapter
+		//
+		WGPURequestAdapterOptions options = WGPURequestAdapterOptions.createDirect();
+		options.setNextInChain();
+		options.setCompatibleSurface(surface);
+		options.setBackendType(backend);
+		options.setPowerPreference(WGPUPowerPreference.HighPerformance);
 
-		if (caps.GL_KHR_debug) {
-			KHRDebug.glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, severity.khr, (IntBuffer)null, enabled);
-			return true;
-		}
+		// Get Adapter
 
-		if (caps.GL_ARB_debug_output && severity.arb != -1) {
-			ARBDebugOutput.glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, severity.arb, (IntBuffer)null, enabled);
-			return true;
-		}
+		Pointer adapter = getAdapterSync(instance, options);
 
-		if (caps.GL_AMD_debug_output && severity.amd != -1) {
-			AMDDebugOutput.glDebugMessageEnableAMD(GL_DONT_CARE, severity.amd, (IntBuffer)null, enabled);
-			return true;
-		}
+		// Get Adapter properties out of interest
+		WGPUAdapterProperties adapterProperties = WGPUAdapterProperties.createDirect();
+		adapterProperties.setNextInChain();
 
-		return false;
+		webGPU.wgpuAdapterGetProperties(adapter, adapterProperties);
+
+		System.out.println("VendorID: " + adapterProperties.getVendorID());
+		System.out.println("Vendor name: " + adapterProperties.getVendorName());
+		System.out.println("Device ID: " + adapterProperties.getDeviceID());
+		System.out.println("Back end: " + adapterProperties.getBackendType());
+		System.out.println("Description: " + adapterProperties.getDriverDescription());
+
+
+		WGPURequiredLimits requiredLimits = WGPURequiredLimits.createDirect();
+		setDefaultLimits(requiredLimits.getLimits());
+
+		// Get a Device
+		//
+		WGPUDeviceDescriptor deviceDescriptor = WGPUDeviceDescriptor.createDirect();
+		deviceDescriptor.setNextInChain();
+		deviceDescriptor.setLabel("My Device");
+		deviceDescriptor.setRequiredLimits(requiredLimits);
+		deviceDescriptor.setRequiredFeatureCount(0);
+		deviceDescriptor.setRequiredFeatures(JavaWebGPU.createNullPointer());
+
+		Pointer device = getDeviceSync(adapter, deviceDescriptor);
+
+		// use a lambda expression to define a callback function
+		WGPUErrorCallback deviceCallback = (WGPUErrorType type, String message, Pointer userdata) -> {
+			System.out.println("*** Device error: " + type + " : " + message);
+			System.exit(-1);
+		};
+		webGPU.wgpuDeviceSetUncapturedErrorCallback(device, deviceCallback, null);
+
+		// Find out the preferred surface format of the window
+		WGPUSurfaceCapabilities caps = WGPUSurfaceCapabilities.createDirect();
+		webGPU.wgpuSurfaceGetCapabilities(surface, adapter, caps);
+		Pointer formats = caps.getFormats();
+		int format = formats.getInt(0);
+		surfaceFormat = WGPUTextureFormat.values()[format];
+
+		webGPU.wgpuAdapterRelease(adapter);       // we can release our adapter as soon as we have a device
+		return device;
 	}
 
+
+	private void initSwapChain(int width, int height){
+		// configure the surface
+		WGPUSurfaceConfiguration config = WGPUSurfaceConfiguration.createDirect();
+		config.setNextInChain()
+				.setWidth(width)
+				.setHeight(height)
+				.setFormat(surfaceFormat)
+				.setViewFormatCount(0)
+				.setViewFormats(JavaWebGPU.createNullPointer())
+				.setUsage(WGPUTextureUsage.RenderAttachment)
+				.setDevice(device)
+				.setPresentMode(vsyncEnabled ? WGPUPresentMode.Fifo : WGPUPresentMode.Immediate)
+				.setAlphaMode(WGPUCompositeAlphaMode.Auto);
+
+
+		webGPU.wgpuSurfaceConfigure(surface, config);
+	}
+
+	private void exitWebGPU() {
+		webGPU.wgpuSurfaceUnconfigure(surface);
+		webGPU.wgpuQueueRelease(queue);
+		webGPU.wgpuDeviceRelease(device);
+		webGPU.wgpuSurfaceRelease(surface);
+	}
+
+
+	final static long WGPU_LIMIT_U32_UNDEFINED = -1;
+	final static long WGPU_LIMIT_U64_UNDEFINED = -1L;
+
+	public void setDefaultLimits(WGPULimits limits) {
+		limits.setMaxTextureDimension1D(WGPU_LIMIT_U32_UNDEFINED);
+		limits.setMaxTextureDimension2D(WGPU_LIMIT_U32_UNDEFINED);
+		limits.setMaxTextureDimension3D(WGPU_LIMIT_U32_UNDEFINED);
+		limits.setMaxTextureArrayLayers(WGPU_LIMIT_U32_UNDEFINED);
+		limits.setMaxBindGroups(WGPU_LIMIT_U32_UNDEFINED);
+		limits.setMaxBindGroupsPlusVertexBuffers(WGPU_LIMIT_U32_UNDEFINED);
+		limits.setMaxBindingsPerBindGroup(WGPU_LIMIT_U32_UNDEFINED);
+		limits.setMaxDynamicUniformBuffersPerPipelineLayout(WGPU_LIMIT_U32_UNDEFINED);
+		limits.setMaxDynamicStorageBuffersPerPipelineLayout(WGPU_LIMIT_U32_UNDEFINED);
+		limits.setMaxSampledTexturesPerShaderStage(WGPU_LIMIT_U32_UNDEFINED);
+		limits.setMaxSamplersPerShaderStage(WGPU_LIMIT_U32_UNDEFINED);
+		limits.setMaxStorageBuffersPerShaderStage(WGPU_LIMIT_U32_UNDEFINED);
+		limits.setMaxStorageTexturesPerShaderStage(WGPU_LIMIT_U32_UNDEFINED);
+		limits.setMaxUniformBuffersPerShaderStage(WGPU_LIMIT_U32_UNDEFINED);
+		limits.setMaxUniformBufferBindingSize(WGPU_LIMIT_U64_UNDEFINED);
+		limits.setMaxStorageBufferBindingSize(WGPU_LIMIT_U64_UNDEFINED);
+		limits.setMinUniformBufferOffsetAlignment(WGPU_LIMIT_U32_UNDEFINED);
+		limits.setMinStorageBufferOffsetAlignment(WGPU_LIMIT_U32_UNDEFINED);
+		limits.setMaxVertexBuffers(WGPU_LIMIT_U32_UNDEFINED);
+		limits.setMaxBufferSize(WGPU_LIMIT_U64_UNDEFINED);
+		limits.setMaxVertexAttributes(WGPU_LIMIT_U32_UNDEFINED);
+		limits.setMaxVertexBufferArrayStride(WGPU_LIMIT_U32_UNDEFINED);
+		limits.setMaxInterStageShaderComponents(WGPU_LIMIT_U32_UNDEFINED);
+		limits.setMaxInterStageShaderVariables(WGPU_LIMIT_U32_UNDEFINED);
+		limits.setMaxColorAttachments(WGPU_LIMIT_U32_UNDEFINED);
+		limits.setMaxColorAttachmentBytesPerSample(WGPU_LIMIT_U32_UNDEFINED);
+		limits.setMaxComputeWorkgroupStorageSize(WGPU_LIMIT_U32_UNDEFINED);
+		limits.setMaxComputeInvocationsPerWorkgroup(WGPU_LIMIT_U32_UNDEFINED);
+		limits.setMaxComputeWorkgroupSizeX(WGPU_LIMIT_U32_UNDEFINED);
+		limits.setMaxComputeWorkgroupSizeY(WGPU_LIMIT_U32_UNDEFINED);
+		limits.setMaxComputeWorkgroupSizeZ(WGPU_LIMIT_U32_UNDEFINED);
+		limits.setMaxComputeWorkgroupsPerDimension(WGPU_LIMIT_U32_UNDEFINED);
+	}
 }

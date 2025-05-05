@@ -19,20 +19,17 @@ How to deal with multiple platforms? We are now tied to the LWJGL3 one.
 5/5/2025:
 Created tests/gdx-tests-webgpu based on gdx-tests-lwjgl3.
 
-Trying to call java-to-webgpu from a test programme HelloTriangle.
+Added the generated jnr files from webgpu-to-java (https://github.com/MonstrousSoftware/java-to-webgpu)
+to the libgdx backend (backends.webgpu.webgpu) (maybe the folder name could be better).
+Needed to adapt the jnr generator to create the correct package name and import statements.
 
-Apparently java-to-webgpu required JDK 17 and tests require Java runtime 8.
-Where does JVM 8 come from? Not clear from build.gradle.
-It just says:
-    sourceCompatibility = versions.java
-    targetCompatibility = versions.java
+Resource folder added under gdx-backend-webgpu for the DLL files. (todo subdir per platform).
+Shader source was added as a String to the HelloTriangle code to avoid too many loose files.
 
+HelloTriangle test now works (calling GLFW and native WebGPU directly).
 
-   > Could not resolve com.github.MonstrousSoftware:java-to-webgpu:1.01.
-     Required by:
-         project :tests:gdx-tests-webgpu
-      > Dependency resolution is looking for a library compatible with JVM runtime version 8, but 'com.github.MonstrousSoftware:java-to-webgpu:1.01' is only compatible with JVM runtime version 17 or newer.
+WebGPUTest uses WebGPUApplication and some native WebGPU calls to render a triangle.  The listener needs to create its own render pass,
+while WebGPUWindow.update() obtains the next render surface and presents the target view.
 
-
- Tried placing the generated jnr files in the libgdx backend (backends.webgpu.webgpu).  Needed to adapt the jnr generator to create the correct
- package name and import statements.
+LibGDX supports multiple windows per application.  This does not work yet for WebGPU (crash). To think which resources should
+be maintained at window level rather than application level, e.g. surface, device?, queue?
