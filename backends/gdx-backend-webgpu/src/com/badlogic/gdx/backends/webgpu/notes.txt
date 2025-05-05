@@ -1,0 +1,20 @@
+Notes on webgpu backend.
+
+4/5/2025:
+Synced libgdx repo on 4/5/2005 (latest update from 27/04/2025). Version 1.13.2.
+Uses Gradle 8.12.
+
+Error message: This project uses AGP 8.7.3, latest supported AGP is 7.4.0.
+It means the IDE doesn't support the required version of the Android Gradle Plugin.
+This is fixed by updating Intellij IDEA to update 2025.1 (built April 15, 2025).
+
+Started creating gdx-backend-webgpu by copying gdx-backend-lwjgl3 and renaming
+everything Lwjgl3 to WebGPU.
+
+For now, copied all the backend files even when it is not graphics API related,
+e.g. audio. Accept or deal with the code duplication later.
+
+How to deal with multiple platforms? We are now tied to the LWJGL3 one.
+
+5/5/2025:
+Created tests/gdx-tests-webgpu based on gdx-tests-lwjgl3.
