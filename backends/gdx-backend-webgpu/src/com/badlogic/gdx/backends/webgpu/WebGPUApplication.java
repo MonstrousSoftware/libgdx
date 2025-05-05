@@ -19,7 +19,7 @@ package com.badlogic.gdx.backends.webgpu;
 import com.badlogic.gdx.*;
 import com.badlogic.gdx.backends.webgpu.WebGPUApplicationConfiguration.GLEmulation;
 import com.badlogic.gdx.backends.webgpu.audio.WebGPUAudio;
-import com.badlogic.gdx.backends.webgpu.audio.OpenALWebGPUAudio;
+import com.badlogic.gdx.backends.webgpu.audio.OpenALLwjgl3Audio;
 import com.badlogic.gdx.backends.webgpu.audio.mock.MockAudio;
 import com.badlogic.gdx.graphics.glutils.GLVersion;
 import com.badlogic.gdx.math.GridPoint2;
@@ -381,7 +381,7 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 
 	@Override
 	public WebGPUAudio createAudio (WebGPUApplicationConfiguration config) {
-		return new OpenALWebGPUAudio(config.audioDeviceSimultaneousSources, config.audioDeviceBufferCount,
+		return new OpenALLwjgl3Audio(config.audioDeviceSimultaneousSources, config.audioDeviceBufferCount,
 			config.audioDeviceBufferSize);
 	}
 

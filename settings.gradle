@@ -47,3 +47,5 @@ include ":tests:gdx-tests-webgpu"
 
 rootProject.name = "libgdx"
 
+
+include 'backends:gdx-backend-webgpu:res'

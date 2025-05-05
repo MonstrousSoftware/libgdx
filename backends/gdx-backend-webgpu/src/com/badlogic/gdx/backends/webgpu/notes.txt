@@ -19,3 +19,20 @@ How to deal with multiple platforms? We are now tied to the LWJGL3 one.
 5/5/2025:
 Created tests/gdx-tests-webgpu based on gdx-tests-lwjgl3.
 
+Trying to call java-to-webgpu from a test programme HelloTriangle.
+
+Apparently java-to-webgpu required JDK 17 and tests require Java runtime 8.
+Where does JVM 8 come from? Not clear from build.gradle.
+It just says:
+    sourceCompatibility = versions.java
+    targetCompatibility = versions.java
+
+
+   > Could not resolve com.github.MonstrousSoftware:java-to-webgpu:1.01.
+     Required by:
+         project :tests:gdx-tests-webgpu
+      > Dependency resolution is looking for a library compatible with JVM runtime version 8, but 'com.github.MonstrousSoftware:java-to-webgpu:1.01' is only compatible with JVM runtime version 17 or newer.
+
+
+ Tried placing the generated jnr files in the libgdx backend (backends.webgpu.webgpu).  Needed to adapt the jnr generator to create the correct
+ package name and import statements.

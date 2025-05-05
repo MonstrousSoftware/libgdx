@@ -25,6 +25,8 @@ targetCompatibility = versions.java
 dependencies {
 	api libraries.lwjgl3
 	api gdxnatives.desktop
+	implementation 'com.github.jnr:jnr-ffi:2.2.17'
+	implementation 'org.jetbrains:annotations:24.0.0'
 }
 
 
