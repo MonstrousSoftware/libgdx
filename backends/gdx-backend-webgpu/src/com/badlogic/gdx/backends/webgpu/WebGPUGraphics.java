@@ -24,7 +24,6 @@ import com.badlogic.gdx.graphics.glutils.GLVersion;
 import com.badlogic.gdx.graphics.glutils.HdpiMode;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.utils.Disposable;
-import com.badlogic.gdx.utils.GdxRuntimeException;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.GLFW;
@@ -83,24 +82,24 @@ public class WebGPUGraphics extends AbstractGraphics implements Disposable {
 		}
 	};
 
-	public WebGPUGraphics(WebGPUWindow window) {
+	public WebGPUGraphics (WebGPUWindow window) {
 		this.window = window;
-//		if (window.getConfig().glEmulation == WebGPUApplicationConfiguration.GLEmulation.GL32) {
-//			this.gl20 = this.gl30 = this.gl31 = this.gl32 = new Lwjgl3GL32();
-//		} else if (window.getConfig().glEmulation == WebGPUApplicationConfiguration.GLEmulation.GL31) {
-//			this.gl20 = this.gl30 = this.gl31 = new Lwjgl3GL31();
-//		} else if (window.getConfig().glEmulation == WebGPUApplicationConfiguration.GLEmulation.GL30) {
-//			this.gl20 = this.gl30 = new Lwjgl3GL30();
-//		} else
-//		{
-//			try {
-//				this.gl20 = window.getConfig().glEmulation == WebGPUApplicationConfiguration.GLEmulation.GL20 ? new Lwjgl3GL20()
-//					: (GL20)Class.forName("com.badlogic.gdx.backends.lwjgl3.angle.Lwjgl3GLES20").newInstance();
-//			} catch (Throwable t) {
-//				throw new GdxRuntimeException("Couldn't instantiate GLES20.", t);
-//			}
-//			this.gl30 = null;
-//		}
+// if (window.getConfig().glEmulation == WebGPUApplicationConfiguration.GLEmulation.GL32) {
+// this.gl20 = this.gl30 = this.gl31 = this.gl32 = new Lwjgl3GL32();
+// } else if (window.getConfig().glEmulation == WebGPUApplicationConfiguration.GLEmulation.GL31) {
+// this.gl20 = this.gl30 = this.gl31 = new Lwjgl3GL31();
+// } else if (window.getConfig().glEmulation == WebGPUApplicationConfiguration.GLEmulation.GL30) {
+// this.gl20 = this.gl30 = new Lwjgl3GL30();
+// } else
+// {
+// try {
+// this.gl20 = window.getConfig().glEmulation == WebGPUApplicationConfiguration.GLEmulation.GL20 ? new Lwjgl3GL20()
+// : (GL20)Class.forName("com.badlogic.gdx.backends.lwjgl3.angle.Lwjgl3GLES20").newInstance();
+// } catch (Throwable t) {
+// throw new GdxRuntimeException("Couldn't instantiate GLES20.", t);
+// }
+// this.gl30 = null;
+// }
 		this.gl20 = new WebGPUGL20();
 		this.gl30 = null;
 		this.gl31 = null;

@@ -92,11 +92,11 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 		}
 	}
 
-	public WebGPUApplication(ApplicationListener listener) {
+	public WebGPUApplication (ApplicationListener listener) {
 		this(listener, new WebGPUApplicationConfiguration());
 	}
 
-	public WebGPUApplication(ApplicationListener listener, WebGPUApplicationConfiguration config) {
+	public WebGPUApplication (ApplicationListener listener, WebGPUApplicationConfiguration config) {
 		if (config.glEmulation == WebGPUApplicationConfiguration.GLEmulation.ANGLE_GLES20) loadANGLE();
 		initializeGlfw();
 		setApplicationLogger(new WebGPUApplicationLogger());
@@ -406,7 +406,7 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 	}
 
 	private WebGPUWindow createWindow (final WebGPUApplicationConfiguration config, ApplicationListener listener,
-									   final long sharedContext) {
+		final long sharedContext) {
 		final WebGPUWindow window = new WebGPUWindow(listener, lifecycleListeners, config, this);
 		if (sharedContext == 0) {
 			// the main window is created immediately

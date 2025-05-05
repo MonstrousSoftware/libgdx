@@ -24,7 +24,6 @@ import com.badlogic.gdx.Graphics.Monitor;
 import com.badlogic.gdx.LifecycleListener;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.audio.Music;
-import com.badlogic.gdx.backends.webgpu.WebGPUApplication;
 import com.badlogic.gdx.backends.webgpu.WebGPUGraphics.WebGPUMonitor;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.glutils.HdpiMode;
