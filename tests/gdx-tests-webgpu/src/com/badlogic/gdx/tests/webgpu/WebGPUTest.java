@@ -46,7 +46,7 @@ public class WebGPUTest {
 			 }
 
 			// create a render pass
-			Pointer renderPass = prepareRenderPass(app.getCommandEncoder(), app.getTargetView());
+			Pointer renderPass = prepareRenderPass(app.getCommandEncoder().getHandle(), app.getTargetView());
 
 			// Select which render pipeline to use
 			webGPU.wgpuRenderPassEncoderSetPipeline(renderPass, pipeline);
@@ -156,7 +156,7 @@ public class WebGPUTest {
 			pipelineDesc.getMultisample().setAlphaToCoverageEnabled(0);
 
 			pipelineDesc.setLayout(JavaWebGPU.createNullPointer());
-			pipeline = webGPU.wgpuDeviceCreateRenderPipeline(app.getDevice(), pipelineDesc);
+			pipeline = webGPU.wgpuDeviceCreateRenderPipeline(app.getDevice().getHandle(), pipelineDesc);
 			if (pipeline.address() == 0) throw new RuntimeException("Pipeline creation failed");
 
 			// We no longer need to access the shader module
@@ -189,7 +189,7 @@ public class WebGPUTest {
 
 			shaderDesc.getNextInChain().set(shaderCodeDesc.getPointerTo());
 
-			Pointer shaderModule = webGPU.wgpuDeviceCreateShaderModule(app.getDevice(), shaderDesc);
+			Pointer shaderModule = webGPU.wgpuDeviceCreateShaderModule(app.getDevice().getHandle(), shaderDesc);
 			if (shaderModule.address() == 0) throw new RuntimeException("ShaderModule: compile failed.");
 			return shaderModule;
 		}

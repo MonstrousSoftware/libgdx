@@ -25,6 +25,7 @@ import com.badlogic.gdx.LifecycleListener;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.backends.webgpu.WebGPUGraphics.WebGPUMonitor;
+import com.badlogic.gdx.backends.webgpu.webgpu.WGPUBackendType;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.glutils.HdpiMode;
 import com.badlogic.gdx.graphics.glutils.HdpiUtils;
@@ -68,6 +69,9 @@ public class WebGPUApplicationConfiguration extends WebGPUWindowConfiguration {
 
 	boolean pauseWhenMinimized = true;
 	boolean pauseWhenLostFocus = false;
+
+	public WGPUBackendType backend = WGPUBackendType.Undefined;	// webgpu backend, e.g. Vulkan, DX12, etc.
+	public boolean enableGPUtiming = false;
 
 	String preferencesDirectory = ".prefs/";
 	FileType preferencesFileType = FileType.External;

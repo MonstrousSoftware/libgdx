@@ -22,6 +22,9 @@ import com.badlogic.gdx.backends.lwjgl3.audio.OpenALLwjgl3Audio;
 import com.badlogic.gdx.backends.lwjgl3.audio.mock.MockAudio;
 import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;
+import com.badlogic.gdx.backends.webgpu.wrappers.WebGPUCommandEncoder;
+import com.badlogic.gdx.backends.webgpu.wrappers.WebGPUDevice;
+import com.badlogic.gdx.backends.webgpu.wrappers.WebGPUQueue;
 import com.badlogic.gdx.graphics.glutils.GLVersion;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.utils.*;
@@ -56,8 +59,8 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 	private static Callback glDebugCallback;
 	private final Sync sync;
 
-	private final WGPUBackendType backend = WGPUBackendType.Undefined;// .D3D12; // or Vulkan, etc.
-	private final boolean vsyncEnabled = true;
+
+	private WGPUSupportedLimits supportedLimits;
 
 	private WebGPU_JNI webGPU;
 
@@ -83,6 +86,7 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 
 		initializeGlfw();
 		setApplicationLogger(new WebGPUApplicationLogger());
+		webGPU = JavaWebGPU.init();
 
 		this.config = config = WebGPUApplicationConfiguration.copy(config);
 		if (config.title == null) config.title = listener.getClass().getSimpleName();
@@ -105,9 +109,7 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 
 		this.sync = new Sync();
 
-		webGPU = JavaWebGPU.init();
-
-		WebGPUWindow window = createWindow(config, listener);
+		createWindow(config, listener);
 
 
 		try {
@@ -239,11 +241,11 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 		return currentWindow.surface;
 	}
 
-	public Pointer getDevice () {
+	public WebGPUDevice getDevice () {
 		return currentWindow.device;
 	}
 
-	public Pointer getQueue () {
+	public WebGPUQueue getQueue () {
 		return currentWindow.queue;
 	}
 
@@ -251,12 +253,20 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 		return currentWindow.targetView;
 	}
 
-	public Pointer getCommandEncoder () {
+	public WebGPUCommandEncoder getCommandEncoder () {
 		return currentWindow.commandEncoder;
 	}
 
 	public WGPUTextureFormat getSurfaceFormat () {
 		return currentWindow.surfaceFormat;
+	}
+
+	public WGPUSupportedLimits getSupportedLimits() {
+		return supportedLimits;
+	}
+
+	public void setSupportedLimits(WGPUSupportedLimits supportedLimits) {
+		this.supportedLimits = supportedLimits;
 	}
 
 	@Override
@@ -405,6 +415,10 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 
 	protected Files createFiles () {
 		return new WebGPUFiles();
+	}
+
+	public WebGPUApplicationConfiguration getConfiguration(){
+		return config;
 	}
 
 	/** Creates a new {@link WebGPUWindow} using the provided listener and {@link WebGPUWindowConfiguration}.
