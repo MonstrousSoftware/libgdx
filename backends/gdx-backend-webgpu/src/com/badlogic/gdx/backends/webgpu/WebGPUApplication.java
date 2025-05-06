@@ -60,12 +60,6 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 	private final boolean vsyncEnabled = true;
 
 	private WebGPU_JNI webGPU;
-//	private Pointer surface;
-//	private WGPUTextureFormat surfaceFormat;
-//	private Pointer device;
-//	private Pointer queue;
-//	private Pointer targetView;
-//	private Pointer commandEncoder;
 
 	static void initializeGlfw () {
 		if (errorCallback == null) {
@@ -113,13 +107,8 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 
 		webGPU = JavaWebGPU.init();
 
-		WebGPUWindow window = createWindow(config, listener, 0);
-		windows.add(window);
+		WebGPUWindow window = createWindow(config, listener);
 
-		//long windowHandle = GLFWNativeWin32.glfwGetWin32Window(window.getWindowHandle());
-
-
-		//initWebGPU(windowHandle, window.getGraphics().getWidth(), window.getGraphics().getHeight());
 
 		try {
 			loop();
@@ -132,7 +121,6 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 		} finally {
 			cleanup();
 		}
-		//exitWebGPU();
 	}
 
 	protected void loop () {
@@ -157,7 +145,6 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 					closedWindows.add(window);
 				}
 			}
-//			webGPU.wgpuDeviceTick(device);
 			GLFW.glfwPollEvents();
 
 			boolean shouldRequestRendering;
@@ -428,31 +415,18 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 		WebGPUApplicationConfiguration appConfig = WebGPUApplicationConfiguration.copy(this.config);
 		appConfig.setWindowConfiguration(config);
 		if (appConfig.title == null) appConfig.title = listener.getClass().getSimpleName();
-		return createWindow(appConfig, listener, 1L); // don't share a GL context
+		return createWindow(appConfig, listener);
 	}
 
-	private WebGPUWindow createWindow (final WebGPUApplicationConfiguration config, ApplicationListener listener,
-		final long sharedContext) {
+	private WebGPUWindow createWindow (final WebGPUApplicationConfiguration config, ApplicationListener listener) {
 		final WebGPUWindow window = new WebGPUWindow(listener, lifecycleListeners, config, this);
-		if (sharedContext == 0) {
-			// the main window is created immediately
-			createWindow(window, config, sharedContext);
-		} else {
-			createWindow(window, config, 0);
-			windows.add(window);
-//			// creation of additional windows is deferred to avoid GL context trouble
-//			postRunnable(new Runnable() {
-//				public void run () {
-//					createWindow(window, config, sharedContext);
-//					windows.add(window);
-//				}
-//			});
-		}
+		createWindow(window, config);
+		windows.add(window);
 		return window;
 	}
 
-	void createWindow (WebGPUWindow window, WebGPUApplicationConfiguration config, long sharedContext) {
-		long windowHandle = createGlfwWindow(config, sharedContext);
+	void createWindow (WebGPUWindow window, WebGPUApplicationConfiguration config) {
+		long windowHandle = createGlfwWindow(config, 0);
 		window.create(windowHandle);
 		window.setVisible(config.initialVisible);
 
@@ -565,162 +539,5 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 		return windowHandle;
 	}
 
-	private void initWebGPU (long windowHandle, int width, int height) {
-		webGPU = JavaWebGPU.init();
 
-//		Pointer instance = webGPU.wgpuCreateInstance(null);
-//
-//		surface = JavaWebGPU.getUtils().glfwGetWGPUSurface(instance, windowHandle); // todo support multiple windows
-//
-//		device = initDevice(instance, surface);
-//
-//		webGPU.wgpuInstanceRelease(instance); // we can release the instance now that we have the device
-//
-//		queue = webGPU.wgpuDeviceGetQueue(device);
-//
-//		initSwapChain(width, height);
-	}
-
-//	private Pointer getAdapterSync (Pointer instance, WGPURequestAdapterOptions options) {
-//
-//		Pointer userBuf = JavaWebGPU.createLongArrayPointer(new long[1]);
-//		WGPURequestAdapterCallback callback = (WGPURequestAdapterStatus status, Pointer adapter, String message,
-//			Pointer userdata) -> {
-//			if (status == WGPURequestAdapterStatus.Success)
-//				userdata.putPointer(0, adapter);
-//			else
-//				System.out.println("Could not get adapter: " + message);
-//		};
-//		webGPU.wgpuInstanceRequestAdapter(instance, options, callback, userBuf);
-//		// on native implementations, we don't have to wait for asynchronous operation. It returns result immediately.
-//		return userBuf.getPointer(0);
-//	}
-//
-//	private Pointer getDeviceSync (Pointer adapter, WGPUDeviceDescriptor deviceDescriptor) {
-//
-//		Pointer userBuf = JavaWebGPU.createLongArrayPointer(new long[1]);
-//		WGPURequestDeviceCallback callback = (WGPURequestDeviceStatus status, Pointer device, String message, Pointer userdata) -> {
-//			if (status == WGPURequestDeviceStatus.Success)
-//				userdata.putPointer(0, device);
-//			else
-//				System.out.println("Could not get device: " + message);
-//		};
-//		webGPU.wgpuAdapterRequestDevice(adapter, deviceDescriptor, callback, userBuf);
-//		// on native implementations, we don't have to wait for asynchronous operation. It returns result immediately.
-//		return userBuf.getPointer(0);
-//	}
-//
-//	private Pointer initDevice (Pointer instance, Pointer surface) {
-//
-//		// Select an Adapter
-//		//
-//		WGPURequestAdapterOptions options = WGPURequestAdapterOptions.createDirect();
-//		options.setNextInChain();
-//		options.setCompatibleSurface(surface);
-//		options.setBackendType(backend);
-//		options.setPowerPreference(WGPUPowerPreference.HighPerformance);
-//
-//		// Get Adapter
-//
-//		Pointer adapter = getAdapterSync(instance, options);
-//
-//		// Get Adapter properties out of interest
-//		WGPUAdapterProperties adapterProperties = WGPUAdapterProperties.createDirect();
-//		adapterProperties.setNextInChain();
-//
-//		webGPU.wgpuAdapterGetProperties(adapter, adapterProperties);
-//
-//		System.out.println("VendorID: " + adapterProperties.getVendorID());
-//		System.out.println("Vendor name: " + adapterProperties.getVendorName());
-//		System.out.println("Device ID: " + adapterProperties.getDeviceID());
-//		System.out.println("Back end: " + adapterProperties.getBackendType());
-//		System.out.println("Description: " + adapterProperties.getDriverDescription());
-//
-//		WGPURequiredLimits requiredLimits = WGPURequiredLimits.createDirect();
-//		setDefaultLimits(requiredLimits.getLimits());
-//
-//		// Get a Device
-//		//
-//		WGPUDeviceDescriptor deviceDescriptor = WGPUDeviceDescriptor.createDirect();
-//		deviceDescriptor.setNextInChain();
-//		deviceDescriptor.setLabel("My Device");
-//		deviceDescriptor.setRequiredLimits(requiredLimits);
-//		deviceDescriptor.setRequiredFeatureCount(0);
-//		deviceDescriptor.setRequiredFeatures(JavaWebGPU.createNullPointer());
-//
-//		Pointer device = getDeviceSync(adapter, deviceDescriptor);
-//
-//		// use a lambda expression to define a callback function
-//		WGPUErrorCallback deviceCallback = (WGPUErrorType type, String message, Pointer userdata) -> {
-//			System.out.println("*** Device error: " + type + " : " + message);
-//			System.exit(-1);
-//		};
-//		webGPU.wgpuDeviceSetUncapturedErrorCallback(device, deviceCallback, null);
-//
-//		// Find out the preferred surface format of the window
-//		WGPUSurfaceCapabilities caps = WGPUSurfaceCapabilities.createDirect();
-//		webGPU.wgpuSurfaceGetCapabilities(surface, adapter, caps);
-//		Pointer formats = caps.getFormats();
-//		int format = formats.getInt(0);
-//		surfaceFormat = WGPUTextureFormat.values()[format];
-//
-//		webGPU.wgpuAdapterRelease(adapter); // we can release our adapter as soon as we have a device
-//		return device;
-//	}
-//
-//	private void initSwapChain (int width, int height) {
-//		// configure the surface
-//		WGPUSurfaceConfiguration config = WGPUSurfaceConfiguration.createDirect();
-//		config.setNextInChain().setWidth(width).setHeight(height).setFormat(surfaceFormat).setViewFormatCount(0)
-//			.setViewFormats(JavaWebGPU.createNullPointer()).setUsage(WGPUTextureUsage.RenderAttachment).setDevice(device)
-//			.setPresentMode(vsyncEnabled ? WGPUPresentMode.Fifo : WGPUPresentMode.Immediate)
-//			.setAlphaMode(WGPUCompositeAlphaMode.Auto);
-//
-//		webGPU.wgpuSurfaceConfigure(surface, config);
-//	}
-//
-//	private void exitWebGPU () {
-//		webGPU.wgpuSurfaceUnconfigure(surface);
-//		webGPU.wgpuQueueRelease(queue);
-//		webGPU.wgpuDeviceRelease(device);
-//		webGPU.wgpuSurfaceRelease(surface);
-//	}
-//
-//	final static long WGPU_LIMIT_U32_UNDEFINED = -1;
-//	final static long WGPU_LIMIT_U64_UNDEFINED = -1L;
-//
-//	public void setDefaultLimits (WGPULimits limits) {
-//		limits.setMaxTextureDimension1D(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxTextureDimension2D(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxTextureDimension3D(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxTextureArrayLayers(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxBindGroups(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxBindGroupsPlusVertexBuffers(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxBindingsPerBindGroup(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxDynamicUniformBuffersPerPipelineLayout(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxDynamicStorageBuffersPerPipelineLayout(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxSampledTexturesPerShaderStage(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxSamplersPerShaderStage(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxStorageBuffersPerShaderStage(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxStorageTexturesPerShaderStage(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxUniformBuffersPerShaderStage(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxUniformBufferBindingSize(WGPU_LIMIT_U64_UNDEFINED);
-//		limits.setMaxStorageBufferBindingSize(WGPU_LIMIT_U64_UNDEFINED);
-//		limits.setMinUniformBufferOffsetAlignment(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMinStorageBufferOffsetAlignment(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxVertexBuffers(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxBufferSize(WGPU_LIMIT_U64_UNDEFINED);
-//		limits.setMaxVertexAttributes(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxVertexBufferArrayStride(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxInterStageShaderComponents(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxInterStageShaderVariables(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxColorAttachments(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxColorAttachmentBytesPerSample(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxComputeWorkgroupStorageSize(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxComputeInvocationsPerWorkgroup(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxComputeWorkgroupSizeX(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxComputeWorkgroupSizeY(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxComputeWorkgroupSizeZ(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxComputeWorkgroupsPerDimension(WGPU_LIMIT_U32_UNDEFINED);
-//	}
 }
