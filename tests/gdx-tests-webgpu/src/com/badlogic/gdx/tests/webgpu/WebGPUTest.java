@@ -47,7 +47,6 @@ public class WebGPUTest {
 // app.newWindow(listener, config);
 // }
 
-
 			Pointer renderPass = prepareRenderPass(app.getCommandEncoder(), app.getTargetView());
 
 			renderStuff(renderPass); // do some rendering in this render pass
@@ -74,7 +73,6 @@ public class WebGPUTest {
 		public void dispose () {
 			webGPU.wgpuRenderPipelineRelease(pipeline);
 		}
-
 
 		private Pointer prepareRenderPass (Pointer encoder, Pointer targetView) {
 
@@ -105,8 +103,6 @@ public class WebGPUTest {
 
 			return webGPU.wgpuCommandEncoderBeginRenderPass(encoder, renderPassDescriptor);
 		}
-
-
 
 		private Pointer initPipeline () {
 

@@ -453,8 +453,8 @@ public class WebGPUWindow implements Disposable {
 		}
 		application.setTargetView(targetView); // use app to pass this pointer to user code, bah
 
-	 	Pointer commandEncoder = prepareEncoder();
-		 application.setCommandEncoder(commandEncoder);	// use Application as central storage
+		Pointer commandEncoder = prepareEncoder();
+		application.setCommandEncoder(commandEncoder); // use Application as central storage
 // Pointer renderPass = prepareRenderPass(commandEncoder, targetView);
 
 		listener.render();
