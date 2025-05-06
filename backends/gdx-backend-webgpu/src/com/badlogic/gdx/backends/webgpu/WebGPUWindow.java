@@ -453,7 +453,8 @@ public class WebGPUWindow implements Disposable {
 		}
 		application.setTargetView(targetView); // use app to pass this pointer to user code, bah
 
-// Pointer commandEncoder = prepareEncoder();
+	 	Pointer commandEncoder = prepareEncoder();
+		 application.setCommandEncoder(commandEncoder);	// use Application as central storage
 // Pointer renderPass = prepareRenderPass(commandEncoder, targetView);
 
 		listener.render();
@@ -462,7 +463,8 @@ public class WebGPUWindow implements Disposable {
 // webGPU.wgpuRenderPassEncoderEnd(renderPass);
 // webGPU.wgpuRenderPassEncoderRelease(renderPass);
 //
-// finishEncoder(commandEncoder);
+		finishEncoder(commandEncoder);
+		application.setCommandEncoder(null);
 
 		// At the end of the frame
 		webGPU.wgpuTextureViewRelease(targetView);
@@ -498,6 +500,32 @@ public class WebGPUWindow implements Disposable {
 		// we can release the texture now as the texture view now has its own reference to it
 		webGPU.wgpuTextureRelease(surfaceTexture.getTexture());
 		return view;
+	}
+
+	private Pointer prepareEncoder () {
+		WGPUCommandEncoderDescriptor encoderDescriptor = WGPUCommandEncoderDescriptor.createDirect();
+		encoderDescriptor.setNextInChain();
+		encoderDescriptor.setLabel("My Encoder");
+
+		return webGPU.wgpuDeviceCreateCommandEncoder(application.getDevice(), encoderDescriptor);
+	}
+
+	private void finishEncoder (Pointer encoder) {
+		// Finish the command encoder, which gives us the command buffer
+		WGPUCommandBufferDescriptor bufferDescriptor = WGPUCommandBufferDescriptor.createDirect();
+		bufferDescriptor.setNextInChain();
+		bufferDescriptor.setLabel("Command Buffer");
+		Pointer commandBuffer = webGPU.wgpuCommandEncoderFinish(encoder, bufferDescriptor);
+
+		// Release the command encoder
+		webGPU.wgpuCommandEncoderRelease(encoder);
+
+		// Submit the command buffer to the queue
+		Pointer bufferPtr = JavaWebGPU.createLongArrayPointer(new long[] {commandBuffer.address()});
+		webGPU.wgpuQueueSubmit(application.getQueue(), 1, bufferPtr);
+
+		// Now we can release the command buffer
+		webGPU.wgpuCommandBufferRelease(commandBuffer);
 	}
 
 	void requestRendering () {

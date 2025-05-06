@@ -73,6 +73,10 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 	//private Pointer pipeline;
 	private Pointer targetView;
 
+
+
+	private Pointer commandEncoder;
+
 	static void initializeGlfw () {
 		if (errorCallback == null) {
 			WebGPUNativesLoader.load();
@@ -269,6 +273,14 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 
 	public Pointer getTargetView(){
 		return targetView;
+	}
+
+	public Pointer getCommandEncoder() {
+		return commandEncoder;
+	}
+
+	public void setCommandEncoder(Pointer commandEncoder) {
+		this.commandEncoder = commandEncoder;
 	}
 
 	public WGPUTextureFormat getSurfaceFormat(){

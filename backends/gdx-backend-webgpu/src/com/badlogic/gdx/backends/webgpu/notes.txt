@@ -28,8 +28,16 @@ Shader source was added as a String to the HelloTriangle code to avoid too many 
 
 HelloTriangle test now works (calling GLFW and native WebGPU directly).
 
-WebGPUTest uses WebGPUApplication and some native WebGPU calls to render a triangle.  The listener needs to create its own render pass,
+WebGPUTest uses WebGPUApplication and some native WebGPU calls to render a triangle.
+The listener needs to create its own render pass (this will later be done by SpriteBatch or ModelBatch),
 while WebGPUWindow.update() obtains the next render surface and presents the target view.
+Update: the command encoder is created and finished in Window, and can be obtained via app.getCommandEncoder(),
+render pass is created in Listener (because you may want multiple render passes).
+(Or should command encoder by managed by Application rather than per Window?).
 
-LibGDX supports multiple windows per application.  This does not work yet for WebGPU (crash). To think which resources should
-be maintained at window level rather than application level, e.g. surface, device?, queue?
+
+LibGDX supports multiple windows per application.  This does not work yet for WebGPU (crash).
+To think which resources should be maintained at window level rather than application level, e.g. surface, device?, queue?
+
+For audio, the webgpu backend simply refers to the lwjgl3 backend, so we don't duplicate non-graphics code.
+This means we can remove the audio subfolder from gdx-backend-webgpu.

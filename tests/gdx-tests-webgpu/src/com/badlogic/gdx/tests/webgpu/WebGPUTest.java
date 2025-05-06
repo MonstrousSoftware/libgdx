@@ -47,16 +47,14 @@ public class WebGPUTest {
 // app.newWindow(listener, config);
 // }
 
-			Pointer commandEncoder = prepareEncoder();
 
-			Pointer renderPass = prepareRenderPass(commandEncoder, app.getTargetView());
+			Pointer renderPass = prepareRenderPass(app.getCommandEncoder(), app.getTargetView());
 
 			renderStuff(renderPass); // do some rendering in this render pass
 
 			webGPU.wgpuRenderPassEncoderEnd(renderPass);
 			webGPU.wgpuRenderPassEncoderRelease(renderPass);
 
-			finishEncoder(commandEncoder);
 		}
 
 		private void renderStuff (Pointer renderPass) {
@@ -77,13 +75,6 @@ public class WebGPUTest {
 			webGPU.wgpuRenderPipelineRelease(pipeline);
 		}
 
-		private Pointer prepareEncoder () {
-			WGPUCommandEncoderDescriptor encoderDescriptor = WGPUCommandEncoderDescriptor.createDirect();
-			encoderDescriptor.setNextInChain();
-			encoderDescriptor.setLabel("My Encoder");
-
-			return webGPU.wgpuDeviceCreateCommandEncoder(app.getDevice(), encoderDescriptor);
-		}
 
 		private Pointer prepareRenderPass (Pointer encoder, Pointer targetView) {
 
@@ -115,23 +106,7 @@ public class WebGPUTest {
 			return webGPU.wgpuCommandEncoderBeginRenderPass(encoder, renderPassDescriptor);
 		}
 
-		private void finishEncoder (Pointer encoder) {
-			// Finish the command encoder, which gives us the command buffer
-			WGPUCommandBufferDescriptor bufferDescriptor = WGPUCommandBufferDescriptor.createDirect();
-			bufferDescriptor.setNextInChain();
-			bufferDescriptor.setLabel("Command Buffer");
-			Pointer commandBuffer = webGPU.wgpuCommandEncoderFinish(encoder, bufferDescriptor);
 
-			// Release the command encoder
-			webGPU.wgpuCommandEncoderRelease(encoder);
-
-			// Submit the command buffer to the queue
-			Pointer bufferPtr = JavaWebGPU.createLongArrayPointer(new long[] {commandBuffer.address()});
-			webGPU.wgpuQueueSubmit(queue, 1, bufferPtr);
-
-			// Now we can release the command buffer
-			webGPU.wgpuCommandBufferRelease(commandBuffer);
-		}
 
 		private Pointer initPipeline () {
 
