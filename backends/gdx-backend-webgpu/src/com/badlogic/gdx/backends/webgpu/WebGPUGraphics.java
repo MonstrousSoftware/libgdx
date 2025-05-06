@@ -17,6 +17,8 @@
 package com.badlogic.gdx.backends.webgpu;
 
 import com.badlogic.gdx.AbstractGraphics;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.backends.webgpu.wrappers.WebGPUTexture;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.Cursor.SystemCursor;
 import com.badlogic.gdx.graphics.glutils.GLVersion;
@@ -57,6 +59,10 @@ public class WebGPUGraphics extends AbstractGraphics implements Disposable {
 	private int windowHeightBeforeFullscreen;
 	private DisplayMode displayModeBeforeFullscreen = null;
 
+
+
+	private WebGPUTexture multiSamplingTexture;
+
 	IntBuffer tmpBuffer = BufferUtils.createIntBuffer(1);
 	IntBuffer tmpBuffer2 = BufferUtils.createIntBuffer(1);
 
@@ -72,9 +78,15 @@ public class WebGPUGraphics extends AbstractGraphics implements Disposable {
 				// gl20.glViewport(0, 0, backBufferWidth, backBufferHeight);
 				window.getListener().resize(getWidth(), getHeight());
 				update();
-				window.renderFrame();
+				//window.renderFrame();
 				// window.getListener().render();
 				// GLFW.glfwSwapBuffers(windowHandle);
+				WebGPUApplication app = (WebGPUApplication) Gdx.app;
+				if(app.getConfiguration().samples > 1 ) {
+					if(multiSamplingTexture != null)
+						multiSamplingTexture.dispose();
+					multiSamplingTexture = new WebGPUTexture(width, height, false, true, app.getSurfaceFormat(), app.getConfiguration().samples);
+				}
 			} else {
 				window.asyncResized = true;
 			}
@@ -104,6 +116,11 @@ public class WebGPUGraphics extends AbstractGraphics implements Disposable {
 		this.gl31 = null;
 		this.gl32 = null;
 		updateFramebufferInfo();
+
+		WebGPUApplication app = (WebGPUApplication) Gdx.app;
+		if(app.getConfiguration().samples > 1 ) {
+			multiSamplingTexture = new WebGPUTexture(getWidth(), getHeight(), false, true, app.getSurfaceFormat(), app.getConfiguration().samples);
+		}
 		// initiateGL();
 		GLFW.glfwSetFramebufferSizeCallback(window.getWindowHandle(), resizeCallback);
 	}
@@ -136,6 +153,10 @@ public class WebGPUGraphics extends AbstractGraphics implements Disposable {
 
 	public WebGPUWindow getWindow () {
 		return window;
+	}
+
+	public WebGPUTexture getMultiSamplingTexture() {
+		return multiSamplingTexture;
 	}
 
 	void updateFramebufferInfo () {

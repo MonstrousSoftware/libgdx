@@ -61,7 +61,7 @@ public class WebGPUApplicationConfiguration extends WebGPUWindowConfiguration {
 
 	int r = 8, g = 8, b = 8, a = 8;
 	int depth = 16, stencil = 0;
-	int samples = 0;
+	public int samples = 1;
 	boolean transparentFramebuffer;
 
 	int idleFPS = 60;

@@ -56,3 +56,23 @@ and getting regular emails about missing permissions.
 Next steps:
 - include WebGPU abstraction classes
 - SpriteBatch / Mesh
+
+Created a wrapper folder which contain Java convenience classes of several WebGPU concepts (device, adapter, command encoder, buffer, etc.)
+The webgpu code in Window was adapted to use these classes.
+To get the raw pointer to use e.g. in a webgpu function call, use the getHandle() method.
+
+Instead of replicating the internals of libgdx SpriteBatch (e.g. using a Mesh) we use a version that is functionally equivalent.
+
+WGPUTexture still needs to be aligned to Texture.
+
+RenderPassBuilder and PipelineSpecification need cleaning up or replacing.
+
+VertexAttributes is reinvented. To be aligned.
+
+Added depth texture to Window. Applcation exports textureview and textureformat (needed to build render pass).
+
+Strange bug: when creating a child window the listener.render() gets called before encoder is created.
+In Application, currentWindow and window variables are somehow different.
+Maybe because newWindow is called async from a mouse event, while the loop is iterating. (newWindow affects currentWindow, because
+the window constructor needs it to point to the window under construction).
+

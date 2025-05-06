@@ -7,6 +7,8 @@ import com.badlogic.gdx.backends.webgpu.WebGPUApplicationConfiguration;
 import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;
 
+import com.badlogic.gdx.backends.webgpu.wrappers.*;
+import com.badlogic.gdx.graphics.Color;
 import jnr.ffi.Pointer;
 
 public class WebGPUTest {
@@ -17,6 +19,8 @@ public class WebGPUTest {
 		WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
 		config.setWindowedMode(640, 480);
 		config.setTitle("WebGPUTest");
+		//config.backend = WGPUBackendType.D3D12;
+		config.enableGPUtiming = false;
 
 		new WebGPUApplication(new TestApp(), config);
 	}
@@ -45,19 +49,24 @@ public class WebGPUTest {
 				 app.newWindow(listener, config);
 			 }
 
+			 if(app.getCommandEncoder() == null){
+				 // not sure why this happens: currentWindow is not the window calling render()
+				 // perhaps resize?
+				System.out.println("No command encoder!!!!");
+				return;
+			}
+
 			// create a render pass
-			Pointer renderPass = prepareRenderPass(app.getCommandEncoder().getHandle(), app.getTargetView());
+			WebGPURenderPass pass = RenderPassBuilder.create("my pass", Color.CORAL, null, null, null, 1, RenderPassType.NO_DEPTH);
 
 			// Select which render pipeline to use
-			webGPU.wgpuRenderPassEncoderSetPipeline(renderPass, pipeline);
+			pass.setPipeline(pipeline);
 
 			// Draw 1 instance of a 3-vertices shape
-			webGPU.wgpuRenderPassEncoderDraw(renderPass, 3, 1, 0, 0);
+			pass.draw(3);
 
 			// end the render pass
-			webGPU.wgpuRenderPassEncoderEnd(renderPass);
-			webGPU.wgpuRenderPassEncoderRelease(renderPass);
-
+			pass.end();
 		}
 
 
@@ -69,36 +78,6 @@ public class WebGPUTest {
 		@Override
 		public void dispose () {
 			webGPU.wgpuRenderPipelineRelease(pipeline);
-		}
-
-		private Pointer prepareRenderPass (Pointer encoder, Pointer targetView) {
-
-			WGPURenderPassColorAttachment renderPassColorAttachment = WGPURenderPassColorAttachment.createDirect();
-			renderPassColorAttachment.setNextInChain();
-			renderPassColorAttachment.setView(targetView);
-			renderPassColorAttachment.setResolveTarget(JavaWebGPU.createNullPointer());
-			renderPassColorAttachment.setLoadOp(WGPULoadOp.Clear);
-			renderPassColorAttachment.setStoreOp(WGPUStoreOp.Store);
-
-			// background colour
-			renderPassColorAttachment.getClearValue().setR(0.9);
-			renderPassColorAttachment.getClearValue().setG(0.1);
-			renderPassColorAttachment.getClearValue().setB(0.2);
-			renderPassColorAttachment.getClearValue().setA(1.0);
-
-			renderPassColorAttachment.setDepthSlice(-1L); // undefined
-
-			WGPURenderPassDescriptor renderPassDescriptor = WGPURenderPassDescriptor.createDirect();
-			renderPassDescriptor.setNextInChain();
-
-			renderPassDescriptor.setLabel("Main Render Pass");
-
-			renderPassDescriptor.setColorAttachmentCount(1);
-			renderPassDescriptor.setColorAttachments(renderPassColorAttachment);
-			renderPassDescriptor.setOcclusionQuerySet(JavaWebGPU.createNullPointer());
-			renderPassDescriptor.setDepthStencilAttachment(); // no depth buffer or stencil buffer
-
-			return webGPU.wgpuCommandEncoderBeginRenderPass(encoder, renderPassDescriptor);
 		}
 
 		private Pointer initPipeline () {

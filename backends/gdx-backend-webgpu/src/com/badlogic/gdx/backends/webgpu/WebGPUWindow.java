@@ -56,8 +56,12 @@ public class WebGPUWindow implements Disposable {
 	public WebGPUQueue queue;
 	public Pointer targetView;
 	public WebGPUCommandEncoder commandEncoder;
-	private final WGPUBackendType backend = WGPUBackendType.Undefined;// .D3D12; // or Vulkan, etc.
-	private final boolean vsyncEnabled = true;	// per window??
+	public WGPUTextureFormat depthTextureFormat;
+	public WebGPUTexture depthTexture;
+	public WebGPUTextureView depthTextureView;
+
+	//private final WGPUBackendType backend = WGPUBackendType.Undefined;// .D3D12; // or Vulkan, etc.
+	private final boolean vsyncEnabled = true;	// per window?? todo read from config
 
 	private final GLFWWindowFocusCallback focusCallback = new GLFWWindowFocusCallback() {
 		@Override
@@ -253,6 +257,32 @@ public class WebGPUWindow implements Disposable {
 		queue = new WebGPUQueue(device);
 
 		initSwapChain(width, height);
+		initDepthBuffer(width, height);
+	}
+
+	// todo handle resize
+	// or call this from resize event rather than constructor
+	private void initDepthBuffer(int width, int height){
+
+		depthTextureFormat = WGPUTextureFormat.Depth24Plus;
+
+		depthTexture = new WebGPUTexture(width, height, 1, WGPUTextureUsage.RenderAttachment,
+				depthTextureFormat, config.samples, depthTextureFormat );
+
+		// Create the view of the depth texture manipulated by the rasterizer
+		depthTextureView = new WebGPUTextureView(depthTexture, WGPUTextureAspect.DepthOnly, WGPUTextureViewDimension._2D,depthTextureFormat, 0, 1, 0, 1 );
+	}
+
+	private void terminateDepthBuffer(){
+		// Destroy the depth texture and its view
+		if(depthTextureView != null)
+			depthTextureView.dispose();
+
+		if(depthTexture != null) {
+			depthTexture.dispose();
+		}
+		depthTextureView = null;
+		depthTexture = null;
 	}
 
 //	private Pointer getAdapterSync (Pointer instance, WGPURequestAdapterOptions options) {
@@ -362,6 +392,8 @@ public class WebGPUWindow implements Disposable {
 //		webGPU.wgpuQueueRelease(queue);
 //		webGPU.wgpuDeviceRelease(device);
 		webGPU.wgpuSurfaceRelease(surface);
+
+		terminateDepthBuffer();
 	}
 
 	/** @return the {@link ApplicationListener} associated with this window **/
@@ -577,7 +609,7 @@ public class WebGPUWindow implements Disposable {
 			graphics.update();
 			// listener.render();
 			// GLFW.glfwSwapBuffers(windowHandle);
-			renderFrame();
+			//renderFrame();
 			return true;
 		}
 
@@ -655,70 +687,6 @@ public class WebGPUWindow implements Disposable {
 	}
 
 
-//	private Pointer prepareEncoder () {
-//
-//		WGPUCommandEncoderDescriptor encoderDescriptor = WGPUCommandEncoderDescriptor.createDirect();
-//		encoderDescriptor.setNextInChain();
-//		encoderDescriptor.setLabel("My Encoder");
-//
-//		return webGPU.wgpuDeviceCreateCommandEncoder(application.getDevice().getHandle(), encoderDescriptor);
-//	}
-//
-//	private void finishEncoder (Pointer encoder) {
-//		// Finish the command encoder, which gives us the command buffer
-//		WGPUCommandBufferDescriptor bufferDescriptor = WGPUCommandBufferDescriptor.createDirect();
-//		bufferDescriptor.setNextInChain();
-//		bufferDescriptor.setLabel("Command Buffer");
-//		Pointer commandBuffer = webGPU.wgpuCommandEncoderFinish(encoder, bufferDescriptor);
-//
-//		// Release the command encoder
-//		webGPU.wgpuCommandEncoderRelease(encoder);
-//
-//		// Submit the command buffer to the queue
-//		Pointer bufferPtr = JavaWebGPU.createLongArrayPointer(new long[] {commandBuffer.address()});
-//		webGPU.wgpuQueueSubmit(application.getQueue().getHandle(), 1, bufferPtr);
-//
-//		// Now we can release the command buffer
-//		webGPU.wgpuCommandBufferRelease(commandBuffer);
-//	}
-//
-//	final static long WGPU_LIMIT_U32_UNDEFINED = -1;
-//	final static long WGPU_LIMIT_U64_UNDEFINED = -1L;
-
-//	public void setDefaultLimits (WGPULimits limits) {
-//		limits.setMaxTextureDimension1D(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxTextureDimension2D(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxTextureDimension3D(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxTextureArrayLayers(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxBindGroups(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxBindGroupsPlusVertexBuffers(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxBindingsPerBindGroup(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxDynamicUniformBuffersPerPipelineLayout(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxDynamicStorageBuffersPerPipelineLayout(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxSampledTexturesPerShaderStage(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxSamplersPerShaderStage(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxStorageBuffersPerShaderStage(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxStorageTexturesPerShaderStage(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxUniformBuffersPerShaderStage(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxUniformBufferBindingSize(WGPU_LIMIT_U64_UNDEFINED);
-//		limits.setMaxStorageBufferBindingSize(WGPU_LIMIT_U64_UNDEFINED);
-//		limits.setMinUniformBufferOffsetAlignment(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMinStorageBufferOffsetAlignment(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxVertexBuffers(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxBufferSize(WGPU_LIMIT_U64_UNDEFINED);
-//		limits.setMaxVertexAttributes(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxVertexBufferArrayStride(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxInterStageShaderComponents(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxInterStageShaderVariables(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxColorAttachments(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxColorAttachmentBytesPerSample(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxComputeWorkgroupStorageSize(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxComputeInvocationsPerWorkgroup(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxComputeWorkgroupSizeX(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxComputeWorkgroupSizeY(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxComputeWorkgroupSizeZ(WGPU_LIMIT_U32_UNDEFINED);
-//		limits.setMaxComputeWorkgroupsPerDimension(WGPU_LIMIT_U32_UNDEFINED);
-//	}
 
 	void requestRendering () {
 		synchronized (this) {
@@ -747,15 +715,8 @@ public class WebGPUWindow implements Disposable {
 	}
 
 	void makeCurrent () {
-		Gdx.graphics = graphics;
-// Gdx.gl32 = graphics.getGL32();
-// Gdx.gl31 = Gdx.gl32 != null ? Gdx.gl32 : graphics.getGL31();
-// Gdx.gl30 = Gdx.gl31 != null ? Gdx.gl31 : graphics.getGL30();
-// Gdx.gl20 = Gdx.gl30 != null ? Gdx.gl30 : graphics.getGL20();
-// Gdx.gl = Gdx.gl20;
+		Gdx.graphics = graphics;	// holds window size for example
 		Gdx.input = input;
-
-// GLFW.glfwMakeContextCurrent(windowHandle);
 	}
 
 	@Override

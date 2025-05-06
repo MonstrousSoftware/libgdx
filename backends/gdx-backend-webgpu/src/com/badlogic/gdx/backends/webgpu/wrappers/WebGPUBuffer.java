@@ -33,8 +33,8 @@ import jnr.ffi.Pointer;
  * usage: one or more flags in combination, e.g. WGPUBufferUsage.CopyDst | WGPUBufferUsage.Uniform
  */
 public class WebGPUBuffer implements Disposable {
-    private final WebGPUApplication app;
-    private final WebGPU_JNI webGPU;
+    protected final WebGPUApplication app;
+    protected final WebGPU_JNI webGPU;
     private Pointer handle;
     private final long bufferSize;
 

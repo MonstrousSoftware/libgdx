@@ -22,9 +22,7 @@ import com.badlogic.gdx.backends.lwjgl3.audio.OpenALLwjgl3Audio;
 import com.badlogic.gdx.backends.lwjgl3.audio.mock.MockAudio;
 import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;
-import com.badlogic.gdx.backends.webgpu.wrappers.WebGPUCommandEncoder;
-import com.badlogic.gdx.backends.webgpu.wrappers.WebGPUDevice;
-import com.badlogic.gdx.backends.webgpu.wrappers.WebGPUQueue;
+import com.badlogic.gdx.backends.webgpu.wrappers.*;
 import com.badlogic.gdx.graphics.glutils.GLVersion;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.utils.*;
@@ -135,10 +133,9 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 			closedWindows.clear();
 			int targetFramerate = -2;
 			for (WebGPUWindow window : windows) {
-				if (currentWindow != window) {
-					window.makeCurrent();
-					currentWindow = window;
-				}
+				window.makeCurrent();
+				currentWindow = window;
+
 				if (targetFramerate == -2) targetFramerate = window.getConfig().foregroundFPS;
 				synchronized (lifecycleListeners) {
 					haveWindowsRendered |= window.update();
@@ -267,6 +264,18 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 
 	public void setSupportedLimits(WGPUSupportedLimits supportedLimits) {
 		this.supportedLimits = supportedLimits;
+	}
+
+	public WebGPUTexture getMultiSamplingTexture () {
+		return currentWindow.getGraphics().getMultiSamplingTexture();
+	}
+
+	public WebGPUTextureView getDepthTextureView () {
+		return currentWindow.depthTextureView;
+	}
+
+	public WGPUTextureFormat getDepthTextureFormat () {
+		return currentWindow.depthTextureFormat;
 	}
 
 	@Override
@@ -434,6 +443,7 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 
 	private WebGPUWindow createWindow (final WebGPUApplicationConfiguration config, ApplicationListener listener) {
 		final WebGPUWindow window = new WebGPUWindow(listener, lifecycleListeners, config, this);
+		currentWindow = window;
 		createWindow(window, config);
 		windows.add(window);
 		return window;

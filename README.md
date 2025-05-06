@@ -1,3 +1,7 @@
 ![libGDX Logo](libgdx_logo.svg)
 
-Trying to add a WebGPU backend.
+Adding a WebGPU backend.
+
+To test call:
+- gdx-tests-webgpu/HelloTriangle ("raw" webgpu calls)
+- gdx-tests-webgpu/WebGPUTest (using WebGPUApplication)
