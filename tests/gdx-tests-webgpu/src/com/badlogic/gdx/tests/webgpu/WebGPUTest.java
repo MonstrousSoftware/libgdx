@@ -25,44 +25,41 @@ public class WebGPUTest {
 	static class TestApp extends ApplicationAdapter {
 		private WebGPUApplication app;
 		private WebGPU_JNI webGPU;
-		private Pointer queue;
 		private Pointer pipeline;
 
 		public void create () {
 			app = (WebGPUApplication)Gdx.app;
 			webGPU = app.getWebGPU();
-			queue = app.getQueue();
 			pipeline = initPipeline();
 		}
 
 		@Override
 		public void render () {
-// if (Gdx.input.justTouched()) {
-//
-// ApplicationListener listener = new TestApp();
-//
-// WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
-// config.setWindowedMode(200, 200);
-// config.setTitle("Child Window");
-// app.newWindow(listener, config);
-// }
+			 if (Gdx.input.justTouched()) {
 
+				 ApplicationListener listener = new TestApp();
+
+				 WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
+				 config.setWindowedMode(200, 200);
+				 config.setTitle("Child Window");
+				 app.newWindow(listener, config);
+			 }
+
+			// create a render pass
 			Pointer renderPass = prepareRenderPass(app.getCommandEncoder(), app.getTargetView());
 
-			renderStuff(renderPass); // do some rendering in this render pass
-
-			webGPU.wgpuRenderPassEncoderEnd(renderPass);
-			webGPU.wgpuRenderPassEncoderRelease(renderPass);
-
-		}
-
-		private void renderStuff (Pointer renderPass) {
 			// Select which render pipeline to use
 			webGPU.wgpuRenderPassEncoderSetPipeline(renderPass, pipeline);
 
 			// Draw 1 instance of a 3-vertices shape
 			webGPU.wgpuRenderPassEncoderDraw(renderPass, 3, 1, 0, 0);
+
+			// end the render pass
+			webGPU.wgpuRenderPassEncoderEnd(renderPass);
+			webGPU.wgpuRenderPassEncoderRelease(renderPass);
+
 		}
+
 
 		@Override
 		public void resize (int width, int height) {

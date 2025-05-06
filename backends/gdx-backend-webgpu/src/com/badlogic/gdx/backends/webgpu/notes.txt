@@ -33,11 +33,26 @@ The listener needs to create its own render pass (this will later be done by Spr
 while WebGPUWindow.update() obtains the next render surface and presents the target view.
 Update: the command encoder is created and finished in Window, and can be obtained via app.getCommandEncoder(),
 render pass is created in Listener (because you may want multiple render passes).
-(Or should command encoder by managed by Application rather than per Window?).
-
 
 LibGDX supports multiple windows per application.  This does not work yet for WebGPU (crash).
-To think which resources should be maintained at window level rather than application level, e.g. surface, device?, queue?
 
 For audio, the webgpu backend simply refers to the lwjgl3 backend, so we don't duplicate non-graphics code.
 This means we can remove the audio subfolder from gdx-backend-webgpu.
+
+
+
+6/5/2024:
+Crash of Application.newWindow() was because of the sharedContext parameter which seems related to GL context.  Crash fixed by passing a 0 instead.
+To think which resources should be maintained at window level rather than application level, e.g. surface, device?, queue?
+Moved surface, device, queue, targetView and commandEncoder to Window.  Application exposes these resource to user code by passing the resources from the current window.
+WebGPU initialisation is mostly done at Window level now.
+
+WebGPUTest now can create multiple windows. Use a mouse click in the window to create a child window.
+Application exits when last window is closed.
+
+Note: had to rename the .github/workflows folder (as a way to disable the workflows) to avoid push conflicts with automatic formatting workflows
+and getting regular emails about missing permissions.
+
+Next steps:
+- include WebGPU abstraction classes
+- SpriteBatch / Mesh
