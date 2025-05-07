@@ -27,7 +27,6 @@ public class WebGPUVertexBuffer extends WebGPUBuffer {
         dataBuf.put(0L, vertexData, 0, vertexData.length);
         // Upload geometry data to the buffer
         app.getQueue().writeBuffer(this, 0, dataBuf, size);
-        //LibGPU.webGPU.wgpuQueueWriteBuffer(LibGPU.queue, getHandle(),0,dataBuf, size);
     }
 
     public void setVertices(ArrayList<Float> floats) {
@@ -39,7 +38,6 @@ public class WebGPUVertexBuffer extends WebGPUBuffer {
             vertData.putFloat((long) i *Float.BYTES, floats.get(i));
         }
         // Upload geometry data to the buffer
-        //LibGPU.webGPU.wgpuQueueWriteBuffer(LibGPU.queue, getHandle(),0,vertData, size);
         app.getQueue().writeBuffer(this, 0, vertData, size);
     }
 

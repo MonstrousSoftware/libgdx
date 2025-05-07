@@ -266,7 +266,7 @@ public class WebGPUWindow implements Disposable {
 
 		depthTextureFormat = WGPUTextureFormat.Depth24Plus;
 
-		depthTexture = new WebGPUTexture(width, height, 1, WGPUTextureUsage.RenderAttachment,
+		depthTexture = new WebGPUTexture("depth texture", width, height, 1, WGPUTextureUsage.RenderAttachment,
 				depthTextureFormat, config.samples, depthTextureFormat );
 
 		// Create the view of the depth texture manipulated by the rasterizer

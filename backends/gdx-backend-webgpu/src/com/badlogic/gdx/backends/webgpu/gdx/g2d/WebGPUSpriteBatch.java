@@ -10,8 +10,10 @@ import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;
 import com.badlogic.gdx.backends.webgpu.wrappers.*;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.utils.Disposable;
 import jnr.ffi.Pointer;
 
 import java.nio.ByteBuffer;
@@ -22,21 +24,22 @@ import java.nio.ShortBuffer;
 /**
  * Class to render textured rectangles in batches.
  */
-public class WebGPUSpriteBatch implements Disposable {
+public class WebGPUSpriteBatch {
 
     //private final static String DEFAULT_SHADER = "shaders/sprite.wgsl";
     private final WebGPUApplication app;
     private final WebGPU_JNI webGPU;
     private final WebGPUShaderProgram specificShader;
     private final int maxSprites;
-    private boolean begun;
+    private boolean drawing;
     private int vertexSize;
     private final FloatBuffer vertexData;     // float buffer view on byte buffer
     private final Pointer vertexDataPtr;      // Pointer wrapped around the byte buffer
     private int numRects;
     private final Color tint;
-    private WebGPUBuffer vertexBuffer;
-    private WebGPUBuffer indexBuffer;
+    private float tintPacked;
+    private WebGPUVertexBuffer vertexBuffer;
+    private WebGPUIndexBuffer indexBuffer;
     private WebGPUUniformBuffer uniformBuffer;
     private final WebGPUBindGroupLayout bindGroupLayout;
     private WebGPUVertexAttributes vertexAttributes;
@@ -45,7 +48,9 @@ public class WebGPUSpriteBatch implements Disposable {
     private final PipelineSpecification pipelineSpec;
     private int uniformBufferSize;
     private WebGPUTexture texture;
-    private final Matrix4 projectionMatrix;
+    private Matrix4 projectionMatrix;
+    private Matrix4 transformMatrix;
+    private Matrix4 combinedMatrix;
     private WebGPURenderPass renderPass;
     private int vbOffset;
     private final PipelineCache pipelines;
@@ -76,7 +81,7 @@ public class WebGPUSpriteBatch implements Disposable {
         this.maxSprites = maxSprites;
         this.specificShader = specificShader;
 
-        begun = false;
+        drawing = false;
 
         vertexAttributes = new WebGPUVertexAttributes(Usage.POSITION_2D|Usage.TEXTURE_COORDINATE|Usage.COLOR_PACKED);
         defaultVertexAttributes = vertexAttributes;
@@ -95,8 +100,8 @@ public class WebGPUSpriteBatch implements Disposable {
         vertexDataPtr = Pointer.wrap(JavaWebGPU.getRuntime(), vertexBB);
 
         projectionMatrix = new Matrix4();
-        projectionMatrix.setToOrtho(0f, Gdx.graphics.getWidth(), 0f, Gdx.graphics.getHeight(), -1f, 1f);
-        setUniforms();
+        transformMatrix = new Matrix4();
+        combinedMatrix = new Matrix4();
 
         tint = new Color(Color.WHITE);
 
@@ -138,6 +143,22 @@ public class WebGPUSpriteBatch implements Disposable {
         tint.set(color);
     }
 
+    public Color getColor() {
+        return tint;
+    }
+
+    //@Override
+    public void setPackedColor (float packedColor) {
+        Color.abgr8888ToColor(tint, packedColor);
+        this.tintPacked = packedColor;
+    }
+
+    //@Override
+    public float getPackedColor () {
+        return tintPacked;
+    }
+
+
     public void enableBlending(){
         if(blendingEnabled)
            return;
@@ -156,8 +177,12 @@ public class WebGPUSpriteBatch implements Disposable {
         setPipeline();
     }
 
+    public boolean isBlendingEnabled(){
+        return blendingEnabled;
+    }
+
     public void setVertexAttributes(WebGPUVertexAttributes vattr){
-        if (!begun) // catch incorrect usage
+        if (!drawing) // catch incorrect usage
             throw new RuntimeException("Call begin() before calling setVertexAttributes().");
         flush();
         vertexAttributes = vattr;
@@ -165,6 +190,9 @@ public class WebGPUSpriteBatch implements Disposable {
         pipelineSpec.vertexAttributes = vattr;
         pipelineSpec.shader = null;     // force recompile of shader
         setPipeline();
+    }
+    public boolean isDrawing () {
+        return drawing;
     }
 
     public void begin(){
@@ -174,11 +202,10 @@ public class WebGPUSpriteBatch implements Disposable {
     public void begin(Color clearColor) {
 
         renderPass = RenderPassBuilder.create(clearColor, app.getConfiguration().samples);
-        //'renderPass = RenderPassBuilder.create("SpriteBatch pass", clearColor,  null, null, null, LibGPU.app.configuration.numSamples, RenderPassType.NO_DEPTH);
 
-        if (begun)
+        if (drawing)
             throw new RuntimeException("Must end() before begin()");
-        begun = true;
+        drawing = true;
         numRects = 0;
         vbOffset = 0;
         vertexData.clear();
@@ -200,10 +227,9 @@ public class WebGPUSpriteBatch implements Disposable {
         pipelineSpec.vertexAttributes = vertexAttributes;
         pipelineSpec.numSamples = app.getConfiguration().samples;
 
-        setUniforms();
-
-        // for testing
-        //wgpu.RenderPassEncoderSetViewport(renderPass, 100, 500, 500, 200, 0, 1);
+        projectionMatrix.setToOrtho(0f, Gdx.graphics.getWidth(), 0f, Gdx.graphics.getHeight(), -1f, 1f);
+        transformMatrix.idt();
+        setupMatrices();
     }
 
     public void flush() {
@@ -221,7 +247,6 @@ public class WebGPUSpriteBatch implements Disposable {
 
         // append new vertex data to GPU vertex buffer
         app.getQueue().writeBuffer(vertexBuffer, vbOffset, vertexDataPtr, numBytes);
-        //webGPU.wgpuQueueWriteBuffer(LibGPU.queue, vertexBuffer.getHandle(), vbOffset, vertexDataPtr, numBytes);
 
         // bind texture
         WebGPUBindGroup bg = makeBindGroup(bindGroupLayout, uniformBuffer, texture);
@@ -233,7 +258,6 @@ public class WebGPUSpriteBatch implements Disposable {
 
         renderPass.setBindGroup( 0, bg.getHandle(), 0, JavaWebGPU.createNullPointer());
 
-        //renderPass.setScissorRect( 20, 20, 500, 500);
 
         renderPass.drawIndexed( numRects*6, 1, 0, 0, 0);
 
@@ -246,9 +270,9 @@ public class WebGPUSpriteBatch implements Disposable {
     }
 
     public void end() {
-        if (!begun) // catch incorrect usage
+        if (!drawing) // catch incorrect usage
             throw new RuntimeException("Cannot end() without begin()");
-        begun = false;
+        drawing = false;
         flush();
         renderPass.end();
         renderPass = null;
@@ -282,23 +306,37 @@ public class WebGPUSpriteBatch implements Disposable {
     }
 
 
-
+    //@Override
     public Matrix4 getProjectionMatrix() {
         return projectionMatrix;
     }
 
-    public void setProjectionMatrix(Matrix4 projection) {
-        if(begun)
-            flush();
-        projectionMatrix.set(projection);
-        setUniforms();
+   // @Override
+    public Matrix4 getTransformMatrix() {
+        return transformMatrix;
     }
 
-    public void draw(WebGPUTexture texture, float x, float y) {
+   // @Override
+    public void setProjectionMatrix(Matrix4 projection) {
+        if(drawing)
+            flush();
+        projectionMatrix.set(projection);
+        setupMatrices();
+    }
+
+  //  @Override
+    public void setTransformMatrix(Matrix4 transform) {
+        if(drawing)
+            flush();
+        transformMatrix.set(transform);
+        setupMatrices();
+    }
+
+    public void draw(Texture texture, float x, float y) {
         draw(texture, x, y, texture.getWidth(), texture.getHeight());
     }
 
-    public void draw(WebGPUTexture texture, float x, float y, float w, float h){
+    public void draw(Texture texture, float x, float y, float w, float h){
         this.draw(texture, x, y, w, h, 0f, 1f, 1f, 0f);
     }
 
@@ -312,8 +350,10 @@ public class WebGPUSpriteBatch implements Disposable {
 //    }
 
 
-    public void draw (WebGPUTexture texture, float x, float y, float width, float height, float u, float v, float u2, float v2) {
-        if (!begun)
+    public void draw (Texture texture, float x, float y, float width, float height, float u, float v, float u2, float v2) {
+        if(!(texture instanceof WebGPUTexture))
+            throw new IllegalArgumentException("texture must be WebGPUTexture");
+        if (!drawing)
             throw new RuntimeException("SpriteBatch: Must call begin() before draw().");
 
         if(numRects == maxSprites)
@@ -321,17 +361,21 @@ public class WebGPUSpriteBatch implements Disposable {
 
         if(texture != this.texture) { // changing texture, need to flush what we have so far
             flush();
-            this.texture = texture;
+            this.texture = (WebGPUTexture)texture;
         }
         addRect(x, y, width, height, u, v, u2, v2);
         numRects++;
     }
 
+
+
     // used by Sprite class
-    public void draw(WebGPUTexture texture, float[] vertices){
+    public void draw(Texture texture, float[] vertices){
+        if(!(texture instanceof WebGPUTexture))
+            throw new IllegalArgumentException("texture must be WebGPUTexture");
         if(vertices.length != 20)
             throw new IllegalArgumentException("SpriteBatch.draw: vertices must have length 20");
-        if (!begun)
+        if (!drawing)
             throw new RuntimeException("SpriteBatch: Must call begin() before draw().");
 
         if(numRects == maxSprites)
@@ -339,7 +383,7 @@ public class WebGPUSpriteBatch implements Disposable {
 
         if(texture != this.texture) { // changing texture, need to flush what we have so far
             flush();
-            this.texture = texture;
+            this.texture = (WebGPUTexture)texture;
         }
         for(int i = 0; i < vertices.length; i++){
             vertexData.put(vertices[i]);
@@ -349,74 +393,50 @@ public class WebGPUSpriteBatch implements Disposable {
 
 
     private void addRect(float x, float y, float w, float h, float u, float v, float u2, float v2) {
+        addVertex(x, y, u, v);
+        addVertex(x, y+h, u, v2);
+        addVertex(x+w, y+h, u2, v2);
+        addVertex(x+w, y, u2, v);
+    }
+
+    private void addVertex(float x, float y, float u, float v) {
         boolean hasColor = vertexAttributes.hasUsage(Usage.COLOR_PACKED);
         boolean hasUV = vertexAttributes.hasUsage(Usage.TEXTURE_COORDINATE);
         float col = tint.toFloatBits();
 
         vertexData.put(x);
         vertexData.put(y);
-        if(hasColor) {
+        if (hasColor) {
             vertexData.put(col);
         }
-        if(hasUV) {
+        if (hasUV) {
             vertexData.put(u);
             vertexData.put(v);
         }
-
-        vertexData.put(x);
-        vertexData.put(y+h);
-        if(hasColor) {
-            vertexData.put(col);
-        }
-        if(hasUV) {
-            vertexData.put(u);
-            vertexData.put(v2);
-        }
-
-
-        vertexData.put(x+w);
-        vertexData.put(y+h);
-        if(hasColor) {
-            vertexData.put(col);
-        }
-        if(hasUV) {
-            vertexData.put(u2);
-            vertexData.put(v2);
-        }
-
-
-        vertexData.put(x+w);
-        vertexData.put(y);
-        if(hasColor) {
-            vertexData.put(col);
-        }
-        if(hasUV) {
-            vertexData.put(u2);
-            vertexData.put(v);
-        }
-
     }
-
 
 
     private void createBuffers() {
 
-        long indexSize = (long) maxSprites * 6 * Short.BYTES;
-        indexSize = (indexSize + 3) & ~3; // round up to the next multiple of 4
+        int indexSize = maxSprites * 6 * Short.BYTES;
 
         // Create vertex buffer and index buffer
-        // todo use VertexBuffer and IndexBuffer
-        vertexBuffer = new WebGPUBuffer("Vertex buffer", WGPUBufferUsage.CopyDst | WGPUBufferUsage.Vertex, (long) maxSprites * 4 * vertexSize);
-        indexBuffer = new WebGPUBuffer("Index buffer", WGPUBufferUsage.CopyDst | WGPUBufferUsage.Index, indexSize);
+        vertexBuffer = new WebGPUVertexBuffer(WGPUBufferUsage.CopyDst | WGPUBufferUsage.Vertex, (long) maxSprites * 4 * vertexSize);
+        indexBuffer = new WebGPUIndexBuffer(WGPUBufferUsage.CopyDst | WGPUBufferUsage.Index, indexSize, Short.BYTES);
 
-        // Create uniform buffer
+        // Create uniform buffer for the projection matrix
         uniformBufferSize = 16 * Float.BYTES;
         uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize,WGPUBufferUsage.CopyDst |WGPUBufferUsage.Uniform  );
     }
 
+    private void setupMatrices(){
+        combinedMatrix.set(projectionMatrix).mul(transformMatrix);
+        setUniforms();
+    }
+
     private void setUniforms(){
         uniformBuffer.beginFill();
-        uniformBuffer.append(projectionMatrix);
+        uniformBuffer.append(combinedMatrix);
         uniformBuffer.endFill();
     }
 
@@ -443,7 +463,7 @@ public class WebGPUSpriteBatch implements Disposable {
     }
 
 
-    @Override
+    //@Override
     public void dispose(){
         pipelines.dispose();
         vertexBuffer.dispose();

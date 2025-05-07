@@ -102,3 +102,28 @@ Perhaps PipelineLayout should be integrated into PipelineSpec.  These are 2 obje
 
 libgdx VertexAttributes uses a String as alias to bind with shader code.  In webgpu we use an integer to bind.
 WebGPU has a vertex format enum that gives type and number of components, e.g. Uint8x4 whereas libgdx uses type (e.g. GL_FLOAT) + numComponents
+
+Got WebGPUSpriteBatch to work to display a texture.  SpriteBatch and Texture are internally very different from the libgdx equivalent.
+
+Should WebGPUSpriteBatch extend SpriteBatch? This way we don't have to copy all the draw methods, setColor, etc.
+
+Also if WebGPUTexture extends Texture we can supply WebGPUTexture as draw parameter (but it would also accept a regular Texture
+which is an error).
+
+In the Vulkan version by Stephan Lebed, a regular Texture is accepted but cast to VulkanTexture, which seems dangerous...
+His VulkanTexture extends Texture.
+Note that his VulkanSpriteBatch implements Batch (i.e. implements all methods).
+
+        @Override
+        public void draw(Texture texture, float[] spriteVertices, int offset, int count) {
+            if (!drawing) throw new IllegalStateException("Batch.begin must be called before draw.");
+
+
+            VulkanTexture vkTexture = (VulkanTexture) texture;
+
+
+WebGPUTexture was brought more in line with Texture by extending Texture.  Uses Pixmap and TextureData.
+The Texture.data member had to be duplicated because it is package private.
+To check if managed textures work and if pixmaps are disposed.
+
+I would like to add a label to each texture, e.g. the source file name to aid with debugging.

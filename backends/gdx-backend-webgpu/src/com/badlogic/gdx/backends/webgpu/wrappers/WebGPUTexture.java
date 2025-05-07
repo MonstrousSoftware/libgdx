@@ -18,69 +18,57 @@ package com.badlogic.gdx.backends.webgpu.wrappers;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.webgpu.WebGPUApplication;
-import com.badlogic.gdx.backends.webgpu.gdx.WebGPUPixmapInfo;
+import com.badlogic.gdx.backends.webgpu.gdx.g2d.WebGPUTextureData;
 import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;
 import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.utils.Disposable;
+import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.glutils.PixmapTextureData;
 import jnr.ffi.Pointer;
-
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.ShortBuffer;
 
 
-public class WebGPUTexture implements Disposable {
-    private WebGPUApplication app = (WebGPUApplication) Gdx.app;
+
+public class WebGPUTexture extends Texture {
+    private final WebGPUApplication app = (WebGPUApplication) Gdx.app;
     private final WebGPU_JNI webGPU =  app.getWebGPU();
-    protected int width;
-    protected int height;
     protected int mipLevelCount;
-    private Pointer image;
     private Pointer texture;
     private WebGPUTextureView textureView;
     private Pointer sampler;
     protected WGPUTextureFormat format;
     protected String label;
     private int numSamples;
+    protected TextureData data; // cannot access data of Texture which is package private
 
-    public WebGPUTexture(){
-    }
+    public WebGPUTexture(String label,int width, int height, boolean mipMapping, boolean renderAttachment, WGPUTextureFormat format, int numSamples ) {
+        this.data = new WebGPUTextureData(width, height, 0, 0, 0);
+        this.label = label;
 
-    public WebGPUTexture(int width, int height){
-        this(width, height, true, false, WGPUTextureFormat.RGBA8Unorm, 1);
-    }
-
-    public WebGPUTexture(int width, int height, boolean mipMapping, boolean renderAttachment, WGPUTextureFormat format, int numSamples ) {
-
-        this.width = width;
-        this.height = height;
-        mipLevelCount = mipMapping ? Math.max(1, bitWidth(Math.max(width, height))) : 1;
         this.numSamples = numSamples;
         int textureUsage = WGPUTextureUsage.TextureBinding | WGPUTextureUsage.CopyDst;
         if (renderAttachment)
             textureUsage |= (WGPUTextureUsage.RenderAttachment | WGPUTextureUsage.CopySrc);    // todo COPY_SRC is temp
-        create( "texture", mipLevelCount, textureUsage, format, 1, numSamples, null);
+        create( label, mipLevelCount, textureUsage, format, 1, numSamples, null);
     }
 
-    public WebGPUTexture(int width, int height, int mipLevelCount, int textureUsage, WGPUTextureFormat format, int numSamples ) {
-        this.width = width;
-        this.height = height;
+    public WebGPUTexture(String label,int width, int height, int mipLevelCount, int textureUsage, WGPUTextureFormat format, int numSamples ) {
+        this.data = new WebGPUTextureData(width, height, 0, 0, 0);
+        this.label = label;
         this.numSamples = numSamples;
         this.mipLevelCount = mipLevelCount;
         this.format = format;
 
-        create( "texture", mipLevelCount, textureUsage, format, 1, numSamples, null);
+        create( label, mipLevelCount, textureUsage, format, 1, numSamples, null);
     }
 
-    public WebGPUTexture(int width, int height, int mipLevelCount, int textureUsage, WGPUTextureFormat format, int numSamples, WGPUTextureFormat viewFormat ) {
-        this.width = width;
-        this.height = height;
+    public WebGPUTexture(String label, int width, int height, int mipLevelCount, int textureUsage, WGPUTextureFormat format, int numSamples, WGPUTextureFormat viewFormat ) {
+        this.data = new WebGPUTextureData(width, height, 0, 0, 0);
+        this.label = label;
         this.numSamples = numSamples;
         this.mipLevelCount = mipLevelCount;
         this.format = format;
-        create( "texture", mipLevelCount, textureUsage, format, 1, numSamples, viewFormat);
+        create( label, mipLevelCount, textureUsage, format, 1, numSamples, viewFormat);
     }
 
     /*
@@ -95,48 +83,78 @@ public class WebGPUTexture implements Disposable {
         this(Gdx.files.internal(fileName), mipMapping);
     }
 
-    public WebGPUTexture(FileHandle file, boolean mipMapping ){
-        byte[] byteArray = file.readBytes();
-        loadFileData(byteArray, file.name(), mipMapping);
+
+    public WebGPUTexture (FileHandle file) {
+        this(file, Pixmap.Format.RGBA8888, false);
     }
 
-    /** byte array contains full file content, i.e. including file header */
-    public WebGPUTexture(byte[] byteArray, String name, boolean mipMapping) {
-        loadFileData(byteArray, name, mipMapping);
+    public WebGPUTexture (FileHandle file, boolean useMipMaps) {
+        this(file, Pixmap.Format.RGBA8888, useMipMaps);
     }
 
-    public void loadFileData(byte[] byteArray, String name, boolean mipMapping) {
+    public WebGPUTexture (FileHandle file, Pixmap.Format format, boolean useMipMaps) {
+        this(TextureData.Factory.loadFromFile(file, format, useMipMaps), file.name());
+    }
 
-        Pointer data = JavaWebGPU.createByteArrayPointer(byteArray);
-        image = JavaWebGPU.getUtils().gdx2d_load(data, byteArray.length);        // use native function to parse image file
+    public WebGPUTexture (Pixmap pixmap) {
+        this(pixmap, "pixmap");
+    }
 
-        WebGPUPixmapInfo info = WebGPUPixmapInfo.createAt(image);
-        this.width = info.width.intValue();
-        this.height = info.height.intValue();
-        int channelsInFile = info.format.intValue();    // gdx2d_load will convert to RGBA, this value gives the original #channels in the file, e.g. 3 for RGB
-        Pointer pixelPtr = info.pixels.get();
-        format = WGPUTextureFormat.RGBA8Unorm;
+    public WebGPUTexture (Pixmap pixmap, String label) {
+        this(new PixmapTextureData(pixmap, null, false, false), label);
+    }
 
-        mipLevelCount = mipMapping ? Math.max(1, bitWidth(Math.max(width, height))) : 1;
+
+    public WebGPUTexture(TextureData data, String label) {
+        load(data, label);
+    }
+
+    public void load (TextureData data, String label) {
+        this.data = data;
+        this.label = label;
+
+        if (!data.isPrepared()) data.prepare();
+
+        uploadImageData(data);
+
+    }
+
+    private void uploadImageData( TextureData data ){
+        mipLevelCount = data.useMipMaps() ? Math.max(1, bitWidth(Math.max(data.getWidth(), data.getHeight()))) : 1;
         numSamples = 1;
+        format = WGPUTextureFormat.RGBA8Unorm; // assumption
         int textureUsage = WGPUTextureUsage.TextureBinding | WGPUTextureUsage.CopyDst;
-        create( name, mipLevelCount, textureUsage, format, 1, numSamples, null);
-        load(pixelPtr, 0);
+        create( label, mipLevelCount, textureUsage, format, 1, numSamples, null);
+        Pixmap pixmap = data.consumePixmap();
+
+
+        if (data.getFormat() != pixmap.getFormat()) {
+            Pixmap tmp = new Pixmap(pixmap.getWidth(), pixmap.getHeight(), data.getFormat());
+            tmp.setBlending(Pixmap.Blending.None);
+            tmp.drawPixmap(pixmap, 0, 0, 0, 0, pixmap.getWidth(), pixmap.getHeight());
+            if (data.disposePixmap()) {
+                pixmap.dispose();
+            }
+            pixmap = tmp;
+            //disposePixmap = true;
+        }
+
+        load(pixmap.getPixels(), 0);
     }
 
 
-
-
-
-
-
-
-    public int getWidth() {
-        return width;
+    @Override
+    public int getWidth () {
+        return data.getWidth();
     }
 
-    public int getHeight() {
-        return height;
+    @Override
+    public int getHeight () {
+        return data.getHeight();
+    }
+
+    public TextureData getTextureData () {
+        return data;
     }
 
     public int getMipLevelCount() {
@@ -192,8 +210,8 @@ public class WebGPUTexture implements Disposable {
         textureDesc.setFormat(format);
         textureDesc.setMipLevelCount(mipLevelCount);
         textureDesc.setSampleCount(numSamples);
-        textureDesc.getSize().setWidth(width);
-        textureDesc.getSize().setHeight(height);
+        textureDesc.getSize().setWidth(data.getWidth());
+        textureDesc.getSize().setHeight(data.getHeight());
         textureDesc.getSize().setDepthOrArrayLayers(numLayers);
         textureDesc.setUsage(textureUsage);
         if (viewFormat == null) {
@@ -236,207 +254,6 @@ public class WebGPUTexture implements Disposable {
 
     }
 
-    public void fill(Color color) {
-        // Arguments telling which part of the texture we upload to
-        // (together with the last argument of writeTexture)
-        WGPUImageCopyTexture destination = WGPUImageCopyTexture.createDirect();
-        destination.setTexture(texture);
-        destination.setMipLevel(0);
-        destination.getOrigin().setX(0);
-        destination.getOrigin().setY(0);
-        destination.getOrigin().setZ(0);
-        destination.setAspect(WGPUTextureAspect.All);   // not relevant
-
-        // Arguments telling how the C++ side pixel memory is laid out
-        WGPUTextureDataLayout source = WGPUTextureDataLayout.createDirect();
-        source.setOffset(0);
-        source.setBytesPerRow(4 * width);
-        source.setRowsPerImage(height);
-
-        byte[] pixels = new byte[4 * width * height];
-        byte r = (byte) (color.r * 255);
-        byte g = (byte) (color.g * 255);
-        byte b = (byte) (color.b * 255);
-        byte a = (byte) (color.a * 255);
-
-        int offset = 0;
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                pixels[offset++] = r;
-                pixels[offset++] = g;
-                pixels[offset++] = b;
-                pixels[offset++] = a;
-            }
-        }
-
-        Pointer pixelPtr = JavaWebGPU.createByteArrayPointer(pixels);
-
-        WGPUExtent3D ext = WGPUExtent3D.createDirect();
-        ext.setWidth(width);
-        ext.setHeight(height);
-        ext.setDepthOrArrayLayers(1);
-
-        destination.setMipLevel(0);
-
-        // N.B. using textureDesc.getSize() for param won't work!
-        webGPU.wgpuQueueWriteTexture(app.getQueue().getHandle(), destination, pixelPtr, width * height * 4, source, ext);
-   }
-
-    /** fill textures using bytes arranged as r, g, b, a, r, g, b, a, etc.
-     * Size of buffer must be 4*width*height
-     * */
-    public void fill(byte[] pixels) {
-        if(pixels.length != 4*width*height) throw new IllegalArgumentException("Texture.fill(): byte array is wrong size.");
-        // Arguments telling which part of the texture we upload to
-        // (together with the last argument of writeTexture)
-        WGPUImageCopyTexture destination = WGPUImageCopyTexture.createDirect();
-        destination.setTexture(texture);
-        destination.setMipLevel(0);
-        destination.getOrigin().setX(0);
-        destination.getOrigin().setY(0);
-        destination.getOrigin().setZ(0);
-        destination.setAspect(WGPUTextureAspect.All);   // not relevant
-
-        // Arguments telling how the C++ side pixel memory is laid out
-        WGPUTextureDataLayout source = WGPUTextureDataLayout.createDirect();
-        source.setOffset(0);
-        source.setBytesPerRow(4 * width);
-        source.setRowsPerImage(height);
-
-        Pointer pixelPtr = JavaWebGPU.createByteArrayPointer(pixels);
-
-        WGPUExtent3D ext = WGPUExtent3D.createDirect();
-        ext.setWidth(width);
-        ext.setHeight(height);
-        ext.setDepthOrArrayLayers(1);
-
-        destination.setMipLevel(0);
-
-        // N.B. using textureDesc.getSize() for param won't work!
-        webGPU.wgpuQueueWriteTexture(app.getQueue().getHandle(), destination, pixelPtr, width * height * 4, source, ext);
-    }
-
-
-    /** fill textures using half-floats masquerading as shorts arranged as r, g, b, a, r, g, b, a, etc.
-     * format RBGAFloat16
-     * Size of buffer must be 4*width*height
-     * */
-    public void fill(short[] pixels) {
-        if(pixels.length != 4*width*height) throw new IllegalArgumentException("Texture.fill(): array is wrong size.");
-        if(format != WGPUTextureFormat.RGBA16Float) throw new IllegalArgumentException("Texture.fill(): expected RGBA16Float texture.");
-        // Arguments telling which part of the texture we upload to
-        // (together with the last argument of writeTexture)
-        WGPUImageCopyTexture destination = WGPUImageCopyTexture.createDirect();
-        destination.setTexture(texture);
-        destination.setMipLevel(0);
-        destination.getOrigin().setX(0);
-        destination.getOrigin().setY(0);
-        destination.getOrigin().setZ(0);
-        destination.setAspect(WGPUTextureAspect.All);   // not relevant
-
-        // Arguments telling how the C++ side pixel memory is laid out
-        WGPUTextureDataLayout source = WGPUTextureDataLayout.createDirect();
-        source.setOffset(0);
-        source.setBytesPerRow(4 * width*2);
-        source.setRowsPerImage(height);
-
-        ByteBuffer bb = ByteBuffer.allocateDirect(8*width*height);
-        bb.order( ByteOrder.LITTLE_ENDIAN);
-        ShortBuffer sb = bb.asShortBuffer();
-        sb.put(pixels);
-        Pointer pixelPtr = JavaWebGPU.createByteBufferPointer(bb);
-
-        WGPUExtent3D ext = WGPUExtent3D.createDirect();
-        ext.setWidth(width);
-        ext.setHeight(height);
-        ext.setDepthOrArrayLayers(1);
-
-        destination.setMipLevel(0);
-
-        // N.B. using textureDesc.getSize() for param won't work!
-        webGPU.wgpuQueueWriteTexture(app.getQueue().getHandle(), destination, pixelPtr, width * height * 8, source, ext);
-    }
-
-    /** fill textures using floats arranged as r, g, b, a, r, g, b, a, etc.
-     * Size of buffer must be 4*width*height
-     * Allows for HDR textures.
-     * */
-    public void fill(float[] pixels) {
-        if(pixels.length != 4*width*height) throw new IllegalArgumentException("Texture.fill(): float array is wrong size.");
-        // Arguments telling which part of the texture we upload to
-        // (together with the last argument of writeTexture)
-        WGPUImageCopyTexture destination = WGPUImageCopyTexture.createDirect();
-        destination.setTexture(texture);
-        destination.setMipLevel(0);
-        destination.getOrigin().setX(0);
-        destination.getOrigin().setY(0);
-        destination.getOrigin().setZ(0);
-        destination.setAspect(WGPUTextureAspect.All);   // not relevant
-
-        // Arguments telling how the C++ side pixel memory is laid out
-        WGPUTextureDataLayout source = WGPUTextureDataLayout.createDirect();
-        source.setOffset(0);
-        source.setBytesPerRow(4L * width*Float.BYTES);
-        source.setRowsPerImage(height);
-
-        Pointer pixelPtr = JavaWebGPU.createFloatArrayPointer(pixels);
-
-        WGPUExtent3D ext = WGPUExtent3D.createDirect();
-        ext.setWidth(width);
-        ext.setHeight(height);
-        ext.setDepthOrArrayLayers(1);
-
-        destination.setMipLevel(0);
-
-        // N.B. using textureDesc.getSize() for param won't work!
-        webGPU.wgpuQueueWriteTexture(app.getQueue().getHandle(), destination, pixelPtr, width * height * 4L*Float.BYTES, source, ext);
-    }
-
-    public void fillHDR(Color color) {
-        // Arguments telling which part of the texture we upload to
-        // (together with the last argument of writeTexture)
-        WGPUImageCopyTexture destination = WGPUImageCopyTexture.createDirect();
-        destination.setTexture(texture);
-        destination.setMipLevel(0);
-        destination.getOrigin().setX(0);
-        destination.getOrigin().setY(0);
-        destination.getOrigin().setZ(0);
-        destination.setAspect(WGPUTextureAspect.All);   // not relevant
-
-        // Arguments telling how the C++ side pixel memory is laid out
-        WGPUTextureDataLayout source = WGPUTextureDataLayout.createDirect();
-        source.setOffset(0);
-        source.setBytesPerRow(16 * width);
-        source.setRowsPerImage(height);
-
-        float[] pixels = new float[4 * width * height];
-//        byte r = (byte) (color.r * 255);
-//        byte g = (byte) (color.g * 255);
-//        byte b = (byte) (color.b * 255);
-//        byte a = (byte) (color.a * 255);
-
-        int offset = 0;
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                pixels[offset++] = 0; //color.r;
-                pixels[offset++] = 0; //color.g;
-                pixels[offset++] = 0; //color.b;
-                pixels[offset++] = 0; //color.a;
-            }
-        }
-
-        Pointer pixelPtr = JavaWebGPU.createFloatArrayPointer(pixels);
-
-        WGPUExtent3D ext = WGPUExtent3D.createDirect();
-        ext.setWidth(width);
-        ext.setHeight(height);
-        ext.setDepthOrArrayLayers(1);
-
-        destination.setMipLevel(0);
-
-        // N.B. using textureDesc.getSize() for param won't work!
-        webGPU.wgpuQueueWriteTexture(app.getQueue().getHandle(), destination, pixelPtr, (long) width * height * 4*4, source, ext);
-    }
 
 
     /** Load pixel data into texture.
@@ -444,7 +261,7 @@ public class WebGPUTexture implements Disposable {
      * @param pixelPtr
      * @param layer which layer to load in case of a 3d texture, otherwise 0
      */
-    public void load(Pointer pixelPtr, int layer) {
+    public void load(ByteBuffer pixelPtr, int layer) {
 
         // Arguments telling which part of the texture we upload to
         // (together with the last argument of writeTexture)
@@ -459,14 +276,14 @@ public class WebGPUTexture implements Disposable {
         // Arguments telling how the C++ side pixel memory is laid out
         WGPUTextureDataLayout source = WGPUTextureDataLayout.createDirect();
         source.setOffset(0);
-        source.setBytesPerRow(4*width);
-        source.setRowsPerImage(height);
+        source.setBytesPerRow(4L *data.getWidth());
+        source.setRowsPerImage( data.getHeight());
 
         // Generate mipmap levels
         // candidate for compute shader
 
-        int mipLevelWidth = width;
-        int mipLevelHeight = height;
+        int mipLevelWidth = data.getWidth();
+        int mipLevelHeight = data.getHeight();
         int numComponents = numComponents(format);
 
         WGPUExtent3D ext = WGPUExtent3D.createDirect();
@@ -478,7 +295,8 @@ public class WebGPUTexture implements Disposable {
 
             if(mipLevel == 0){
                 // fast copy for most common case: mip level 0
-                pixelPtr.get(0, pixels, 0, numComponents * mipLevelWidth * mipLevelHeight);
+                pixelPtr.position(0);
+                pixelPtr.get(pixels, 0, numComponents * mipLevelWidth * mipLevelHeight);
             }
             else {
                 // todo with compute shader
@@ -510,21 +328,24 @@ public class WebGPUTexture implements Disposable {
             destination.setMipLevel(mipLevel);
             destination.getOrigin().setZ(layer);
 
-            source.setBytesPerRow(4*mipLevelWidth);
+            source.setBytesPerRow(4L *mipLevelWidth);
             source.setRowsPerImage(mipLevelHeight);
 
             ext.setWidth(mipLevelWidth);
             ext.setHeight(mipLevelHeight);
             ext.setDepthOrArrayLayers(1);
 
+            pixelPtr.position(0);
+            Pointer pp = JavaWebGPU.createByteBufferPointer(pixelPtr);  // convert ByteBuffer to Pointer
+
             if(mipLevel == 0){
-                webGPU.wgpuQueueWriteTexture(app.getQueue().getHandle(), destination, pixelPtr, mipLevelWidth * mipLevelHeight * 4, source, ext);
+                webGPU.wgpuQueueWriteTexture(app.getQueue().getHandle(), destination, pp, (long) mipLevelWidth * mipLevelHeight * 4, source, ext);
             } else {
 
                 // wrap byte array in native pointer
                 Pointer pixelData = JavaWebGPU.createByteArrayPointer(pixels);
                 // N.B. using textureDesc.getSize() for param won't work!
-                webGPU.wgpuQueueWriteTexture(app.getQueue().getHandle(), destination, pixelData, mipLevelWidth * mipLevelHeight * 4, source, ext);
+                webGPU.wgpuQueueWriteTexture(app.getQueue().getHandle(), destination, pixelData, (long) mipLevelWidth * mipLevelHeight * 4, source, ext);
             }
 
             mipLevelWidth /= 2;
@@ -535,13 +356,7 @@ public class WebGPUTexture implements Disposable {
 
     /** Load image data into a specific layer and mip level
      *
-     * @param info
-     * @param layer
-     * @param mipLevel
      */
-//    protected void loadMipLevel(PixmapInfo info, int layer, int mipLevel) {
-//        loadMipLevel(info.pixels.get(), info.width.intValue(), info.height.intValue(), layer, mipLevel);
-//    }
 
     protected void loadMipLevel(Pointer data, int width, int height, int layer, int mipLevel) {
 
@@ -558,7 +373,7 @@ public class WebGPUTexture implements Disposable {
         // Arguments telling how the C++ side pixel memory is laid out
         WGPUTextureDataLayout source = WGPUTextureDataLayout.createDirect();
         source.setOffset(0);
-        source.setBytesPerRow(4*width);
+        source.setBytesPerRow(4L *width);
         source.setRowsPerImage(height);
 
         WGPUExtent3D ext = WGPUExtent3D.createDirect();
@@ -570,57 +385,6 @@ public class WebGPUTexture implements Disposable {
     }
 
 
-
-    // load HDR image (RBGA16Float), no mip mapping, no layers
-    protected void loadHDR(Pointer pixelPtr) {
-
-        // Arguments telling which part of the texture we upload to
-        // (together with the last argument of writeTexture)
-        WGPUImageCopyTexture destination = WGPUImageCopyTexture.createDirect();
-        destination.setTexture(texture);
-        destination.setMipLevel(0);
-        destination.getOrigin().setX(0);
-        destination.getOrigin().setY(0);
-        destination.getOrigin().setZ(0);
-        destination.setAspect(WGPUTextureAspect.All);   // not relevant
-
-        // Arguments telling how the C++ side pixel memory is laid out
-        WGPUTextureDataLayout source = WGPUTextureDataLayout.createDirect();
-        source.setOffset(0);
-        source.setBytesPerRow(2*4*width);   // 2 bytes per component
-        source.setRowsPerImage(height);
-
-
-        WGPUExtent3D ext = WGPUExtent3D.createDirect();
-
-        float[] pixels = new float[4 * width * height];
-
-        int offset = 0;
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                pixels[offset] = pixelPtr.getFloat(offset);  offset++;
-                pixels[offset] = pixelPtr.getFloat(offset);  offset++;
-                pixels[offset] = pixelPtr.getFloat(offset);  offset++;
-                pixels[offset] = pixelPtr.getFloat(offset);  offset++;
-            }
-        }
-
-        destination.setMipLevel(0);
-        destination.getOrigin().setZ(0);
-
-        source.setBytesPerRow(2*4*width);
-        source.setRowsPerImage(height);
-
-        ext.setWidth(width);
-        ext.setHeight(height);
-        ext.setDepthOrArrayLayers(1);
-
-        // wrap byte array in native pointer
-        Pointer pixelData = JavaWebGPU.createFloatArrayPointer(pixels);
-        // N.B. using textureDesc.getSize() for param won't work!
-        webGPU.wgpuQueueWriteTexture(app.getQueue().getHandle(), destination, pixelData, width * height * 8, source, ext);
-
-    }
 
 
     private static int toUnsignedInt(byte x) {
@@ -643,20 +407,17 @@ public class WebGPUTexture implements Disposable {
 
     @Override
     public void dispose(){
-        if(image != null) {
-            //System.out.println("free: "+image);
-            JavaWebGPU.getUtils().gdx2d_free(image);
-            image = null;
-        }
+
         if(texture != null) {   // guard against double dispose
-            //System.out.println("Destroy texture " + label);
+            System.out.println("Destroy texture " + label);
             // todo released when?
             //LibGPU.webGPU.wgpuSamplerRelease(sampler);
             textureView.dispose();
-            //LibGPU.webGPU.wgpuTextureViewRelease(textureView);
+
             webGPU.wgpuTextureDestroy(texture);
             webGPU.wgpuTextureRelease(texture);
             texture = null;
         }
+        super.dispose();
     }
 }

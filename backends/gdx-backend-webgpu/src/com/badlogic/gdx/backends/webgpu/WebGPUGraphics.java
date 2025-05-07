@@ -85,7 +85,7 @@ public class WebGPUGraphics extends AbstractGraphics implements Disposable {
 				if(app.getConfiguration().samples > 1 ) {
 					if(multiSamplingTexture != null)
 						multiSamplingTexture.dispose();
-					multiSamplingTexture = new WebGPUTexture(width, height, false, true, app.getSurfaceFormat(), app.getConfiguration().samples);
+					multiSamplingTexture = new WebGPUTexture("multisampling", width, height, false, true, app.getSurfaceFormat(), app.getConfiguration().samples);
 				}
 			} else {
 				window.asyncResized = true;
@@ -119,7 +119,7 @@ public class WebGPUGraphics extends AbstractGraphics implements Disposable {
 
 		WebGPUApplication app = (WebGPUApplication) Gdx.app;
 		if(app.getConfiguration().samples > 1 ) {
-			multiSamplingTexture = new WebGPUTexture(getWidth(), getHeight(), false, true, app.getSurfaceFormat(), app.getConfiguration().samples);
+			multiSamplingTexture = new WebGPUTexture("multisampling", getWidth(), getHeight(), false, true, app.getSurfaceFormat(), app.getConfiguration().samples);
 		}
 		// initiateGL();
 		GLFW.glfwSetFramebufferSizeCallback(window.getWindowHandle(), resizeCallback);
