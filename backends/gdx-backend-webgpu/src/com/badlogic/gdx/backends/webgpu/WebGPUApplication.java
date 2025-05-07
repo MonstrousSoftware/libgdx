@@ -443,9 +443,11 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 
 	private WebGPUWindow createWindow (final WebGPUApplicationConfiguration config, ApplicationListener listener) {
 		final WebGPUWindow window = new WebGPUWindow(listener, lifecycleListeners, config, this);
+		WebGPUWindow save = currentWindow;
 		currentWindow = window;
 		createWindow(window, config);
 		windows.add(window);
+		currentWindow = save;
 		return window;
 	}
 

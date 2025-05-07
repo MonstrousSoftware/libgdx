@@ -18,6 +18,7 @@ package com.badlogic.gdx.backends.webgpu.wrappers;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.webgpu.WebGPUApplication;
+import com.badlogic.gdx.backends.webgpu.gdx.WebGPUPixmapInfo;
 import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;
 import com.badlogic.gdx.files.FileHandle;
@@ -91,12 +92,12 @@ public class WebGPUTexture implements Disposable {
     }
 
     public WebGPUTexture(String fileName, boolean mipMapping) {
-        //this(Files.internal(fileName), mipMapping);
+        this(Gdx.files.internal(fileName), mipMapping);
     }
 
     public WebGPUTexture(FileHandle file, boolean mipMapping ){
-//        byte[] byteArray = file.readAllBytes();
-//        loadFileData(byteArray, file.file.getName(), mipMapping);
+        byte[] byteArray = file.readBytes();
+        loadFileData(byteArray, file.name(), mipMapping);
     }
 
     /** byte array contains full file content, i.e. including file header */
@@ -105,22 +106,22 @@ public class WebGPUTexture implements Disposable {
     }
 
     public void loadFileData(byte[] byteArray, String name, boolean mipMapping) {
-        // todo
-//        Pointer data = JavaWebGPU.createByteArrayPointer(byteArray);
-//        image = JavaWebGPU.getUtils().gdx2d_load(data, byteArray.length);        // use native function to parse image file
-//
-//        PixmapInfo info = PixmapInfo.createAt(image);
-//        this.width = info.width.intValue();
-//        this.height = info.height.intValue();
-//        int channelsInFile = info.format.intValue();    // gdx2d_load will convert to RGBA, this value gives the original #channels in the file, e.g. 3 for RGB
-//        Pointer pixelPtr = info.pixels.get();
-//        format = WGPUTextureFormat.RGBA8Unorm;
-//
-//        mipLevelCount = mipMapping ? Math.max(1, bitWidth(Math.max(width, height))) : 1;
-//        numSamples = 1;
-//        int textureUsage = WGPUTextureUsage.TextureBinding | WGPUTextureUsage.CopyDst;
-//        create( name, mipLevelCount, textureUsage, format, 1, numSamples, null);
-//        load(pixelPtr, 0);
+
+        Pointer data = JavaWebGPU.createByteArrayPointer(byteArray);
+        image = JavaWebGPU.getUtils().gdx2d_load(data, byteArray.length);        // use native function to parse image file
+
+        WebGPUPixmapInfo info = WebGPUPixmapInfo.createAt(image);
+        this.width = info.width.intValue();
+        this.height = info.height.intValue();
+        int channelsInFile = info.format.intValue();    // gdx2d_load will convert to RGBA, this value gives the original #channels in the file, e.g. 3 for RGB
+        Pointer pixelPtr = info.pixels.get();
+        format = WGPUTextureFormat.RGBA8Unorm;
+
+        mipLevelCount = mipMapping ? Math.max(1, bitWidth(Math.max(width, height))) : 1;
+        numSamples = 1;
+        int textureUsage = WGPUTextureUsage.TextureBinding | WGPUTextureUsage.CopyDst;
+        create( name, mipLevelCount, textureUsage, format, 1, numSamples, null);
+        load(pixelPtr, 0);
     }
 
 
@@ -648,7 +649,7 @@ public class WebGPUTexture implements Disposable {
             image = null;
         }
         if(texture != null) {   // guard against double dispose
-            System.out.println("Destroy texture " + label);
+            //System.out.println("Destroy texture " + label);
             // todo released when?
             //LibGPU.webGPU.wgpuSamplerRelease(sampler);
             textureView.dispose();

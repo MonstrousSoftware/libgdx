@@ -638,6 +638,10 @@ public class WebGPUWindow implements Disposable {
 
 		commandEncoder = new WebGPUCommandEncoder(device);
 
+		if(application.getCommandEncoder() != commandEncoder){
+			System.out.println("******* currentWindow not pointing to this window ******");
+		}
+
 
 		listener.render();	// call user code
 

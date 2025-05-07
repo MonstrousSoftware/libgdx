@@ -71,8 +71,34 @@ VertexAttributes is reinvented. To be aligned.
 
 Added depth texture to Window. Applcation exports textureview and textureformat (needed to build render pass).
 
-Strange bug: when creating a child window the listener.render() gets called before encoder is created.
-In Application, currentWindow and window variables are somehow different.
-Maybe because newWindow is called async from a mouse event, while the loop is iterating. (newWindow affects currentWindow, because
-the window constructor needs it to point to the window under construction).
+07/05:
+Many classes need access to the webGPU instance and the app instance (because this gives access to device, queue, etc.)
+(app instance actually relies on current Window).  So many classes include the following type of code:
 
+        public class WebGPUBindGroup implements Disposable {
+            private final WebGPUApplication app;
+            private final WebGPU_JNI webGPU;
+
+
+            public WebGPUBindGroup(WebGPUBindGroupLayout layout) {
+                app = (WebGPUApplication) Gdx.app;
+                webGPU = app.getWebGPU();
+                ...
+            }
+        }
+
+This is the equivalent of libgdx code using Gdx.gl and Gdx.app but unfortunately more wordy (since we don't want to modify Gdx itself).
+
+Perhaps we should put the WebGPU context in Graphics rather than Window, then we can use:
+    WebGPUGraphics gfx = (WebGPUGraphics)Gdx.graphics;
+    WebGPU_JNI webGPU = gfx.getWebGPU();
+    gfx.getDevice()
+    gfx.getQueue() etc.
+
+Still just as wordy, but more logical.
+
+
+Perhaps PipelineLayout should be integrated into PipelineSpec.  These are 2 objects required to create or find a pipeline.
+
+libgdx VertexAttributes uses a String as alias to bind with shader code.  In webgpu we use an integer to bind.
+WebGPU has a vertex format enum that gives type and number of components, e.g. Uint8x4 whereas libgdx uses type (e.g. GL_FLOAT) + numComponents
