@@ -420,4 +420,16 @@ public class WebGPUTexture extends Texture {
         }
         super.dispose();
     }
+
+    // override these methods to avoid drop to GL functions
+
+    @Override
+    public void setFilter(TextureFilter minFilter, TextureFilter magFilter){
+        // ignored
+    }
+
+    @Override
+    public void setWrap (TextureWrap u, TextureWrap v){
+        // ignored
+    }
 }

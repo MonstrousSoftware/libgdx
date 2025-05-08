@@ -61,7 +61,7 @@ public class WebGPUSpriteBatch implements Batch {
     private int vbOffset;
     private final PipelineCache pipelines;
     private WebGPUPipeline prevPipeline;
-    public int maxSpritesInBatch;
+    public int maxFillLevel;    // most nr of sprites in the batch over its lifetime
     public int renderCalls;
     public int pipelineCount;
     private float invTexWidth;
@@ -295,7 +295,7 @@ public class WebGPUSpriteBatch implements Batch {
         vertexData.clear();
         vertexAttributes = defaultVertexAttributes;
         vertexSize = vertexAttributes.getVertexSizeInBytes(); // bytes
-        maxSpritesInBatch = 0;
+        maxFillLevel = 0;
         renderCalls = 0;
 
         prevPipeline = null;
@@ -328,8 +328,8 @@ public class WebGPUSpriteBatch implements Batch {
     public void flush() {
         if(numRects == 0)
             return;
-        if(numRects > maxSpritesInBatch)
-            maxSpritesInBatch = numRects;
+        if(numRects > maxFillLevel)
+            maxFillLevel = numRects;
         renderCalls++;
 
         setPipeline();

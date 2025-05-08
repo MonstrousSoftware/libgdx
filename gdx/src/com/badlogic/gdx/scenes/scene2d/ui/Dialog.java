@@ -116,7 +116,7 @@ public class Dialog extends Window {
 		};
 	}
 
-	protected void setStage (Stage stage) {
+	public void setStage (Stage stage) {		// MM
 		if (stage == null)
 			addListener(focusListener);
 		else

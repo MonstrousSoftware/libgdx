@@ -140,6 +140,7 @@ the WebGPUSpriteBatch is compatible with Batch.
 - whereas the libgdx SpriteBatch can handle more sprites than fit in the vertex buffer by flushing and restarting, this does not work
 for WebGPU as the buffer cannot be reused after each draw call but needs to be maintained until the end of the frame.
 If there are too many sprites an exception is thrown. In such a case, use a larger number in the sprite batch constructor.
+(Another option would be to silently discard the last rectangles.)
 
 TextureRegion
 -------------
@@ -154,6 +155,31 @@ BitmapFont
 Had to be copied to WebGPUBitmapFont because it calls new Texture which should be new WebGPUTexture. (line 134)
 Glyph subclass is used from the original.
 This also means BitmapFontCache and GlyphLayout need to be copied because of type changes from BitmapFont to WebGPUBitmapFont.
-Unfortunately , that's a lot of duplicated lines for a few trivial changes.
+Unfortunately , that's a lot of duplicated lines for a few trivial changes. But it now works.
+
+
+Stage
+-----
+Made WebGPUStage to extend Stage.
+Calls Group.setStage which is package private, idem for Actor.setParent().
+Made a few changes in core to make methods public, marked with // MM comment.
+
+Alternative approach: call Stage but supply viewport and batch.
+
+Viewport: troublemaker is line 49: 		HdpiUtils.glViewport(screenX, screenY, screenWidth, screenHeight);
+Use WebGPUViewport which overrides apply().
+The other viewport types need to derive from WebGPUViewport.
+
+TextureAtlas: contains new Texture in the load method.  Tried to extend TextureAtlas and just replace load()
+but many textures and regions are private.
+
+Stage now works and different Scene2d UI elements.
+
+Core changes (access modified):
+Actor.java  	    355 public void setParent (@Null Group parent) {
+Dialog.java         119 public void setStage (Stage stage)
+Group.java          403 public void setStage (Stage stage)
+SelectBox.java      591 public void setStage
+
 
 
