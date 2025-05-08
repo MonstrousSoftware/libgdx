@@ -1126,4 +1126,5 @@ public class SpriteBatch implements Batch {
 	public boolean isDrawing () {
 		return drawing;
 	}
+
 }

@@ -44,6 +44,7 @@ public class PipelineSpecification {
     public boolean afterDepthPrepass;
     public int numSamples;
 
+    public boolean blendingEnabled;
     public WGPUBlendFactor blendSrcColor;
     public WGPUBlendFactor blendDstColor;
     public WGPUBlendOperation blendOpColor;
@@ -61,6 +62,9 @@ public class PipelineSpecification {
         this.name = "pipeline";
         enableDepthTest();
         noDepthAttachment = false;
+        blendOpColor = WGPUBlendOperation.Add;
+        blendOpAlpha = WGPUBlendOperation.Add;
+        setBlendFactor(WGPUBlendFactor.SrcAlpha, WGPUBlendFactor.OneMinusSrcAlpha);
         disableBlending();
         setCullMode(WGPUCullMode.None);
         indexFormat = WGPUIndexFormat.Uint16;
@@ -97,6 +101,7 @@ public class PipelineSpecification {
         this.useDepthTest = spec.useDepthTest;
         this.noDepthAttachment = spec.noDepthAttachment;
         this.isDepthPass= spec.isDepthPass;
+        this.blendingEnabled = spec.blendingEnabled;
         this.blendSrcColor = spec.blendSrcColor;
         this.blendDstColor = spec.blendDstColor;
         this.blendOpColor = spec.blendOpColor;
@@ -131,23 +136,46 @@ public class PipelineSpecification {
     }
 
     public void enableBlending(){
-        blendSrcColor = WGPUBlendFactor.SrcAlpha;
-        blendDstColor = WGPUBlendFactor.OneMinusSrcAlpha;
-        blendOpColor = WGPUBlendOperation.Add;
-        blendSrcAlpha = WGPUBlendFactor.Zero;
-        blendDstAlpha = WGPUBlendFactor.One;
-        blendOpAlpha = WGPUBlendOperation.Add;
+        blendingEnabled = true;
         recalcHash();
     }
 
     public void disableBlending(){
-        blendSrcColor = WGPUBlendFactor.One;
-        blendDstColor = WGPUBlendFactor.Zero;
-        blendOpColor = WGPUBlendOperation.Add;
-        blendSrcAlpha = WGPUBlendFactor.One;
-        blendDstAlpha = WGPUBlendFactor.Zero;
-        blendOpAlpha = WGPUBlendOperation.Add;
+        blendingEnabled = false;
         recalcHash();
+    }
+
+    public boolean isBlendingEnabled(){
+        return blendingEnabled;
+    }
+
+    public void setBlendFactor(WGPUBlendFactor srcFunc, WGPUBlendFactor dstFunc) {
+        setBlendFactorSeparate(srcFunc, dstFunc, srcFunc, dstFunc);
+    }
+
+    /** note:is only effective if blendingEnabled */
+    public void setBlendFactorSeparate(WGPUBlendFactor srcFuncColor, WGPUBlendFactor dstFuncColor, WGPUBlendFactor srcFuncAlpha, WGPUBlendFactor dstFuncAlpha) {
+        blendSrcColor = srcFuncColor;
+        blendDstColor = dstFuncColor;
+        blendSrcAlpha = srcFuncAlpha;
+        blendDstAlpha = dstFuncAlpha;
+        recalcHash();
+    }
+
+    public WGPUBlendFactor getBlendSrcFactor() {
+        return blendSrcColor;
+    }
+
+    public WGPUBlendFactor getBlendDstFactor() {
+        return blendDstColor;
+    }
+
+    public WGPUBlendFactor getBlendSrcFactorAlpha() {
+        return blendSrcAlpha;
+    }
+
+    public WGPUBlendFactor getBlendDstFactorAlpha() {
+        return blendDstAlpha;
     }
 
     // used?
@@ -156,10 +184,7 @@ public class PipelineSpecification {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         PipelineSpecification that = (PipelineSpecification) o;
-        return useDepthTest == that.useDepthTest && Objects.equals(vertexAttributes, that.vertexAttributes) && blendSrcColor == that.blendSrcColor && blendDstColor == that.blendDstColor
-                && blendOpColor == that.blendOpColor && blendSrcAlpha == that.blendSrcAlpha && blendDstAlpha == that.blendDstAlpha && blendOpAlpha == that.blendOpAlpha &&
-                numSamples == that.numSamples;
-        // todo compare shader
+        return hash == ((PipelineSpecification) o).hash;
     }
 
     @Override
@@ -177,8 +202,17 @@ public class PipelineSpecification {
 //                environment == null ? 0 :!environment.depthPass && environment.renderShadows,
 //                environment == null ? 0 : environment.cubeMap != null,
 //                environment == null ? 0 : environment.useImageBasedLighting,
-                blendSrcColor, blendDstColor, blendOpColor, blendSrcAlpha, blendDstAlpha, blendOpAlpha, numSamples, cullMode, isSkyBox, depthFormat, numSamples);
+                blendingEnabled,
+                // blend factors should be ignored when !blendingEnabled
+                blendingEnabled ? blendSrcColor : 0,
+                blendingEnabled ? blendDstColor : 0,
+                blendingEnabled ? blendOpColor : 0,
+                blendingEnabled ? blendSrcAlpha: 0,
+                blendingEnabled ? blendDstAlpha: 0,
+                blendingEnabled ? blendOpAlpha : 0,
+                numSamples, cullMode, isSkyBox, depthFormat, numSamples);
     }
+
 
     // note: don't include compiled shader in the hash because this would force new compiles every frame since a spec of an uncompiled shader <> compiled shader
 

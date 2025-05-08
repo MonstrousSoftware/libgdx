@@ -122,8 +122,27 @@ Note that his VulkanSpriteBatch implements Batch (i.e. implements all methods).
             VulkanTexture vkTexture = (VulkanTexture) texture;
 
 
-WebGPUTexture was brought more in line with Texture by extending Texture.  Uses Pixmap and TextureData.
-The Texture.data member had to be duplicated because it is package private.
-To check if managed textures work and if pixmaps are disposed.
+WebGPUTexture was brought more in line with Texture and now extends Texture.  Uses Pixmap and TextureData.
+The Texture.data member had to be duplicated because it is package private and cannot be accessed by the subclass.
+To check if managed textures work and if pixmaps are disposed properly.
 
-I would like to add a label to each texture, e.g. the source file name to aid with debugging.
+Added a label parameter to some of the different Texture constructurs, e.g. the source file name to aid with debugging.
+
+WebGPUSpriteBatch
+-----------------
+- The blend methods use values of type WGPUBlendFactor (e.g. WGPUBlendFactor.SrcAlpha) instead of int (e.g. GL_SRC_ALPHA). To differentiate
+the methods are called xxxxFactor instead of xxxxFunc.  The original methods are also provide and perform a translation to/from GL constants to ensure
+the WebGPUSpriteBatch is compatible with Batch.
+- setShader() variant with WebGPUShaderProgram instead of ShaderProgram.
+- getShader() always returns null.
+- The blendOpColor and blendOpAlpha are not modified by spritebatch methods and is set to Add.
+- begin() has an extra Color parameter to set the background colour.
+- to check: handling buffer overflow (i.e. intermediate flushing)
+
+TextureRegion
+-------------
+This works out of the box as long as you provide a WebGPUTexture as input. (You cannot create a Texture anyway without a GL context).
+
+Sprite
+------
+Works out of the box as long as you provide a WebGPUTexture as input.

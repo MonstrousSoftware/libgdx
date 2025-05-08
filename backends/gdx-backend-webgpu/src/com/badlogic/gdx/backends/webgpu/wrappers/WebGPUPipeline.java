@@ -89,13 +89,16 @@ public class WebGPUPipeline implements Disposable {
             fragmentState.setConstants();
 
             // blend
-            WGPUBlendState blendState = WGPUBlendState.createDirect();
-            blendState.getColor().setSrcFactor(spec.blendSrcColor);
-            blendState.getColor().setDstFactor(spec.blendDstColor);
-            blendState.getColor().setOperation(spec.blendOpColor);
-            blendState.getAlpha().setSrcFactor(spec.blendSrcAlpha);
-            blendState.getAlpha().setDstFactor(spec.blendDstAlpha);
-            blendState.getAlpha().setOperation(spec.blendOpAlpha);
+            WGPUBlendState blendState = null;   // to disable blending
+            if(spec.blendingEnabled) {
+                blendState = WGPUBlendState.createDirect();
+                blendState.getColor().setSrcFactor(spec.blendSrcColor);
+                blendState.getColor().setDstFactor(spec.blendDstColor);
+                blendState.getColor().setOperation(spec.blendOpColor);
+                blendState.getAlpha().setSrcFactor(spec.blendSrcAlpha);
+                blendState.getAlpha().setDstFactor(spec.blendDstAlpha);
+                blendState.getAlpha().setOperation(spec.blendOpAlpha);
+            }
 
 
             WGPUColorTargetState colorTarget = WGPUColorTargetState.createDirect();
