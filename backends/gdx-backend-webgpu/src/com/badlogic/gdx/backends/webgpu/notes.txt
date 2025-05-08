@@ -146,3 +146,11 @@ This works out of the box as long as you provide a WebGPUTexture as input. (You 
 Sprite
 ------
 Works out of the box as long as you provide a WebGPUTexture as input.
+
+BitmapFont
+-----------
+Had to be copied to WebGPUBitmapFont because it calls new Texture which should be new WebGPUTexture. (line 134)
+Glyph subclass is used from the original.
+This also means BitmapFontCache and GlyphLayout need to be copied because of type changes from BitmapFont to WebGPUBitmapFont.
+
+

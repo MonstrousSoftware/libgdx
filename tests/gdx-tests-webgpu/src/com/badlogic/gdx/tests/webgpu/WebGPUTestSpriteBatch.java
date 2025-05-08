@@ -6,6 +6,7 @@ import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.webgpu.WebGPUApplication;
 import com.badlogic.gdx.backends.webgpu.WebGPUApplicationConfiguration;
+import com.badlogic.gdx.backends.webgpu.gdx.g2d.WebGPUBitmapFont;
 import com.badlogic.gdx.backends.webgpu.gdx.g2d.WebGPUSpriteBatch;
 import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;
@@ -18,11 +19,15 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.ScreenUtils;
 import jnr.ffi.Pointer;
 
+// demonstrates the use of WebGPUSpriteBatch
+// shows texture from file, texture from pixmap, texture region, sprite
+//
 public class WebGPUTestSpriteBatch  {
 
 	// launcher
@@ -44,6 +49,7 @@ public class WebGPUTestSpriteBatch  {
 		private TextureRegion region;
 		private Sprite sprite;
 		private float sx = 10;
+		private WebGPUBitmapFont font;
 
 		public void create () {
 			batch = new WebGPUSpriteBatch();
@@ -63,6 +69,8 @@ public class WebGPUTestSpriteBatch  {
 			region = new TextureRegion(texture, 100, 100);
 			sprite = new Sprite(texture);
 			sprite.setScale(0.3f);
+
+			font = new WebGPUBitmapFont();
 		}
 
 		@Override
@@ -76,7 +84,7 @@ public class WebGPUTestSpriteBatch  {
 			sprite.setCenter(sx,20);
 
 			batch.begin(Color.FOREST);
-			//batch.disableBlending();
+
 			batch.setBlendFactor(WGPUBlendFactor.SrcAlpha, WGPUBlendFactor.OneMinusSrcAlpha);
 			batch.draw(texture, 100, 100);
 			batch.draw(texture2, 400, 300);
@@ -90,6 +98,7 @@ public class WebGPUTestSpriteBatch  {
 			//batch.setBlendFactor(WGPUBlendFactor.One, WGPUBlendFactor.Zero);	// WebGPU constants
 			sprite.draw(batch);
 
+			font.draw(batch, "Hello, world!", 20, 400);
 
 			batch.end();
 		}
@@ -107,6 +116,7 @@ public class WebGPUTestSpriteBatch  {
 			texture.dispose();
 			texture2.dispose();
 			textureAlpha.dispose();
+
 		}
 
 

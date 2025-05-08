@@ -654,8 +654,6 @@ public class WebGPUSpriteBatch implements Batch {
     // used by Sprite class
     // to do: handle buffer overflow by flushing
     public void draw(Texture texture, float[] vertices, int offset, int count){
-        if(count != 20)
-            throw new IllegalArgumentException("SpriteBatch.draw: vertices must have length 20");
         if (!drawing)
             throw new RuntimeException("SpriteBatch: Must call begin() before draw().");
 
@@ -668,7 +666,7 @@ public class WebGPUSpriteBatch implements Batch {
         for(int i = 0; i < count; i++){
             vertexData.put(vertices[offset + i]);
         }
-        numRects++;
+        numRects+= count/20;
     }
 
 //    public void draw (Texture texture, float[] spriteVertices, int offset, int count) {
@@ -1026,7 +1024,6 @@ public class WebGPUSpriteBatch implements Batch {
                 "    projectionMatrix: mat4x4f,\n" +
                 "};\n" +
                 "\n" +
-                "// The memory location of the uniform is given by a pair of a *bind group* and a *binding*\n" +
                 "@group(0) @binding(0) var<uniform> uniforms: Uniforms;\n" +
                 "@group(0) @binding(1) var texture: texture_2d<f32>;\n" +
                 "@group(0) @binding(2) var textureSampler: sampler;\n" +
