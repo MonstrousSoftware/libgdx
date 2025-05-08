@@ -137,7 +137,9 @@ the WebGPUSpriteBatch is compatible with Batch.
 - getShader() always returns null.
 - The blendOpColor and blendOpAlpha are not modified by spritebatch methods and is set to Add.
 - begin() has an extra Color parameter to set the background colour.
-- to check: handling buffer overflow (i.e. intermediate flushing)
+- whereas the libgdx SpriteBatch can handle more sprites than fit in the vertex buffer by flushing and restarting, this does not work
+for WebGPU as the buffer cannot be reused after each draw call but needs to be maintained until the end of the frame.
+If there are too many sprites an exception is thrown. In such a case, use a larger number in the sprite batch constructor.
 
 TextureRegion
 -------------
@@ -152,5 +154,6 @@ BitmapFont
 Had to be copied to WebGPUBitmapFont because it calls new Texture which should be new WebGPUTexture. (line 134)
 Glyph subclass is used from the original.
 This also means BitmapFontCache and GlyphLayout need to be copied because of type changes from BitmapFont to WebGPUBitmapFont.
+Unfortunately , that's a lot of duplicated lines for a few trivial changes.
 
 
