@@ -200,3 +200,6 @@ ScrollPane.java line 541  //		if (clipBegin(actorArea.x, actorArea.y, actorArea.
 
 Not sure how Label and TextButton get the correct font (i.e. WebGPUBitmapFont).
 
+If you extract font from a WebGPUSkin, then you can use it as is:
+			BitmapFont font = skin.get("default-font", BitmapFont.class);
+

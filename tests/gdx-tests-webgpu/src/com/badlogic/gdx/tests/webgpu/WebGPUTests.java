@@ -73,7 +73,8 @@ public class WebGPUTests {
 	// @off
 		ClearScreen.class,
 		StageTest.class,
-		ColorTest.class
+		ColorTest.class,
+		FontTest.class
 
 		// @on
 
