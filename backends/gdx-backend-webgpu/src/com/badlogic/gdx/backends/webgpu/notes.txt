@@ -175,9 +175,11 @@ but many textures and regions are private.
 
 Stage now works and different Scene2d UI elements.
 The only difference from the regular Stage is in the constructors to make sure to use a WebGPUSpriteBatch and WebGPUViewport.
-You can also use the regulate stage and pass these to the constructor.
+You can also use the regular Stage if you use the constructor that injects spritebatch and view port.
 
 On resize the UI looks bad. Viewport is not yet implemented... Or perhaps it is due to filtering.
+
+Images in Scene2d appear upside down.
 
 Core changes (access modified):
 Actor.java  	    355 public void setParent (@Null Group parent) {
@@ -191,15 +193,19 @@ SelectBox.java      591 public void setStage
 next steps:
 - ScreenUtils
 - view ports
+- ShapeRenderer
 
 Actor calls ScissorStack which makes GL calls.
 
 Core changes:
 ScrollPane.java line 541  //		if (clipBegin(actorArea.x, actorArea.y, actorArea.width, actorArea.height)) {			// MonstrousSoftware
+Idem for Table.java
 
-
-Not sure how Label and TextButton get the correct font (i.e. WebGPUBitmapFont).
 
 If you extract font from a WebGPUSkin, then you can use it as is:
 			BitmapFont font = skin.get("default-font", BitmapFont.class);
 
+ScreenUtils
+-----------
+Implemented the clear() methods, but only for color, not for depth.  It is quite expensive as it creates a SpriteBatch to do this
+for each call.  Preferred way to clear the screen is to use SpriteBatch.begin(clearColor);

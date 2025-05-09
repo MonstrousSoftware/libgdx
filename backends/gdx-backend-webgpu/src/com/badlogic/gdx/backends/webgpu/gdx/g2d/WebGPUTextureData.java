@@ -21,8 +21,9 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.TextureData;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 
-/** A {@link TextureData} implementation which should be used to create webgpu only textures. This TextureData fits perfectly for
- * FrameBuffer. The data is not managed. */
+/** A {@link TextureData} implementation which should be used to create webgpu only textures.
+ *  For example when creating a Texture for the depth buffer.
+ * The data is not managed. */
 public class WebGPUTextureData implements TextureData {
 
 	/** width and height */

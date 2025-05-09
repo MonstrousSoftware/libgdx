@@ -112,12 +112,12 @@ public class Table extends WidgetGroup {
 			if (clip) {
 				batch.flush();
 				float padLeft = this.padLeft.get(this), padBottom = this.padBottom.get(this);
-				if (clipBegin(padLeft, padBottom, getWidth() - padLeft - padRight.get(this),
-					getHeight() - padBottom - padTop.get(this))) {
+				//if (clipBegin(padLeft, padBottom, getWidth() - padLeft - padRight.get(this),	// MonstrousSoftware
+				//	getHeight() - padBottom - padTop.get(this))) {
 					drawChildren(batch, parentAlpha);
 					batch.flush();
-					clipEnd();
-				}
+					//clipEnd();
+				//}
 			} else
 				drawChildren(batch, parentAlpha);
 			resetTransform(batch);

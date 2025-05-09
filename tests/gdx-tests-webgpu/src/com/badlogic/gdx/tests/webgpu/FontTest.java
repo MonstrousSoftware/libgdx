@@ -20,24 +20,13 @@ import com.badlogic.gdx.tests.utils.GdxTest;
 //
 public class FontTest extends GdxTest {
 		private WebGPUSpriteBatch batch;
-		private WebGPUTexture texture;
 		private BitmapFont font;
-		private WebGPUSkin skin;
 
 		public void create () {
 			batch = new WebGPUSpriteBatch();
-			//font = new BitmapFont();
+			font = new WebGPUBitmapFont();
 
-//			skin = new WebGPUSkin(Gdx.files.internal("data/uiskin.json"));
-//			font = skin.get("default-font", BitmapFont.class);
-
-			texture = new WebGPUTexture(Gdx.files.classpath("com/badlogic/gdx/utils/lsans-15.png"));
-			TextureRegion textureRegion = new TextureRegion(texture);
-			font = new BitmapFont(Gdx.files.classpath("com/badlogic/gdx/utils/lsans-15.fnt"), textureRegion);
-
-
-
-
+			//font = new WebGPUBitmapFont(Gdx.files.classpath("com/badlogic/gdx/utils/lsans-15.fnt"));
 		}
 
 		@Override
@@ -58,7 +47,6 @@ public class FontTest extends GdxTest {
 		public void dispose () {
 			batch.dispose();
 			font.dispose();
-
 		}
 
 }
