@@ -70,7 +70,7 @@ public class WebGPUSpriteBatch implements Batch {
     private final Map<WGPUBlendFactor, Integer> blendGLConstantMap = new HashMap<>(); // vice versa
 
     public WebGPUSpriteBatch() {
-        this(1000); // default nr
+        this(10000); // default nr
     }
 
     public WebGPUSpriteBatch(int maxSprites) {

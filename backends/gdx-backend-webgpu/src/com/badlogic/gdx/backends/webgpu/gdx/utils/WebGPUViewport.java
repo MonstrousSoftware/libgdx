@@ -19,9 +19,7 @@ package com.badlogic.gdx.backends.webgpu.gdx.utils;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
-/** Manages a {@link Camera} and determines how world coordinates are mapped to and from the screen.
- * @author Daniel Holderbaum
- * @author Nathan Sweet */
+/** Version of Viewport for WebGPU. Avoids the GL call in apply(). */
 public abstract class WebGPUViewport extends Viewport {
 
 	/** Applies the viewport to the camera and sets the glViewport.

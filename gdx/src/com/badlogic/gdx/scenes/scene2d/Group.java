@@ -400,7 +400,7 @@ public class Group extends Actor implements Cullable {
 		return null;
 	}
 
-	public void setStage (Stage stage) { // MM
+	public void setStage (Stage stage) { // MS
 		super.setStage(stage);
 		Actor[] childrenArray = children.items;
 		for (int i = 0, n = children.size; i < n; i++)

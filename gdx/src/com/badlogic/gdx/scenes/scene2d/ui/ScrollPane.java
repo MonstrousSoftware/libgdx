@@ -538,11 +538,11 @@ public class ScrollPane extends WidgetGroup implements Styleable<ScrollPane.Scro
 		}
 
 		batch.flush();
-		if (clipBegin(actorArea.x, actorArea.y, actorArea.width, actorArea.height)) {
+//		if (clipBegin(actorArea.x, actorArea.y, actorArea.width, actorArea.height)) {			// MonstrousSoftware
 			drawChildren(batch, parentAlpha);
 			batch.flush();
-			clipEnd();
-		}
+//			clipEnd();
+//		}
 
 		// Render scrollbars and knobs on top if they will be visible.
 		batch.setColor(color.r, color.g, color.b, alpha);

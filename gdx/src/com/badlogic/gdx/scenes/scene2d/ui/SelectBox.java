@@ -588,7 +588,7 @@ public class SelectBox<T> extends Widget implements Disableable, Styleable<Selec
 			toFront();
 		}
 
-		public void setStage (Stage stage) {	// MM
+		public void setStage (Stage stage) {	// MS
 			Stage oldStage = getStage();
 			if (oldStage != null) {
 				oldStage.removeCaptureListener(hideListener);

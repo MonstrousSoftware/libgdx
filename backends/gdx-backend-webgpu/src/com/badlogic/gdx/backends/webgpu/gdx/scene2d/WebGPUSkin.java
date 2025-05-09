@@ -17,6 +17,7 @@
 package com.badlogic.gdx.backends.webgpu.gdx.scene2d;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.backends.webgpu.gdx.g2d.WebGPUBitmapFont;
 import com.badlogic.gdx.backends.webgpu.gdx.g2d.WebGPUTextureAtlas;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;

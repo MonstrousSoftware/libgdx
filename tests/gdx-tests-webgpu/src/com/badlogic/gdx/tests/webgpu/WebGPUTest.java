@@ -49,12 +49,6 @@ public class WebGPUTest {
 				 app.newWindow(listener, config);
 			 }
 
-			 if(app.getCommandEncoder() == null){
-				 // not sure why this happens: currentWindow is not the window calling render()
-				 // perhaps resize?
-				System.out.println("No command encoder!!!!");
-				return;
-			}
 
 			// create a render pass
 			WebGPURenderPass pass = RenderPassBuilder.create("my pass", Color.CORAL, null, null, null, 1, RenderPassType.NO_DEPTH);

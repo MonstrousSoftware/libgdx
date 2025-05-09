@@ -24,6 +24,9 @@ import com.badlogic.gdx.backends.webgpu.WebGPUApplication;
 import com.badlogic.gdx.backends.webgpu.WebGPUApplicationConfiguration;
 import com.badlogic.gdx.backends.webgpu.WebGPUGraphics;
 import com.badlogic.gdx.backends.webgpu.WebGPUWindowConfiguration;
+import com.badlogic.gdx.backends.webgpu.gdx.scene2d.WebGPUSkin;
+import com.badlogic.gdx.backends.webgpu.gdx.scene2d.WebGPUStage;
+import com.badlogic.gdx.backends.webgpu.gdx.utils.WebGPUScreenViewport;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -34,7 +37,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.tests.utils.CommandLineOptions;
 import com.badlogic.gdx.tests.utils.GdxTestWrapper;
-import com.badlogic.gdx.tests.utils.GdxTests;
+
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
@@ -48,45 +51,19 @@ public class WebGPUTestStarter {
 	 * 
 	 * @param argv command line arguments */
 	public static void main (String[] argv) {
-		options = new CommandLineOptions(argv);
+		//options = new CommandLineOptions(argv);
 
 		WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
 		config.setWindowedMode(640, 480);
 
-// if (options.gl30 || options.gl31 || options.gl32) {
-// ShaderProgram.prependVertexCode = "#version 140\n#define varying out\n#define attribute in\n";
-// ShaderProgram.prependFragmentCode = "#version 140\n#define varying in\n#define texture2D texture\n#define gl_FragColor
-// fragColor\nout vec4 fragColor;\n";
-// }
-//
-// if (options.gl32) {
-// config.setOpenGLEmulation(WebGPUApplicationConfiguration.GLEmulation.GL32, 4, 6);
-// } else if (options.gl31) {
-// config.setOpenGLEmulation(WebGPUApplicationConfiguration.GLEmulation.GL31, 4, 5);
-// } else if (options.gl30) {
-// if (SharedLibraryLoader.os == Os.MacOsX) {
-// config.setOpenGLEmulation(WebGPUApplicationConfiguration.GLEmulation.GL30, 3, 2);
-// } else {
-// config.setOpenGLEmulation(WebGPUApplicationConfiguration.GLEmulation.GL30, 4, 3);
-// }
-// } else if (options.angle) {
-// config.setOpenGLEmulation(WebGPUApplicationConfiguration.GLEmulation.ANGLE_GLES20, 0, 0);
-// // Use CPU sync if ANGLE is enabled on macOS, otherwise the framerate gets halfed
-// // by each new open window.
-// if (SharedLibraryLoader.os == Os.MacOsX) {
-// config.useVsync(false);
-// config.setForegroundFPS(60);
-// }
-// }
-
-		if (options.startupTestName != null) {
-			ApplicationListener test = GdxTests.newTest(options.startupTestName);
-			if (test != null) {
-				new WebGPUApplication(test, config);
-				return;
-			}
-			// Otherwise, fall back to showing the list
-		}
+//		if (options.startupTestName != null) {
+//			ApplicationListener test = GdxTests.newTest(options.startupTestName);
+//			if (test != null) {
+//				new WebGPUApplication(test, config);
+//				return;
+//			}
+//			// Otherwise, fall back to showing the list
+//		}
 		new WebGPUApplication(new TestChooser(), config);
 	}
 
@@ -101,9 +78,9 @@ public class WebGPUTestStarter {
 
 			final Preferences prefs = Gdx.app.getPreferences("webgpu-tests");
 
-			stage = new Stage(new ScreenViewport());
+			stage = new WebGPUStage(new WebGPUScreenViewport());
 			Gdx.input.setInputProcessor(stage);
-			skin = new Skin(Gdx.files.internal("data/uiskin.json"));
+			skin = new WebGPUSkin(Gdx.files.internal("data/uiskin.json"));
 
 			Table container = new Table();
 			stage.addActor(container);
@@ -116,25 +93,28 @@ public class WebGPUTestStarter {
 			scroll.setFadeScrollBars(false);
 			stage.setScrollFocus(scroll);
 
+//			stage.addActor(table);
+//			table.setFillParent(true);
+
 			int tableSpace = 4;
 			table.pad(10).defaults().expandX().space(tableSpace);
-			for (final String testName : GdxTests.getNames()) {
+			for (final String testName : WebGPUTests.getNames()) {
 				final TextButton testButton = new TextButton(testName, skin);
-				testButton.setDisabled(!options.isTestCompatible(testName));
+				//testButton.setDisabled(!options.isTestCompatible(testName));
 				testButton.setName(testName);
 				table.add(testButton).fillX();
 				table.row();
 				testButton.addListener(new ChangeListener() {
 					@Override
 					public void changed (ChangeEvent event, Actor actor) {
-						ApplicationListener test = GdxTests.newTest(testName);
+						ApplicationListener test = WebGPUTests.newTest(testName);
 						WebGPUWindowConfiguration winConfig = new WebGPUWindowConfiguration();
 						winConfig.setTitle(testName);
 						winConfig.setWindowedMode(640, 480);
 						winConfig.setWindowPosition(((WebGPUGraphics)Gdx.graphics).getWindow().getPositionX() + 40,
 							((WebGPUGraphics)Gdx.graphics).getWindow().getPositionY() + 40);
 						winConfig.useVsync(false);
-						((WebGPUApplication)Gdx.app).newWindow(new GdxTestWrapper(test, options.logGLErrors), winConfig);
+						((WebGPUApplication)Gdx.app).newWindow(new GdxTestWrapper(test, false), winConfig);
 						System.out.println("Started test: " + testName);
 						prefs.putString("LastTest", testName);
 						prefs.flush();
@@ -163,13 +143,14 @@ public class WebGPUTestStarter {
 				// Since ScrollPane takes some time for scrolling to a position, we just "fake" time
 				stage.act(1f);
 				stage.act(1f);
-				stage.draw();
+				// context not ready outside render()
+				//stage.draw();
 			}
 		}
 
 		@Override
 		public void render () {
-			ScreenUtils.clear(0, 0, 0, 1);
+			///ScreenUtils.clear(0, 0, 0, 1);
 			stage.act();
 			stage.draw();
 		}
