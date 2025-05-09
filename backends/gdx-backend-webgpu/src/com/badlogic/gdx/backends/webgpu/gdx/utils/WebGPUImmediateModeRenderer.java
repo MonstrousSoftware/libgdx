@@ -23,24 +23,27 @@ import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;
 import com.badlogic.gdx.backends.webgpu.wrappers.*;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.glutils.ImmediateModeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Matrix4;
 import jnr.ffi.Pointer;
+import org.lwjgl.opengl.GL20;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
-// todo
+
 
 /** Immediate mode rendering class for WebGPU. The renderer will allow you to specify vertices on the fly and provides a default
  * shader for (unlit) rendering.
- * @author mzechner */
+ * Use setTexture() to bind a texture (the GL version assumes the texture is bound already).
+ * Setting/getting ShaderProgram is not supported.
+ **/
 public class WebGPUImmediateModeRenderer implements ImmediateModeRenderer {
 	private int primitiveType;
 	private int vertexIdx;
-	private int numSetTexCoords;
 	private final int maxVertices;
 	private int numVertices;
 
@@ -49,7 +52,6 @@ public class WebGPUImmediateModeRenderer implements ImmediateModeRenderer {
 	private final int colorOffset;
 	private final int texCoordOffset;
 	private final Matrix4 projModelView = new Matrix4();
-	private final float[] vertices;
 
 	private WebGPUApplication app;
 	private WebGPUVertexAttributes vertexAttributes;
@@ -76,17 +78,16 @@ public class WebGPUImmediateModeRenderer implements ImmediateModeRenderer {
 
 	}
 
+	/** hasNormals, hasColors and numTexCoords are ignored */
 	public WebGPUImmediateModeRenderer(int maxVertices, boolean hasNormals, boolean hasColors, int numTexCoords,
 									   ShaderProgram shader) {
 
 		app = (WebGPUApplication) Gdx.app;
 		this.maxVertices = maxVertices;
 
-
 		vertexAttributes = new WebGPUVertexAttributes(WebGPUVertexAttributes.Usage.POSITION| WebGPUVertexAttributes.Usage.NORMAL|WebGPUVertexAttributes.Usage.TEXTURE_COORDINATE| WebGPUVertexAttributes.Usage.COLOR_PACKED);
 
 		vertexSize = vertexAttributes.getVertexSizeInBytes()/Float.BYTES;	// size in floats
-		vertices = new float[maxVertices * vertexSize];
 
 		// PPP C UU NNN
 		normalOffset = 6;
@@ -108,33 +109,25 @@ public class WebGPUImmediateModeRenderer implements ImmediateModeRenderer {
 		pipelines = new PipelineCache();
 		pipelineSpec = new PipelineSpecification(vertexAttributes, defaultShaderSource());
 		pipelineSpec.name = "ImmediateModeRenderer pipeline";
-		pipelineSpec.disableDepthTest();
+		pipelineSpec.enableDepthTest();
+
+
 
 		// default blending values
-		pipelineSpec.enableBlending();
-		pipelineSpec.setBlendFactor(WGPUBlendFactor.SrcAlpha, WGPUBlendFactor.OneMinusSrcAlpha);
+		pipelineSpec.disableBlending();
+		//pipelineSpec.setBlendFactor(WGPUBlendFactor.SrcAlpha, WGPUBlendFactor.OneMinusSrcAlpha);
 
 		prevPipeline = null;
+
+		// fallback texture (1 white pixel)
+		Pixmap pm = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
+		pm.setColor(Color.WHITE);
+		pm.fill();
+		texture = new WebGPUTexture(pm);
 	}
 
-//	private VertexAttribute[] buildVertexAttributes (boolean hasNormals, boolean hasColor, int numTexCoords) {
-//		Array<VertexAttribute> attribs = new Array<VertexAttribute>();
-//		attribs.add(new VertexAttribute(Usage.Position, 3, ShaderProgram.POSITION_ATTRIBUTE));
-//		if (hasNormals) attribs.add(new VertexAttribute(Usage.Normal, 3, ShaderProgram.NORMAL_ATTRIBUTE));
-//		if (hasColor) attribs.add(new VertexAttribute(Usage.ColorPacked, 4, ShaderProgram.COLOR_ATTRIBUTE));
-//		for (int i = 0; i < numTexCoords; i++) {
-//			attribs.add(new VertexAttribute(Usage.TextureCoordinates, 2, ShaderProgram.TEXCOORD_ATTRIBUTE + i));
-//		}
-//		VertexAttribute[] array = new VertexAttribute[attribs.size];
-//		for (int i = 0; i < attribs.size; i++)
-//			array[i] = attribs.get(i);
-//		return array;
-//	}
-
 	public void setShader (ShaderProgram shader) {
-//		if (ownsShader) this.shader.dispose();
-//		this.shader = shader;
-//		ownsShader = false;
+		// ignored
 	}
 
 	public ShaderProgram getShader () {
@@ -145,42 +138,52 @@ public class WebGPUImmediateModeRenderer implements ImmediateModeRenderer {
 		this.projModelView.set(projModelView);
 		this.primitiveType = primitiveType;
 
+		if(primitiveType == GL20.GL_LINES)
+			pipelineSpec.topology = WGPUPrimitiveTopology.LineList;
+		else if (primitiveType == GL20.GL_POINTS)
+			pipelineSpec.topology = WGPUPrimitiveTopology.PointList;
+		else
+			pipelineSpec.topology = WGPUPrimitiveTopology.TriangleList;
+		pipelineSpec.setCullMode(WGPUCullMode.None);
+
+
 		renderPass = RenderPassBuilder.create(null, app.getConfiguration().samples);
 	}
 
 	public void color (Color color) {
-		vertices[vertexIdx + colorOffset] = color.toFloatBits();
+		vertexData.put(vertexIdx + colorOffset, color.toFloatBits());
 	}
 
 	public void color (float r, float g, float b, float a) {
-		vertices[vertexIdx + colorOffset] = Color.toFloatBits(r, g, b, a);
+		vertexData.put(vertexIdx + colorOffset, Color.toFloatBits(r, g, b, a));
 	}
 
 	public void color (float colorBits) {
-		vertices[vertexIdx + colorOffset] = colorBits;
+		vertexData.put(vertexIdx + colorOffset, colorBits);
 	}
 
 	public void texCoord (float u, float v) {
 		final int idx = vertexIdx + texCoordOffset;
-		vertices[idx ] = u;
-		vertices[idx + 1] = v;
+		vertexData.put(idx, u);
+		vertexData.put(idx+1, v);
 	}
 
 	public void normal (float x, float y, float z) {
 		final int idx = vertexIdx + normalOffset;
-		vertices[idx] = x;
-		vertices[idx + 1] = y;
-		vertices[idx + 2] = z;
+		vertexData.put(idx, 		x);
+		vertexData.put(idx+1, 	y);
+		vertexData.put(idx+2, 	z);
 	}
 
 	public void vertex (float x, float y, float z) {
 		final int idx = vertexIdx;
-		vertices[idx] = x;
-		vertices[idx + 1] = y;
-		vertices[idx + 2] = z;
+		vertexData.put(idx, 		x);
+		vertexData.put(idx+1, 	y);
+		vertexData.put(idx+2, 	z);
 
 		vertexIdx += vertexSize;
 		numVertices++;
+		if(numVertices > maxVertices) throw new ArrayIndexOutOfBoundsException("Too many vertices");
 	}
 
 	public void flush () {
@@ -196,9 +199,6 @@ public class WebGPUImmediateModeRenderer implements ImmediateModeRenderer {
 		// write number of vertices to the GPU's vertex buffer
 		//
 		int numBytes = numVertices * vertexSize * Float.BYTES;
-		for(int i = 0; i < numVertices * vertexSize; i++)	// copy floats
-			vertexData.put(i, vertices[i]);
-		//vertexData.put(0, vertices, 0, numBytes/Float.BYTES);	// copy to FloatBuffer
 
 		// copy vertex data to GPU vertex buffer
 		app.getQueue().writeBuffer(vertexBuffer, 0, vertexDataPtr, numBytes);
@@ -213,7 +213,6 @@ public class WebGPUImmediateModeRenderer implements ImmediateModeRenderer {
 		bg.dispose();	// done with bind group
 
 		// reset
-		// todo allow multiple batches
 		vertexIdx = 0;
 		numVertices = 0;
 	}
@@ -238,61 +237,7 @@ public class WebGPUImmediateModeRenderer implements ImmediateModeRenderer {
 	}
 
 
-//	static private String createVertexShader (boolean hasNormals, boolean hasColors, int numTexCoords) {
-//		String shader = "attribute vec4 " + ShaderProgram.POSITION_ATTRIBUTE + ";\n"
-//			+ (hasNormals ? "attribute vec3 " + ShaderProgram.NORMAL_ATTRIBUTE + ";\n" : "")
-//			+ (hasColors ? "attribute vec4 " + ShaderProgram.COLOR_ATTRIBUTE + ";\n" : "");
-//
-//		for (int i = 0; i < numTexCoords; i++) {
-//			shader += "attribute vec2 " + ShaderProgram.TEXCOORD_ATTRIBUTE + i + ";\n";
-//		}
-//
-//		shader += "uniform mat4 u_projModelView;\n" //
-//			+ (hasColors ? "varying vec4 v_col;\n" : "");
-//
-//		for (int i = 0; i < numTexCoords; i++) {
-//			shader += "varying vec2 v_tex" + i + ";\n";
-//		}
-//
-//		shader += "void main() {\n" + "   gl_Position = u_projModelView * " + ShaderProgram.POSITION_ATTRIBUTE + ";\n";
-//		if (hasColors) {
-//			shader += "   v_col = " + ShaderProgram.COLOR_ATTRIBUTE + ";\n" //
-//				+ "   v_col.a *= 255.0 / 254.0;\n";
-//		}
-//
-//		for (int i = 0; i < numTexCoords; i++) {
-//			shader += "   v_tex" + i + " = " + ShaderProgram.TEXCOORD_ATTRIBUTE + i + ";\n";
-//		}
-//		shader += "   gl_PointSize = 1.0;\n" //
-//			+ "}\n";
-//		return shader;
-//	}
-//
-//	static private String createFragmentShader (boolean hasNormals, boolean hasColors, int numTexCoords) {
-//		String shader = "#ifdef GL_ES\n" + "precision mediump float;\n" + "#endif\n";
-//
-//		if (hasColors) shader += "varying vec4 v_col;\n";
-//		for (int i = 0; i < numTexCoords; i++) {
-//			shader += "varying vec2 v_tex" + i + ";\n";
-//			shader += "uniform sampler2D u_sampler" + i + ";\n";
-//		}
-//
-//		shader += "void main() {\n" //
-//			+ "   gl_FragColor = " + (hasColors ? "v_col" : "vec4(1, 1, 1, 1)");
-//
-//		if (numTexCoords > 0) shader += " * ";
-//
-//		for (int i = 0; i < numTexCoords; i++) {
-//			if (i == numTexCoords - 1) {
-//				shader += " texture2D(u_sampler" + i + ",  v_tex" + i + ")";
-//			} else {
-//				shader += " texture2D(u_sampler" + i + ",  v_tex" + i + ") *";
-//			}
-//		}
-//
-//		shader += ";\n}";
-//		return shader;
-//	}
+	// Note: the default shader ignores the normal vectors
 
 	static private String defaultShaderSource() {
 		return "struct Uniforms {\n" +

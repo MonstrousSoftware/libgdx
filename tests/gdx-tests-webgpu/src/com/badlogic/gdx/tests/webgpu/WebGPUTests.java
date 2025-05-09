@@ -76,7 +76,8 @@ public class WebGPUTests {
 		ColorTest.class,
 		FontTest.class,
 		Scene2dTest.class,
-		ImmediateModeRendererTest.class
+		ImmediateModeRendererTest.class,
+		ShapeRendererTest.class
 
 		// @on
 
