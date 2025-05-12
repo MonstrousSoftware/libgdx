@@ -209,3 +209,11 @@ ScreenUtils
 -----------
 Implemented the clear() methods, but only for color, not for depth.  It is quite expensive as it creates a SpriteBatch to do this
 for each call.  Preferred way to clear the screen is to use SpriteBatch.begin(clearColor);
+
+
+
+12/05/2025:
+-updated intellij to 2025.1.1.1 (Community Edition).
+- fresh clone from https://github.com/MonstrousSoftware/libgdx
+- Error: Unable to read file for extraction: gdx64.dll   => ./gradlew fetchNatives
+- Resource not found: dawn.dll => Created new folder 'res' under gdx-backend-webgpu (at same level as src). Added dawn.dll and webgpuUtils.dll.

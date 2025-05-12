@@ -49,3 +49,4 @@ rootProject.name = "libgdx"
 
 
 include 'backends:gdx-backend-webgpu:res'
+include 'backends:gdx-backend-webgpu:res'
