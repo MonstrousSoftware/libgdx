@@ -22,8 +22,8 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.webgpu.WebGPUApplication;
 import com.badlogic.gdx.backends.webgpu.gdx.WebGPUEnvironment;
 import com.badlogic.gdx.backends.webgpu.gdx.WebGPUShaderProgram;
-import com.badlogic.gdx.backends.webgpu.gdx.WebGPUVertexAttributes;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;
+import com.badlogic.gdx.graphics.VertexAttributes;
 
 import java.util.Objects;
 
@@ -31,7 +31,7 @@ import java.util.Objects;
 
 public class PipelineSpecification {
     public String name;
-    public WebGPUVertexAttributes vertexAttributes;
+    public VertexAttributes vertexAttributes;
     public WGPUIndexFormat indexFormat;
     public WGPUPrimitiveTopology topology;
     public WebGPUEnvironment environment;
@@ -78,14 +78,14 @@ public class PipelineSpecification {
         recalcHash();
     }
 
-    public PipelineSpecification(WebGPUVertexAttributes vertexAttributes, String shaderSource) {
+    public PipelineSpecification(VertexAttributes vertexAttributes, String shaderSource) {
         this();
         this.vertexAttributes = vertexAttributes;
         this.shaderSource = shaderSource;
         recalcHash();
     }
 
-    public PipelineSpecification(WebGPUVertexAttributes vertexAttributes, WebGPUShaderProgram shader) {
+    public PipelineSpecification(VertexAttributes vertexAttributes, WebGPUShaderProgram shader) {
         this();
         this.vertexAttributes = vertexAttributes;
         this.shader = shader;
@@ -194,7 +194,7 @@ public class PipelineSpecification {
 
     /** to be called whenever relevant content changes (to avoid doing this in hashCode which is called a lot) */
     public void recalcHash() {
-        hash = Objects.hash(vertexAttributes != null ? vertexAttributes.getUsageFlags() : 0,
+        hash = Objects.hash(vertexAttributes == null ? 0 : vertexAttributes.hashCode(),
                 shaderSource,
                 isDepthPass, afterDepthPrepass,
                 useDepthTest, noDepthAttachment,

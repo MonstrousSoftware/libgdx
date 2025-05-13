@@ -7,14 +7,18 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.webgpu.WebGPUApplication;
 import com.badlogic.gdx.backends.webgpu.WebGPUApplicationConfiguration;
 import com.badlogic.gdx.backends.webgpu.gdx.WebGPUMesh;
-import com.badlogic.gdx.backends.webgpu.gdx.WebGPUVertexAttributes;
 import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;
 import com.badlogic.gdx.backends.webgpu.wrappers.*;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttribute;
+import com.badlogic.gdx.graphics.VertexAttributes;
 import jnr.ffi.Pointer;
+
+// Basic test of Mesh
+// Renders a rectangle.
+
 
 public class WebGPUTestMesh {
 
@@ -33,24 +37,23 @@ public class WebGPUTestMesh {
 	// application
 	static class TestApp extends ApplicationAdapter {
 		private Mesh mesh;
-		private WebGPUVertexAttributes vertexAttributes;
+		private VertexAttributes vattr;
 		private WebGPUPipeline pipeline;
 
 		public void create () {
+			vattr = new VertexAttributes(VertexAttribute.Position(),  VertexAttribute.TexCoords(0), VertexAttribute.ColorUnpacked());
 
-			vertexAttributes = new WebGPUVertexAttributes(WebGPUVertexAttributes.Usage.POSITION| WebGPUVertexAttributes.Usage.TEXTURE_COORDINATE| WebGPUVertexAttributes.Usage.COLOR);
-
-			PipelineSpecification pipelineSpec = new PipelineSpecification(vertexAttributes, getDefaultShaderSource());
+			PipelineSpecification pipelineSpec = new PipelineSpecification(vattr, getDefaultShaderSource());
 			pipelineSpec.name = "pipeline";
 			pipeline = new WebGPUPipeline((WebGPUPipelineLayout) null, pipelineSpec);
 
 
-			mesh = new WebGPUMesh(true, 4, 6, VertexAttribute.Position(), VertexAttribute.ColorUnpacked(), VertexAttribute.TexCoords(0));
+			mesh = new WebGPUMesh(true, 4, 6, vattr);
 			mesh.setVertices(new float[]{
-				-0.5f, -0.5f, 0, 	1,0,1,1,	0, 1,
-				0.5f, -0.5f, 0, 	0,1,1,1, 	1, 1,
-				0.5f, 0.5f, 0, 		1,1,0,1,    1,0,
-				-0.5f, 0.5f, 0, 	0,1,0,1, 	0,0
+				-0.5f, -0.5f, 0, 	0, 1, 	1,0,1,1,
+				0.5f, -0.5f, 0, 	1,1,	0,1,1,1,
+				0.5f, 0.5f, 0, 		1,0,	1,1,0,1,
+				-0.5f, 0.5f, 0, 	0,0,	0,1,0,1,
 			});
 
 			mesh.setIndices(new short[] {0, 1, 2, 	2, 3, 0});
@@ -88,8 +91,9 @@ public class WebGPUTestMesh {
 					"\n" +
 					"struct VertexInput {\n" +
 					"    @location(0) position: vec3f,\n" +
-					"    @location(1) uv: vec2f,\n" +
 					"    @location(5) color: vec4f,\n" +
+					"    @location(1) uv: vec2f,\n" +
+
 					"};\n" +
 					"\n" +
 					"struct VertexOutput {\n" +

@@ -18,12 +18,13 @@ package com.badlogic.gdx.backends.webgpu.gdx.utils;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.webgpu.WebGPUApplication;
-import com.badlogic.gdx.backends.webgpu.gdx.WebGPUVertexAttributes;
 import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;
 import com.badlogic.gdx.backends.webgpu.wrappers.*;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.VertexAttribute;
+import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.glutils.ImmediateModeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Matrix4;
@@ -54,7 +55,7 @@ public class WebGPUImmediateModeRenderer implements ImmediateModeRenderer {
 	private final Matrix4 projModelView = new Matrix4();
 
 	private WebGPUApplication app;
-	private WebGPUVertexAttributes vertexAttributes;
+	private VertexAttributes vertexAttributes;
 	private WebGPUVertexBuffer vertexBuffer;
 	private WebGPUUniformBuffer uniformBuffer;
 	private int uniformBufferSize;
@@ -85,9 +86,10 @@ public class WebGPUImmediateModeRenderer implements ImmediateModeRenderer {
 		app = (WebGPUApplication) Gdx.app;
 		this.maxVertices = maxVertices;
 
-		vertexAttributes = new WebGPUVertexAttributes(WebGPUVertexAttributes.Usage.POSITION| WebGPUVertexAttributes.Usage.NORMAL|WebGPUVertexAttributes.Usage.TEXTURE_COORDINATE| WebGPUVertexAttributes.Usage.COLOR_PACKED);
+		vertexAttributes = new VertexAttributes( VertexAttribute.Position(),
+				VertexAttribute.ColorPacked(), VertexAttribute.TexCoords(0), VertexAttribute.Normal() );
 
-		vertexSize = vertexAttributes.getVertexSizeInBytes()/Float.BYTES;	// size in floats
+		vertexSize = vertexAttributes.vertexSize/Float.BYTES;	// size in floats
 
 		// PPP C UU NNN
 		normalOffset = 6;

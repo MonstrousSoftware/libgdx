@@ -20,6 +20,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.webgpu.WebGPUApplication;
 import com.badlogic.gdx.backends.webgpu.gdx.ShaderPrefix;
 import com.badlogic.gdx.backends.webgpu.gdx.WebGPUShaderProgram;
+import com.badlogic.gdx.backends.webgpu.gdx.WebGPUVertexLayout;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.utils.Disposable;
@@ -59,7 +60,8 @@ public class WebGPUPipeline implements Disposable {
         this.specification = new PipelineSpecification(spec);
 
         Pointer shaderModule = shader.getHandle();
-        WGPUVertexBufferLayout vertexBufferLayout = spec.vertexAttributes != null ? spec.vertexAttributes.getVertexBufferLayout() : null;
+       // WGPUVertexBufferLayout vertexBufferLayout = spec.vertexAttributes != null ? spec.vertexAttributes.getVertexBufferLayout() : null;
+        WGPUVertexBufferLayout vertexBufferLayout = spec.vertexAttributes == null ? null : WebGPUVertexLayout.buildVertexBufferLayout(spec.vertexAttributes);
 
 
         WGPURenderPipelineDescriptor pipelineDesc = WGPURenderPipelineDescriptor.createDirect();        // todo worth reusing these?

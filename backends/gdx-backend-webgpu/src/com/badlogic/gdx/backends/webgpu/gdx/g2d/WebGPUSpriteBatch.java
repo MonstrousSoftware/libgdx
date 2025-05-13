@@ -4,14 +4,10 @@ package com.badlogic.gdx.backends.webgpu.gdx.g2d;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.webgpu.WebGPUApplication;
 import com.badlogic.gdx.backends.webgpu.gdx.WebGPUShaderProgram;
-import com.badlogic.gdx.backends.webgpu.gdx.WebGPUVertexAttributes;
-import com.badlogic.gdx.backends.webgpu.gdx.WebGPUVertexAttributes.Usage;
 import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;
 import com.badlogic.gdx.backends.webgpu.wrappers.*;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
@@ -48,8 +44,8 @@ public class WebGPUSpriteBatch implements Batch {
     private WebGPUIndexBuffer indexBuffer;
     private WebGPUUniformBuffer uniformBuffer;
     private final WebGPUBindGroupLayout bindGroupLayout;
-    private WebGPUVertexAttributes vertexAttributes;
-    private final WebGPUVertexAttributes defaultVertexAttributes;
+    private VertexAttributes vertexAttributes;
+    private final VertexAttributes defaultVertexAttributes;
     private final WebGPUPipelineLayout pipelineLayout;
     private final PipelineSpecification pipelineSpec;
     private int uniformBufferSize;
@@ -91,11 +87,12 @@ public class WebGPUSpriteBatch implements Batch {
 
         drawing = false;
 
-        vertexAttributes = new WebGPUVertexAttributes(Usage.POSITION_2D|Usage.TEXTURE_COORDINATE|Usage.COLOR_PACKED);
+        vertexAttributes = new VertexAttributes(new VertexAttribute(VertexAttributes.Usage.Position, 2, ShaderProgram.POSITION_ATTRIBUTE),
+                VertexAttribute.ColorPacked(), VertexAttribute.TexCoords(0) );
         defaultVertexAttributes = vertexAttributes;
 
         // vertex: x, y, u, v, rgba
-        vertexSize = vertexAttributes.getVertexSizeInBytes(); // bytes
+        vertexSize = vertexAttributes.vertexSize; // bytes
 
         initBlendMap(); // fill constants mapping table
 
@@ -104,7 +101,7 @@ public class WebGPUSpriteBatch implements Batch {
         createBuffers();
         fillIndexBuffer();
 
-        ByteBuffer vertexBB = ByteBuffer.allocateDirect(maxSprites * 4 * vertexSize);
+        ByteBuffer vertexBB = ByteBuffer.allocateDirect(maxSprites * 4 * vertexSize);   // 4 vertices per sprite
         vertexBB.order(ByteOrder.nativeOrder());  // important
         vertexData = vertexBB.asFloatBuffer();
         vertexDataPtr = Pointer.wrap(JavaWebGPU.getRuntime(), vertexBB);
@@ -265,12 +262,12 @@ public class WebGPUSpriteBatch implements Batch {
 
 
 
-    public void setVertexAttributes(WebGPUVertexAttributes vattr){
+    public void setVertexAttributes(VertexAttributes vattr){
         if (!drawing) // catch incorrect usage
             throw new RuntimeException("Call begin() before calling setVertexAttributes().");
         flush();
         vertexAttributes = vattr;
-        vertexSize = vertexAttributes.getVertexSizeInBytes(); // bytes
+        vertexSize = vertexAttributes.vertexSize; // bytes
         pipelineSpec.vertexAttributes = vattr;
         pipelineSpec.shader = null;     // force recompile of shader
         setPipeline();
@@ -294,7 +291,7 @@ public class WebGPUSpriteBatch implements Batch {
         vbOffset = 0;
         vertexData.clear();
         vertexAttributes = defaultVertexAttributes;
-        vertexSize = vertexAttributes.getVertexSizeInBytes(); // bytes
+        vertexSize = vertexAttributes.vertexSize; // bytes
         maxFillLevel = 0;
         renderCalls = 0;
 
@@ -950,8 +947,8 @@ public class WebGPUSpriteBatch implements Batch {
     }
 
     private void addVertex(float x, float y, float u, float v) {
-        boolean hasColor = vertexAttributes.hasUsage(Usage.COLOR_PACKED);
-        boolean hasUV = vertexAttributes.hasUsage(Usage.TEXTURE_COORDINATE);
+        boolean hasColor = (vertexAttributes.getMask() & VertexAttributes.Usage.ColorPacked) != 0;
+        boolean hasUV = (vertexAttributes.getMask() & VertexAttributes.Usage.TextureCoordinates) != 0;
         float col = tint.toFloatBits();
 
         vertexData.put(x);

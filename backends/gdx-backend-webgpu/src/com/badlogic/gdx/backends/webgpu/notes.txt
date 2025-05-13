@@ -222,7 +222,25 @@ Preferred way to clear the screen is to use SpriteBatch.begin(clearColor); which
 - Resource not found: dawn.dll => Created new folder (normal folder, not a module) 'res' under gdx-backend-webgpu (at same level as src). Added dawn.dll and webgpuUtils.dll.
 
 Scene2dTest bugs:
-- moving image is not visible
+- moving image is the incorrect texture
 - debug lines are not visible (known limitation)
 - checkbox image is upside down
 - some buttons in the vertical button row are not visible. This is because of the patch that is drawn, probably because the scissoring is disabled.
+
+13/05/2025:
+- Started work on 3d rendering:
+    - WebGPUIndexData which implements interface IndexData,
+    - WebGPUVertexData which implements interface VertexData,
+    - WebGPUMesh which is derived from Mesh
+
+    WebGPUMesh has a new bind method and render method which take a render pass (instead of a ShaderProgram).
+
+    Note: Mesh.vertices is package private, but was made protected so we can access it from WebGPUMesh (core change). Note that there is a Mesh.getIndexData() but not
+    an equivalent Mesh.getVertexData().  We want access to vertices to bind it to the render pass.
+
+    WebGPUTestMesh is a test app for WebGPUMesh.
+
+- Migrated to standard VertexAttribute/VertexAttributes
+    - The class WebGPUVertexLayout has a factory method to construct a vertex layout, mapping GL constants to WebGPU formats.
+
+

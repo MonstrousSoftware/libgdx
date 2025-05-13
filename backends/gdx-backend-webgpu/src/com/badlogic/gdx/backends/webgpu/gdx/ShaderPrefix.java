@@ -16,27 +16,33 @@
 
 package com.badlogic.gdx.backends.webgpu.gdx;
 
-import com.badlogic.gdx.backends.webgpu.gdx.WebGPUVertexAttributes.Usage;
+
+import com.badlogic.gdx.graphics.VertexAttributes;
 
 public class ShaderPrefix {
     private static StringBuffer sb = new StringBuffer();
 
-    public static String buildPrefix(WebGPUVertexAttributes vertexAttributes, WebGPUEnvironment environment ){
+    public static String buildPrefix(VertexAttributes vertexAttributes, WebGPUEnvironment environment ){
         sb.setLength(0);
+
         if(vertexAttributes != null) {
-            if (vertexAttributes.hasUsage(Usage.TEXTURE_COORDINATE)) {
+            long mask = vertexAttributes.getMask();
+            if ((mask & VertexAttributes.Usage.TextureCoordinates) != 0) {
                 sb.append("#define TEXTURE_COORDINATE\n");
             }
-            if (vertexAttributes.hasUsage(Usage.COLOR) || vertexAttributes.hasUsage(Usage.COLOR_PACKED)) {
+            if ((mask & VertexAttributes.Usage.ColorUnpacked) != 0 ) {
                 sb.append("#define COLOR\n");
             }
-            if (vertexAttributes.hasUsage(Usage.NORMAL)) {
+            if ((mask & VertexAttributes.Usage.ColorPacked) != 0 ) {
+                sb.append("#define COLOR\n");
+            }
+            if ((mask & VertexAttributes.Usage.Normal) != 0) {
                 sb.append("#define NORMAL\n");
             }
-            if (vertexAttributes.hasUsage(Usage.TANGENT)) {   // this is taken as indication that a normal map is used
+            if ((mask & VertexAttributes.Usage.Tangent) != 0) {  // this is taken as indication that a normal map is used
                 sb.append("#define NORMAL_MAP\n");
             }
-            if (vertexAttributes.hasUsage(Usage.JOINTS)&&vertexAttributes.hasUsage(Usage.WEIGHTS)) {
+            if ((mask & VertexAttributes.Usage.BoneWeight) != 0) {
                 sb.append("#define SKIN\n");
             }
         }
