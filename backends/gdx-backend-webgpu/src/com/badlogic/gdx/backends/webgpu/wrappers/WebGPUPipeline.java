@@ -35,7 +35,7 @@ public class WebGPUPipeline implements Disposable {
     private boolean ownsShader;
 
     public WebGPUPipeline(WebGPUPipelineLayout pipelineLayout, PipelineSpecification spec) {
-        this(pipelineLayout.getHandle(), spec);
+        this(pipelineLayout == null ? (Pointer)null : pipelineLayout.getHandle(), spec);
     }
 
     public WebGPUPipeline(Pointer pipelineLayout, PipelineSpecification spec) {

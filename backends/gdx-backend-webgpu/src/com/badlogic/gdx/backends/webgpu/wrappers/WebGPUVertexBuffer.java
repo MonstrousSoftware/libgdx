@@ -5,6 +5,7 @@ import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.backends.webgpu.webgpu.WGPUBufferUsage;
 import jnr.ffi.Pointer;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 public class WebGPUVertexBuffer extends WebGPUBuffer {
@@ -39,6 +40,15 @@ public class WebGPUVertexBuffer extends WebGPUBuffer {
         }
         // Upload geometry data to the buffer
         app.getQueue().writeBuffer(this, 0, vertData, size);
+    }
+
+    public void setVertices(ByteBuffer byteData) {
+        int sizeInBytes = byteData.limit();
+        sizeInBytes = (sizeInBytes + 3) & ~3; // round up to multiple of 4 for writeBuffer
+        if(sizeInBytes > getSize()) throw new IllegalArgumentException("VertexBuffer.setVertices: ByteBuffer contents too large.");
+
+        // Upload data to the buffer
+        app.getQueue().writeBuffer(this, 0, JavaWebGPU.createByteBufferPointer(byteData), sizeInBytes);
     }
 
 }

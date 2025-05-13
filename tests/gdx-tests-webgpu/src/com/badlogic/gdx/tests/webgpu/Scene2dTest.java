@@ -159,14 +159,14 @@ public class Scene2dTest extends GdxTest {
 
 		patch = new TiledDrawable(skin.getRegion("default-round"));
 
-		Window window = new Window("Moo", skin);
-		Label lbl = new Label("ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJ", skin);
-		lbl.setWrap(true);
-		window.row();
-		window.add(lbl).width(400);
-		window.pack();
-		window.pack();
-		stage.addActor(window);
+//		Window window = new Window("Moo", skin);
+//		Label lbl = new Label("ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJ", skin);
+//		lbl.setWrap(true);
+//		window.row();
+//		window.add(lbl).width(400);
+//		window.pack();
+//		window.pack();
+//		stage.addActor(window);
 
 		ImageTextButtonStyle style = new ImageTextButtonStyle(skin.get("default", TextButtonStyle.class));
 		style.imageUp = skin.getDrawable("default-round");
@@ -192,10 +192,10 @@ public class Scene2dTest extends GdxTest {
 		checkBoxLeft.setPosition(150, 400);
 		checkBoxRight.setPosition(150, 370);
 
-		stage.addActor(buttonLeft);
-		stage.addActor(buttonRight);
-		stage.addActor(checkBoxLeft);
-		stage.addActor(checkBoxRight);
+//		stage.addActor(buttonLeft);
+//		stage.addActor(buttonRight);
+//		stage.addActor(checkBoxLeft);
+//		stage.addActor(checkBoxRight);
 
 //		buttonLeft.debug();
 //		buttonRight.debug();
@@ -209,9 +209,9 @@ public class Scene2dTest extends GdxTest {
 		stage.act(Gdx.graphics.getDeltaTime());
 		stage.draw();
 
-		stage.getBatch().begin();
-		patch.draw(stage.getBatch(), 300, 100, 126, 126);
-		stage.getBatch().end();
+//		stage.getBatch().begin();
+//		patch.draw(stage.getBatch(), 300, 100, 126, 126);
+//		stage.getBatch().end();
 	}
 
 	public void resize (int width, int height) {

@@ -22,6 +22,7 @@ import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.backends.webgpu.webgpu.WGPUIndexFormat;
 import com.badlogic.gdx.backends.webgpu.webgpu.WGPUTextureFormat;
 import com.badlogic.gdx.backends.webgpu.webgpu.WebGPU_JNI;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import jnr.ffi.Pointer;
 import org.lwjgl.system.MemoryStack;
 
@@ -29,7 +30,7 @@ import java.nio.ByteBuffer;
 
 import static org.lwjgl.system.MemoryStack.stackPush;
 
-public class WebGPURenderPass {
+public class WebGPURenderPass  {
     private final WebGPU_JNI webGPU;
     private final Pointer renderPass;                   // handle used by WebGPU
     public final RenderPassType type;
@@ -41,6 +42,7 @@ public class WebGPURenderPass {
 
     // don't call this directly, use RenderPassBuilder.create()
     WebGPURenderPass(Pointer renderPass, RenderPassType type, WGPUTextureFormat textureFormat, WGPUTextureFormat depthFormat, int sampleCount, int targetWidth, int targetHeight) {
+        super();
         WebGPUApplication app = (WebGPUApplication) Gdx.app;
         webGPU = app.getWebGPU();
 
@@ -82,6 +84,10 @@ public class WebGPURenderPass {
 
     public void setPipeline(Pointer pipeline) {
         webGPU.wgpuRenderPassEncoderSetPipeline(renderPass, pipeline);
+    }
+
+    public void setPipeline(WebGPUPipeline pipeline) {
+        webGPU.wgpuRenderPassEncoderSetPipeline(renderPass, pipeline.getHandle());
     }
 
     public void setBindGroup(int groupIndex, Pointer bindGroup) {

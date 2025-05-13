@@ -76,7 +76,7 @@ public class Mesh implements Disposable {
 	/** list of all meshes **/
 	static final Map<Application, Array<Mesh>> meshes = new HashMap<Application, Array<Mesh>>();
 
-	final VertexData vertices;
+	final protected VertexData vertices;	// Monstrous
 	final IndexData indices;
 	boolean autoBind = true;
 	final boolean isVertexArray;
