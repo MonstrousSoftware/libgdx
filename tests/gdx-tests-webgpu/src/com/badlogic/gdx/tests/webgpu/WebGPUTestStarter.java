@@ -20,13 +20,13 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
-import com.badlogic.gdx.backends.webgpu.WebGPUApplication;
-import com.badlogic.gdx.backends.webgpu.WebGPUApplicationConfiguration;
-import com.badlogic.gdx.backends.webgpu.WebGPUGraphics;
-import com.badlogic.gdx.backends.webgpu.WebGPUWindowConfiguration;
+import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplication;
+import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplicationConfiguration;
+import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUGraphics;
+import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUWindowConfiguration;
 import com.badlogic.gdx.backends.webgpu.gdx.scene2d.WebGPUSkin;
 import com.badlogic.gdx.backends.webgpu.gdx.scene2d.WebGPUStage;
-import com.badlogic.gdx.backends.webgpu.gdx.utils.WebGPUScreenViewport;
+import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.utils.WebGPUScreenViewport;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -37,9 +37,6 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.tests.utils.CommandLineOptions;
 import com.badlogic.gdx.tests.utils.GdxTestWrapper;
-
-import com.badlogic.gdx.utils.ScreenUtils;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 public class WebGPUTestStarter {
 

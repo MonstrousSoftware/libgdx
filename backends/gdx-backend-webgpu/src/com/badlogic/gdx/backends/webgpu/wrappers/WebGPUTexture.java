@@ -17,8 +17,8 @@
 package com.badlogic.gdx.backends.webgpu.wrappers;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.backends.webgpu.WebGPUApplication;
-import com.badlogic.gdx.backends.webgpu.gdx.g2d.WebGPUTextureData;
+import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplication;
+import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.g2d.WebGPUTextureData;
 import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;
 import com.badlogic.gdx.files.FileHandle;

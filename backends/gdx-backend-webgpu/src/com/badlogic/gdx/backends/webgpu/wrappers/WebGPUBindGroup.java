@@ -2,7 +2,7 @@ package com.badlogic.gdx.backends.webgpu.wrappers;
 
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.backends.webgpu.WebGPUApplication;
+import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplication;
 import com.badlogic.gdx.backends.webgpu.webgpu.WGPUBindGroupDescriptor;
 import com.badlogic.gdx.backends.webgpu.webgpu.WGPUBindGroupEntry;
 import com.badlogic.gdx.backends.webgpu.webgpu.WebGPU_JNI;

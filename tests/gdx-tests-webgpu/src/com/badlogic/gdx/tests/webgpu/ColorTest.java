@@ -17,19 +17,13 @@
 package com.badlogic.gdx.tests.webgpu;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.backends.webgpu.gdx.g2d.WebGPUBitmapFont;
 import com.badlogic.gdx.backends.webgpu.gdx.scene2d.WebGPUSkin;
 import com.badlogic.gdx.backends.webgpu.gdx.scene2d.WebGPUStage;
-import com.badlogic.gdx.backends.webgpu.gdx.utils.WebGPUScreenUtils;
-import com.badlogic.gdx.backends.webgpu.gdx.utils.WebGPUScreenViewport;
+import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.utils.WebGPUScreenUtils;
+import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.utils.WebGPUScreenViewport;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.tests.utils.GdxTest;
-import com.badlogic.gdx.utils.ScreenUtils;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 public class ColorTest extends GdxTest {
 	WebGPUStage stage;

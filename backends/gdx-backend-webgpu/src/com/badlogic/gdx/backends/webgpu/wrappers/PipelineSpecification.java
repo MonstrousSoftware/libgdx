@@ -19,7 +19,7 @@ package com.badlogic.gdx.backends.webgpu.wrappers;
 
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.backends.webgpu.WebGPUApplication;
+import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplication;
 import com.badlogic.gdx.backends.webgpu.gdx.WebGPUEnvironment;
 import com.badlogic.gdx.backends.webgpu.gdx.WebGPUShaderProgram;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;

@@ -2,18 +2,13 @@
 package com.badlogic.gdx.tests.webgpu;
 
 import com.badlogic.gdx.ApplicationAdapter;
-import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.backends.webgpu.WebGPUApplication;
-import com.badlogic.gdx.backends.webgpu.WebGPUApplicationConfiguration;
+import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplication;
+import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplicationConfiguration;
 import com.badlogic.gdx.backends.webgpu.gdx.WebGPUMesh;
-import com.badlogic.gdx.backends.webgpu.gdx.g3d.model.WebGPUMeshPart;
-import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
-import com.badlogic.gdx.backends.webgpu.webgpu.*;
+import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.model.WebGPUMeshPart;
 import com.badlogic.gdx.backends.webgpu.wrappers.*;
 import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.g3d.model.MeshPart;
-import jnr.ffi.Pointer;
 
 // Basic test of Mesh
 // Renders a rectangle.

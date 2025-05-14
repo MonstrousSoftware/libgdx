@@ -2,28 +2,17 @@
 package com.badlogic.gdx.tests.webgpu;
 
 import com.badlogic.gdx.ApplicationAdapter;
-import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.backends.webgpu.WebGPUApplication;
-import com.badlogic.gdx.backends.webgpu.WebGPUApplicationConfiguration;
-import com.badlogic.gdx.backends.webgpu.gdx.g2d.WebGPUBitmapFont;
-import com.badlogic.gdx.backends.webgpu.gdx.g2d.WebGPUSpriteBatch;
-import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
+import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplication;
+import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplicationConfiguration;
+import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.g2d.WebGPUBitmapFont;
+import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.g2d.WebGPUSpriteBatch;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;
-import com.badlogic.gdx.backends.webgpu.wrappers.RenderPassBuilder;
-import com.badlogic.gdx.backends.webgpu.wrappers.RenderPassType;
-import com.badlogic.gdx.backends.webgpu.wrappers.WebGPURenderPass;
 import com.badlogic.gdx.backends.webgpu.wrappers.WebGPUTexture;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.utils.ScreenUtils;
-import jnr.ffi.Pointer;
 
 // demonstrates the use of WebGPUSpriteBatch
 // shows texture from file, texture from pixmap, texture region, sprite

@@ -18,15 +18,11 @@ package com.badlogic.gdx.tests.webgpu;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
-import com.badlogic.gdx.backends.webgpu.gdx.g2d.WebGPUBitmapFont;
-import com.badlogic.gdx.backends.webgpu.gdx.g2d.WebGPUSpriteBatch;
-import com.badlogic.gdx.backends.webgpu.gdx.utils.WebGPUShapeRenderer;
+import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.g2d.WebGPUBitmapFont;
+import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.g2d.WebGPUSpriteBatch;
+import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.utils.WebGPUShapeRenderer;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.tests.utils.GdxTest;
 import com.badlogic.gdx.tests.utils.PerspectiveCamController;

@@ -17,12 +17,11 @@
 package com.badlogic.gdx.backends.webgpu.wrappers;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.backends.webgpu.WebGPUApplication;
+import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplication;
 import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.backends.webgpu.webgpu.WGPUIndexFormat;
 import com.badlogic.gdx.backends.webgpu.webgpu.WGPUTextureFormat;
 import com.badlogic.gdx.backends.webgpu.webgpu.WebGPU_JNI;
-import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import jnr.ffi.Pointer;
 import org.lwjgl.system.MemoryStack;
 

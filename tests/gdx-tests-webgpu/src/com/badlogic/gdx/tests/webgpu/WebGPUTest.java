@@ -2,8 +2,8 @@
 package com.badlogic.gdx.tests.webgpu;
 
 import com.badlogic.gdx.*;
-import com.badlogic.gdx.backends.webgpu.WebGPUApplication;
-import com.badlogic.gdx.backends.webgpu.WebGPUApplicationConfiguration;
+import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplication;
+import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplicationConfiguration;
 import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;
 
