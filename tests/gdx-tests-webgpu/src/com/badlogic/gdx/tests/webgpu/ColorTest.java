@@ -17,10 +17,11 @@
 package com.badlogic.gdx.tests.webgpu;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.backends.webgpu.gdx.graphics.viewport.WebGPUScreenViewport;
 import com.badlogic.gdx.backends.webgpu.gdx.scene2d.WebGPUSkin;
 import com.badlogic.gdx.backends.webgpu.gdx.scene2d.WebGPUStage;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.utils.WebGPUScreenUtils;
-import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.utils.WebGPUScreenViewport;
+
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.tests.utils.GdxTest;

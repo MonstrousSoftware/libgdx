@@ -18,7 +18,7 @@ package com.badlogic.gdx.backends.webgpu.gdx.scene2d;
 
 import com.badlogic.gdx.*;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.g2d.WebGPUSpriteBatch;
-import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.utils.WebGPUScalingViewport;
+import com.badlogic.gdx.backends.webgpu.gdx.graphics.viewport.WebGPUScalingViewport;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.scenes.scene2d.*;
