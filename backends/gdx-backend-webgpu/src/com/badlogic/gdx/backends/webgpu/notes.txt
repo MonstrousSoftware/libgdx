@@ -248,6 +248,14 @@ Scene2dTest bugs:
 MeshPart can almost be used unchanged, except it provides render methods that take a ShaderProgram and we need to provide a RenderPass.
 
 Tried a trick to derive ShaderProgram into a Pass class, but ShaderProgram has no no-args constructor and the existing constructor will compile shader coder or throw an exception.
+Derived WebGPUMeshPart instead, overriding a few methods.
+
+Folder structure in backend:
+- gdx           code replicating classes from gdx.graphics and gdx.scene2d core
+- lwjgl3        platform-specific code for desktop using LWJGL3 and GLFW
+- utils         utility functions related to JNR-FFI mechanism
+- webgpu        generated Java code to interface with Dawn via JNR-FFI
+- wrappers      Java classes corresponding to some WebGPU concepts, e.g. adapter, pipeline, texture, etc.
 
 
 
