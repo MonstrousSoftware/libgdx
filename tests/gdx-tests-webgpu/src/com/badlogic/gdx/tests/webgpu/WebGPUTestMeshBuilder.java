@@ -3,18 +3,24 @@ package com.badlogic.gdx.tests.webgpu;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplication;
-import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplicationConfiguration;
 import com.badlogic.gdx.backends.webgpu.gdx.WebGPUMesh;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.model.WebGPUMeshPart;
+import com.badlogic.gdx.backends.webgpu.gdx.graphics.utils.WebGPUMeshBuilder;
+import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplication;
+import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplicationConfiguration;
 import com.badlogic.gdx.backends.webgpu.wrappers.*;
-import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.VertexAttribute;
+import com.badlogic.gdx.graphics.VertexAttributes;
+import com.badlogic.gdx.math.Vector3;
 
 // Basic test of Mesh and MeshPart
 // Renders a rectangle (or part of it).
+// Also tests MeshBuilder by building a circle.
 
 
-public class WebGPUTestMesh {
+public class WebGPUTestMeshBuilder {
 
 	// launcher
 	public static void main (String[] argv) {
@@ -30,17 +36,29 @@ public class WebGPUTestMesh {
 
 	// application
 	static class TestApp extends ApplicationAdapter {
-		private WebGPUMesh mesh;
-		private VertexAttributes vattr;
-		private WebGPUPipeline pipeline;
+        private WebGPUMesh mesh;
 		private WebGPUMeshPart meshPart;
+		private WebGPUMesh mesh2;
+		private WebGPUMeshPart meshPart2;
+        private WebGPUPipeline pipeline;
+
 
 		public void create () {
-			vattr = new VertexAttributes(VertexAttribute.Position(),  VertexAttribute.TexCoords(0), VertexAttribute.ColorUnpacked());
+
+            VertexAttributes vattr = new VertexAttributes(VertexAttribute.Position(), VertexAttribute.TexCoords(0), VertexAttribute.ColorUnpacked());
 
 			PipelineSpecification pipelineSpec = new PipelineSpecification(vattr, getDefaultShaderSource());
 			pipelineSpec.name = "pipeline";
 			pipeline = new WebGPUPipeline((WebGPUPipelineLayout) null, pipelineSpec);
+
+			// create a circular mesh part with the mesh builder
+            WebGPUMeshBuilder mb = new WebGPUMeshBuilder();
+			mb.begin(vattr);
+			mb.ensureCapacity(200, 200);
+			meshPart2 = mb.part( "circle", GL20.GL_TRIANGLES);
+			mb.setColor(Color.ROYAL);
+			mb.circle(0.3f, 32, new Vector3(0,-0.5f,0), Vector3.Z );
+			mesh2 = mb.end();
 
 
 			mesh = new WebGPUMesh(true, 4, 6, vattr);
@@ -50,7 +68,6 @@ public class WebGPUTestMesh {
 				0.5f, 0.5f, 0, 		1,0,	1,1,0,1,
 				-0.5f, 0.5f, 0, 	0,0,	0,1,0,1,
 			});
-
 			mesh.setIndices(new short[] {0, 1, 2, 	2, 3, 0});
 
 			int offset = 3;	// offset in the indices array, since the mesh is indexed
@@ -71,6 +88,8 @@ public class WebGPUTestMesh {
 
 			meshPart.render(pass);
 
+			meshPart2.render(pass);
+
 			// end the render pass
 			pass.end();
 		}
@@ -85,6 +104,7 @@ public class WebGPUTestMesh {
 		public void dispose () {
 			pipeline.dispose();
 			mesh.dispose();
+			mesh2.dispose();
 		}
 
 		private String getDefaultShaderSource() {

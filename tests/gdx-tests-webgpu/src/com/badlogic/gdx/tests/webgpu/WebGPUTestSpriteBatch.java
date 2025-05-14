@@ -3,12 +3,16 @@ package com.badlogic.gdx.tests.webgpu;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.assets.loaders.FileHandleResolver;
+import com.badlogic.gdx.backends.webgpu.gdx.assets.WebGPUTextureLoader;
 import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplication;
 import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplicationConfiguration;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.g2d.WebGPUBitmapFont;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.g2d.WebGPUSpriteBatch;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;
 import com.badlogic.gdx.backends.webgpu.wrappers.WebGPUTexture;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.g2d.Sprite;
@@ -40,8 +44,10 @@ public class WebGPUTestSpriteBatch  {
 		private float sx = 10;
 		private WebGPUBitmapFont font;
 
+
 		public void create () {
 			batch = new WebGPUSpriteBatch();
+
 			texture = new WebGPUTexture(Gdx.files.internal("data/badlogic.jpg"));
 
 

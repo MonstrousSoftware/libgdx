@@ -14,13 +14,14 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.utils;
+package com.badlogic.gdx.backends.webgpu.gdx.graphics.utils;
 
+import com.badlogic.gdx.backends.webgpu.gdx.WebGPUMesh;
+import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.model.WebGPUMeshPart;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
-import com.badlogic.gdx.graphics.g3d.utils.MeshBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.*;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
@@ -29,7 +30,7 @@ import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.*;
 
 
-public class WebGPUMeshBuilder extends MeshBuilder {
+public class WebGPUMeshBuilder implements MeshPartBuilder {
 	/** maximum number of vertices mesh builder can hold (64k) */
 	public static final int MAX_VERTICES = 1 << 16;
 	/** highest index mesh builder can get (64k - 1) */
@@ -76,9 +77,9 @@ public class WebGPUMeshBuilder extends MeshBuilder {
 	/** The offset within an vertex to texture coordinates, or -1 if not available */
 	private int uvOffset;
 	/** The meshpart currently being created */
-	private MeshPart part;
+	private WebGPUMeshPart part;
 	/** The parts created between begin and end */
-	private Array<MeshPart> parts = new Array<MeshPart>();
+	private Array<WebGPUMeshPart> parts = new Array<WebGPUMeshPart>();
 	/** The color used if no vertex color is specified. */
 	private final Color color = new Color(Color.WHITE);
 	private boolean hasColor = false;
@@ -185,8 +186,8 @@ public class WebGPUMeshBuilder extends MeshBuilder {
 	/** Starts a new MeshPart. The mesh part is not usable until end() is called. This will reset the current color and vertex
 	 * transformation.
 	 * @see #part(String, int, MeshPart) */
-	public MeshPart part (final String id, int primitiveType) {
-		return part(id, primitiveType, new MeshPart());
+	public WebGPUMeshPart part (final String id, int primitiveType) {
+		return part(id, primitiveType, new WebGPUMeshPart());
 	}
 
 	/** Starts a new MeshPart. The mesh part is not usable until end() is called. This will reset the current color and vertex
@@ -194,7 +195,7 @@ public class WebGPUMeshBuilder extends MeshBuilder {
 	 * @param id The id (name) of the part
 	 * @param primitiveType e.g. {@link GL20#GL_TRIANGLES} or {@link GL20#GL_LINES}
 	 * @param meshPart The part to receive the result */
-	public MeshPart part (final String id, final int primitiveType, MeshPart meshPart) {
+	public WebGPUMeshPart part (final String id, final int primitiveType, WebGPUMeshPart meshPart) {
 		if (this.attributes == null) throw new RuntimeException("Call begin() first");
 		endpart();
 
@@ -213,7 +214,7 @@ public class WebGPUMeshBuilder extends MeshBuilder {
 	/** End building the mesh and returns the mesh
 	 * @param mesh The mesh to receive the built vertices and indices, must have the same attributes and must be big enough to hold
 	 *           the data, any existing data will be overwritten. */
-	public Mesh end (Mesh mesh) {
+	public WebGPUMesh end (WebGPUMesh mesh) {
 		endpart();
 
 		if (attributes == null) throw new GdxRuntimeException("Call begin() first");
@@ -226,7 +227,7 @@ public class WebGPUMeshBuilder extends MeshBuilder {
 		mesh.setVertices(vertices.items, 0, vertices.size);
 		mesh.setIndices(indices.items, 0, indices.size);
 
-		for (MeshPart p : parts)
+		for (WebGPUMeshPart p : parts)
 			p.mesh = mesh;
 		parts.clear();
 
@@ -238,8 +239,8 @@ public class WebGPUMeshBuilder extends MeshBuilder {
 	}
 
 	/** End building the mesh and returns the mesh */
-	public Mesh end () {
-		return end(new Mesh(true, Math.min(vertices.size / stride, MAX_VERTICES), indices.size, attributes));
+	public WebGPUMesh end () {
+		return end(new WebGPUMesh(true, Math.min(vertices.size / stride, MAX_VERTICES), indices.size, attributes));
 	}
 
 	/** Clears the data being built up until now, including the vertices, indices and all parts. Must be called in between the call
@@ -312,7 +313,7 @@ public class WebGPUMeshBuilder extends MeshBuilder {
 	}
 
 	@Override
-	public MeshPart getMeshPart () {
+	public WebGPUMeshPart getMeshPart () {
 		return part;
 	}
 
@@ -714,7 +715,14 @@ public class WebGPUMeshBuilder extends MeshBuilder {
 	}
 
 	@Override
-	public void addMesh (MeshPart meshpart) {
+	public void addMesh(MeshPart meshpart) {
+		if(meshpart instanceof WebGPUMeshPart)
+			addMesh(meshpart);
+		else
+			throw new GdxRuntimeException("addMesh: meshPart needs to be WebGPUMeshPart");
+	}
+
+	public void addMesh (WebGPUMeshPart meshpart) {
 		if (meshpart.primitiveType != primitiveType) throw new GdxRuntimeException("Primitive type doesn't match");
 		addMesh(meshpart.mesh, meshpart.offset, meshpart.size);
 	}

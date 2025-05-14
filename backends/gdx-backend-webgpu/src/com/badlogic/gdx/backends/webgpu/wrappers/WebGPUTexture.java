@@ -104,6 +104,11 @@ public class WebGPUTexture extends Texture {
         this(new PixmapTextureData(pixmap, null, false, false), label);
     }
 
+    public WebGPUTexture (TextureData data) {
+        this(data, "texture");
+    }
+
+
 
     public WebGPUTexture(TextureData data, String label) {
         load(data, label);
