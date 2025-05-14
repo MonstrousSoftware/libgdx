@@ -7,13 +7,12 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.webgpu.WebGPUApplication;
 import com.badlogic.gdx.backends.webgpu.WebGPUApplicationConfiguration;
 import com.badlogic.gdx.backends.webgpu.gdx.WebGPUMesh;
+import com.badlogic.gdx.backends.webgpu.gdx.g3d.model.WebGPUMeshPart;
 import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;
 import com.badlogic.gdx.backends.webgpu.wrappers.*;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Mesh;
-import com.badlogic.gdx.graphics.VertexAttribute;
-import com.badlogic.gdx.graphics.VertexAttributes;
+import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import jnr.ffi.Pointer;
 
 // Basic test of Mesh
@@ -36,9 +35,10 @@ public class WebGPUTestMesh {
 
 	// application
 	static class TestApp extends ApplicationAdapter {
-		private Mesh mesh;
+		private WebGPUMesh mesh;
 		private VertexAttributes vattr;
 		private WebGPUPipeline pipeline;
+		private WebGPUMeshPart meshPart;
 
 		public void create () {
 			vattr = new VertexAttributes(VertexAttribute.Position(),  VertexAttribute.TexCoords(0), VertexAttribute.ColorUnpacked());
@@ -57,6 +57,11 @@ public class WebGPUTestMesh {
 			});
 
 			mesh.setIndices(new short[] {0, 1, 2, 	2, 3, 0});
+
+			int offset = 3;	// offset in the indices array, since the mesh is indexed
+			int size = 3;	// nr of indices, since the mesh is indexed
+			int type = GL20.GL_TRIANGLES;	// primitive type using GL constant
+			meshPart = new WebGPUMeshPart("part", mesh, offset, size, type);
 		}
 
 		@Override
@@ -67,7 +72,9 @@ public class WebGPUTestMesh {
 
 			pass.setPipeline(pipeline);
 
-			((WebGPUMesh)mesh).render(pass, 0);
+			//mesh.render(pass, 0, 0, 6);
+
+			meshPart.render(pass);
 
 			// end the render pass
 			pass.end();

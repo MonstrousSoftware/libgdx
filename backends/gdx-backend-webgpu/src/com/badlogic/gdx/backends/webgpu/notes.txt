@@ -241,6 +241,13 @@ Scene2dTest bugs:
     WebGPUTestMesh is a test app for WebGPUMesh.
 
 - Migrated to standard VertexAttribute/VertexAttributes
-    - The class WebGPUVertexLayout has a factory method to construct a vertex layout, mapping GL constants to WebGPU formats.
+    - The new class WebGPUVertexLayout has a factory method to construct a vertex layout from VertexAttributes, mapping GL constants to WebGPU formats.
+
+
+
+MeshPart can almost be used unchanged, except it provides render methods that take a ShaderProgram and we need to provide a RenderPass.
+
+Tried a trick to derive ShaderProgram into a Pass class, but ShaderProgram has no no-args constructor and the existing constructor will compile shader coder or throw an exception.
+
 
 

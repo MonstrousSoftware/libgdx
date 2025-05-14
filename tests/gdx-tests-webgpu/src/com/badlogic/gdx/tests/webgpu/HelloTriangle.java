@@ -67,8 +67,6 @@ public class HelloTriangle {
 
 	public HelloTriangle () {
 
-
-
 		// create a window
 		openWindow(WIDTH, HEIGHT, "WebGPU: Hello Triangle!");
 
