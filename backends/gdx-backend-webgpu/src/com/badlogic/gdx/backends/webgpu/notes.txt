@@ -259,3 +259,6 @@ Folder structure in backend:
 
 
 
+15/05/2025:
+- Separated out the backend into a platform specific part (gdx-backend-lwjgl3_webgpu) and a shared part (gdx-backend-webgpu). This
+opens up the possibility to add different platform backends.
