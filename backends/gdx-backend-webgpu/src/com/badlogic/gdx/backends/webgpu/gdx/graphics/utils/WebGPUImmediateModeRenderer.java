@@ -151,7 +151,7 @@ public class WebGPUImmediateModeRenderer implements ImmediateModeRenderer {
 		pipelineSpec.setCullMode(WGPUCullMode.None);
 
 
-		renderPass = RenderPassBuilder.create(gfx, null, gfx.getSamples());
+		renderPass = RenderPassBuilder.create(null, gfx.getSamples());
 	}
 
 	public void color (Color color) {

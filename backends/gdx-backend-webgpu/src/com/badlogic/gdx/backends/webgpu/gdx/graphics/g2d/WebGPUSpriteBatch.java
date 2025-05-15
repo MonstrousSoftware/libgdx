@@ -283,7 +283,7 @@ public class WebGPUSpriteBatch implements Batch {
 
     public void begin(Color clearColor) {
 
-        renderPass = RenderPassBuilder.create(gfx, clearColor, gfx.getSamples());
+        renderPass = RenderPassBuilder.create(clearColor, gfx.getSamples());
 
         if (drawing)
             throw new RuntimeException("Must end() before begin()");

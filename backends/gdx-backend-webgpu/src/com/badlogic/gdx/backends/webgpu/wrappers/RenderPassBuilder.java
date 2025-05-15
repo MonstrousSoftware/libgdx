@@ -32,22 +32,22 @@ public class RenderPassBuilder {
 
 //    private static Viewport viewport = null;
 
-    public static WebGPURenderPass create(WebGPUGraphicsBase gfx) {
-        return create(gfx, null);
+    public static WebGPURenderPass create() {
+        return create( null);
     }
 
-    public static WebGPURenderPass create(WebGPUGraphicsBase gfx,Color clearColor) {
-        return create(gfx, clearColor,  1);
+    public static WebGPURenderPass create(Color clearColor) {
+        return create(clearColor,  1);
     }
 
-    public static WebGPURenderPass create(WebGPUGraphicsBase gfx, Color clearColor, int sampleCount) {
-
-        return create(gfx, clearColor, null, gfx.getDepthTextureFormat(), gfx.getDepthTextureView(), sampleCount);
+    public static WebGPURenderPass create(Color clearColor, int sampleCount) {
+        WebGPUGraphicsBase gfx = (WebGPUGraphicsBase)Gdx.graphics;
+        return create(clearColor, null, gfx.getDepthTextureFormat(), gfx.getDepthTextureView(), sampleCount);
     }
 
 
-    public static WebGPURenderPass create(WebGPUGraphicsBase gfx,Color clearColor, WebGPUTexture outTexture, WGPUTextureFormat depthFormat, WebGPUTextureView depthTextureView, int sampleCount){
-        return create(gfx, "color pass", clearColor, outTexture, depthFormat, depthTextureView, sampleCount, RenderPassType.COLOR_PASS);
+    public static WebGPURenderPass create( Color clearColor, WebGPUTexture outTexture, WGPUTextureFormat depthFormat, WebGPUTextureView depthTextureView, int sampleCount){
+        return create("color pass", clearColor, outTexture, depthFormat, depthTextureView, sampleCount, RenderPassType.COLOR_PASS);
     }
 
 
@@ -61,8 +61,9 @@ public class RenderPassBuilder {
      * @param passType
      * @return
      */
-    public static WebGPURenderPass create(WebGPUGraphicsBase gfx, String name, Color clearColor, WebGPUTexture outTexture,  WGPUTextureFormat depthFormat,
+    public static WebGPURenderPass create(String name, Color clearColor, WebGPUTexture outTexture,  WGPUTextureFormat depthFormat,
                                           WebGPUTextureView depthTextureView, int sampleCount, RenderPassType passType) {
+        WebGPUGraphicsBase gfx = (WebGPUGraphicsBase)Gdx.graphics;
         if(gfx.getCommandEncoder() == null)
             throw new RuntimeException("Encoder must be set before calling WebGPURenderPass.create()");
 
