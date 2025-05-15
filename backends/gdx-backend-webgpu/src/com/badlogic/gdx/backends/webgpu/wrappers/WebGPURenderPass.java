@@ -17,7 +17,7 @@
 package com.badlogic.gdx.backends.webgpu.wrappers;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplication;
+import com.badlogic.gdx.backends.webgpu.gdx.WebGPUGraphicsBase;
 import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.backends.webgpu.webgpu.WGPUIndexFormat;
 import com.badlogic.gdx.backends.webgpu.webgpu.WGPUTextureFormat;
@@ -42,8 +42,8 @@ public class WebGPURenderPass  {
     // don't call this directly, use RenderPassBuilder.create()
     WebGPURenderPass(Pointer renderPass, RenderPassType type, WGPUTextureFormat textureFormat, WGPUTextureFormat depthFormat, int sampleCount, int targetWidth, int targetHeight) {
         super();
-        WebGPUApplication app = (WebGPUApplication) Gdx.app;
-        webGPU = app.getWebGPU();
+        WebGPUGraphicsBase gfx = (WebGPUGraphicsBase) Gdx.graphics;
+        webGPU = gfx.getWebGPU();
 
         this.renderPass = renderPass;
         this.type = type;

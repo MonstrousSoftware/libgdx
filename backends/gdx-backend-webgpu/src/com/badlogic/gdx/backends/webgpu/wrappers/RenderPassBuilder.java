@@ -17,7 +17,7 @@
 package com.badlogic.gdx.backends.webgpu.wrappers;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplication;
+import com.badlogic.gdx.backends.webgpu.gdx.WebGPUGraphicsBase;
 import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;
 import com.badlogic.gdx.graphics.Color;
@@ -32,22 +32,22 @@ public class RenderPassBuilder {
 
 //    private static Viewport viewport = null;
 
-    public static WebGPURenderPass create() {
-        return create(null);
+    public static WebGPURenderPass create(WebGPUGraphicsBase gfx) {
+        return create(gfx, null);
     }
 
-    public static WebGPURenderPass create(Color clearColor) {
-        return create(clearColor,  1);
+    public static WebGPURenderPass create(WebGPUGraphicsBase gfx,Color clearColor) {
+        return create(gfx, clearColor,  1);
     }
 
-    public static WebGPURenderPass create(Color clearColor, int sampleCount) {
-        WebGPUApplication app = (WebGPUApplication) Gdx.app;
-        return create(clearColor, null, app.getDepthTextureFormat(), app.getDepthTextureView(), sampleCount);
+    public static WebGPURenderPass create(WebGPUGraphicsBase gfx, Color clearColor, int sampleCount) {
+
+        return create(gfx, clearColor, null, gfx.getDepthTextureFormat(), gfx.getDepthTextureView(), sampleCount);
     }
 
 
-    public static WebGPURenderPass create(Color clearColor, WebGPUTexture outTexture, WGPUTextureFormat depthFormat, WebGPUTextureView depthTextureView, int sampleCount){
-        return create("color pass", clearColor, outTexture, depthFormat, depthTextureView, sampleCount, RenderPassType.COLOR_PASS);
+    public static WebGPURenderPass create(WebGPUGraphicsBase gfx,Color clearColor, WebGPUTexture outTexture, WGPUTextureFormat depthFormat, WebGPUTextureView depthTextureView, int sampleCount){
+        return create(gfx, "color pass", clearColor, outTexture, depthFormat, depthTextureView, sampleCount, RenderPassType.COLOR_PASS);
     }
 
 
@@ -61,10 +61,9 @@ public class RenderPassBuilder {
      * @param passType
      * @return
      */
-    public static WebGPURenderPass create(String name, Color clearColor, WebGPUTexture outTexture,  WGPUTextureFormat depthFormat,
+    public static WebGPURenderPass create(WebGPUGraphicsBase gfx, String name, Color clearColor, WebGPUTexture outTexture,  WGPUTextureFormat depthFormat,
                                           WebGPUTextureView depthTextureView, int sampleCount, RenderPassType passType) {
-        WebGPUApplication app = (WebGPUApplication) Gdx.app;
-        if(app.getCommandEncoder() == null)
+        if(gfx.getCommandEncoder() == null)
             throw new RuntimeException("Encoder must be set before calling WebGPURenderPass.create()");
 
         WGPUTextureFormat colorFormat = WGPUTextureFormat.Undefined;
@@ -96,13 +95,13 @@ public class RenderPassBuilder {
 
             if (outTexture == null) {
                 if ( sampleCount > 1) {
-                    renderPassColorAttachment.setView(app.getMultiSamplingTexture().getTextureView().getHandle());
-                    renderPassColorAttachment.setResolveTarget(app.getTargetView());
+                    renderPassColorAttachment.setView(gfx.getMultiSamplingTexture().getTextureView().getHandle());
+                    renderPassColorAttachment.setResolveTarget(gfx.getTargetView());
                 } else {
-                    renderPassColorAttachment.setView(app.getTargetView());
+                    renderPassColorAttachment.setView(gfx.getTargetView());
                     renderPassColorAttachment.setResolveTarget(JavaWebGPU.createNullPointer());
                 }
-                colorFormat = app.getSurfaceFormat();
+                colorFormat = gfx.getSurfaceFormat();
 
             } else {
                 renderPassColorAttachment.setView(outTexture.getTextureView().getHandle());
@@ -139,8 +138,8 @@ public class RenderPassBuilder {
         //app.gpuTiming.configureWebGPURenderPassDescriptor(renderPassDescriptor);
 
 
-        WebGPU_JNI webGPU = app.getWebGPU();
-        Pointer renderPassPtr = webGPU.wgpuCommandEncoderBeginRenderPass(app.getCommandEncoder().getHandle(), renderPassDescriptor);
+
+        Pointer renderPassPtr = gfx.getWebGPU().wgpuCommandEncoderBeginRenderPass(gfx.getCommandEncoder().getHandle(), renderPassDescriptor);
         WebGPURenderPass pass = new WebGPURenderPass(renderPassPtr, passType, colorFormat, depthFormat, sampleCount,
                 outTexture == null ? Gdx.graphics.getWidth() : outTexture.getWidth(),
                 outTexture == null ? Gdx.graphics.getHeight() : outTexture.getHeight());
@@ -150,6 +149,8 @@ public class RenderPassBuilder {
 //            viewport.apply(pass);
 //            viewport = null;        // apply only once after setViewport() is called
 //        }
+
+
         return pass;
     }
 

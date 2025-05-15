@@ -2,7 +2,7 @@ package com.badlogic.gdx.backends.webgpu.wrappers;
 
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplication;
+import com.badlogic.gdx.backends.webgpu.gdx.WebGPUGraphicsBase;
 import com.badlogic.gdx.backends.webgpu.webgpu.WGPUCommandEncoderDescriptor;
 import com.badlogic.gdx.backends.webgpu.webgpu.WebGPU_JNI;
 import com.badlogic.gdx.utils.Disposable;
@@ -14,8 +14,8 @@ public class WebGPUCommandEncoder implements Disposable {
     private final Pointer encoder;
 
     public WebGPUCommandEncoder(WebGPUDevice device) {
-        WebGPUApplication app = (WebGPUApplication) Gdx.app;
-        webGPU = app.getWebGPU();
+        WebGPUGraphicsBase gfx = (WebGPUGraphicsBase) Gdx.graphics;
+        webGPU = gfx.getWebGPU();
 
         // create a command encoder
         WGPUCommandEncoderDescriptor encoderDesc = WGPUCommandEncoderDescriptor.createDirect();

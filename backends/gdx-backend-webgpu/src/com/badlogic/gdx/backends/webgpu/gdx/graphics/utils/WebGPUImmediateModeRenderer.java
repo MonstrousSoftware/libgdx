@@ -17,7 +17,7 @@
 package com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.utils;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplication;
+import com.badlogic.gdx.backends.webgpu.gdx.WebGPUGraphicsBase;
 import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;
 import com.badlogic.gdx.backends.webgpu.wrappers.*;
@@ -54,7 +54,7 @@ public class WebGPUImmediateModeRenderer implements ImmediateModeRenderer {
 	private final int texCoordOffset;
 	private final Matrix4 projModelView = new Matrix4();
 
-	private WebGPUApplication app;
+
 	private VertexAttributes vertexAttributes;
 	private WebGPUVertexBuffer vertexBuffer;
 	private WebGPUUniformBuffer uniformBuffer;
@@ -68,6 +68,7 @@ public class WebGPUImmediateModeRenderer implements ImmediateModeRenderer {
 	private Pointer vertexDataPtr;
 	private FloatBuffer vertexData;
 	private WebGPUPipeline prevPipeline;
+	private WebGPUGraphicsBase gfx;
 
 	public WebGPUImmediateModeRenderer(boolean hasNormals, boolean hasColors, int numTexCoords) {
 		this(5000, hasNormals, hasColors, numTexCoords, createDefaultShader(hasNormals, hasColors, numTexCoords));
@@ -83,7 +84,8 @@ public class WebGPUImmediateModeRenderer implements ImmediateModeRenderer {
 	public WebGPUImmediateModeRenderer(int maxVertices, boolean hasNormals, boolean hasColors, int numTexCoords,
 									   ShaderProgram shader) {
 
-		app = (WebGPUApplication) Gdx.app;
+		gfx = (WebGPUGraphicsBase) Gdx.graphics;
+
 		this.maxVertices = maxVertices;
 
 		vertexAttributes = new VertexAttributes( VertexAttribute.Position(),
@@ -149,7 +151,7 @@ public class WebGPUImmediateModeRenderer implements ImmediateModeRenderer {
 		pipelineSpec.setCullMode(WGPUCullMode.None);
 
 
-		renderPass = RenderPassBuilder.create(null, app.getConfiguration().samples);
+		renderPass = RenderPassBuilder.create(gfx, null, gfx.getSamples());
 	}
 
 	public void color (Color color) {
@@ -203,7 +205,7 @@ public class WebGPUImmediateModeRenderer implements ImmediateModeRenderer {
 		int numBytes = numVertices * vertexSize * Float.BYTES;
 
 		// copy vertex data to GPU vertex buffer
-		app.getQueue().writeBuffer(vertexBuffer, 0, vertexDataPtr, numBytes);
+		gfx.getQueue().writeBuffer(vertexBuffer, 0, vertexDataPtr, numBytes);
 
 		// Set vertex buffer while encoding the render pass
 		renderPass.setVertexBuffer( 0, vertexBuffer.getHandle(), 0, numBytes);

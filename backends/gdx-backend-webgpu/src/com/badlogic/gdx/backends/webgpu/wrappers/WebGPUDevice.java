@@ -2,7 +2,7 @@ package com.badlogic.gdx.backends.webgpu.wrappers;
 
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplication;
+import com.badlogic.gdx.backends.webgpu.gdx.WebGPUGraphicsBase;
 import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;
 import com.badlogic.gdx.utils.Disposable;
@@ -16,8 +16,8 @@ public class WebGPUDevice implements Disposable {
     private final WebGPU_JNI webGPU;
 
     public WebGPUDevice(WebGPUAdapter adapter) {
-        WebGPUApplication app = (WebGPUApplication) Gdx.app;
-        webGPU = app.getWebGPU();
+        WebGPUGraphicsBase gfx = (WebGPUGraphicsBase) Gdx.graphics;
+        webGPU = gfx.getWebGPU();
 
         // set required limits for device
         // todo these values are rather random
@@ -49,7 +49,7 @@ public class WebGPUDevice implements Disposable {
 
 
         // required feature to do timestamp queries
-        if(app.getConfiguration().enableGPUtiming){
+        if(gfx.getGPUtimingEnabled()){
             int[] featureValues = new int[1];
             featureValues[0] = WGPUFeatureName.TimestampQuery;
             Pointer requiredFeatures = createIntegerArrayPointer(featureValues);
@@ -81,7 +81,7 @@ public class WebGPUDevice implements Disposable {
 //        System.out.println("maxTextureArrayLayers " + supportedLimits.getLimits().getMaxTextureArrayLayers());
 
 
-        if (app.getConfiguration().enableGPUtiming && !webGPU.wgpuDeviceHasFeature(device, WGPUFeatureName.TimestampQuery)) {
+        if (gfx.getGPUtimingEnabled() && !webGPU.wgpuDeviceHasFeature(device, WGPUFeatureName.TimestampQuery)) {
             System.out.println("** Requested timestamp queries are not supported!");
         }
     }

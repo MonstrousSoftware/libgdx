@@ -20,6 +20,7 @@ include ":backends:gdx-backend-android"
 include ":backends:gdx-backend-headless"
 include ":backends:gdx-backend-lwjgl"
 include ":backends:gdx-backend-lwjgl3"
+include ":backends:gdx-backend-lwjgl3_webgpu"
 include ":backends:gdx-backend-robovm"
 include ":backends:gdx-backend-robovm-metalangle"
 include ":backends:gdx-backends-gwt"
@@ -51,3 +52,4 @@ rootProject.name = "libgdx"
 include 'backends:gdx-backend-webgpu:res'
 include 'backends:gdx-backend-webgpu:res'
 include 'extensions:gdx-webgpu'
+include 'backends:testmodule'

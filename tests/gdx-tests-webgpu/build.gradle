@@ -37,6 +37,8 @@ targetCompatibility = 17 //versions.java
 dependencies {
 	implementation project(":tests:gdx-tests")
 	implementation project(":backends:gdx-backend-webgpu")
+	implementation project(":backends:gdx-backend-lwjgl3")
+	implementation project(":backends:gdx-backend-lwjgl3_webgpu")
 	implementation project(":extensions:gdx-lwjgl3-angle")
 	implementation testnatives.desktop
 	//	implementation 'com.github.MonstrousSoftware:Java-to-WebGPU:-SNAPSHOT'

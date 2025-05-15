@@ -14,12 +14,11 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.badlogic.gdx.backends.webgpu.lwjgl3;
+package com.badlogic.gdx.backends.lwjgl3_webgpu;
 
 import com.badlogic.gdx.Files.FileType;
 import com.badlogic.gdx.Graphics;
 import com.badlogic.gdx.Graphics.DisplayMode;
-import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUGraphics.WebGPUDisplayMode;
 import com.badlogic.gdx.graphics.Color;
 
 import java.util.Arrays;
@@ -38,7 +37,7 @@ public class WebGPUWindowConfiguration {
 	FileType windowIconFileType;
 	String[] windowIconPaths;
 	WebGPUWindowListener windowListener;
-	WebGPUDisplayMode fullscreenMode;
+	WebGPUGraphics.WebGPUDisplayMode fullscreenMode;
 	String title;
 	Color initialBackgroundColor = Color.BLACK;
 	boolean initialVisible = true;
@@ -147,7 +146,7 @@ public class WebGPUWindowConfiguration {
 	/** Sets the app to use fullscreen mode. Use the static methods like {@link Lwjgl3ApplicationConfiguration#getDisplayMode()} on
 	 * this class to enumerate connected monitors and their fullscreen display modes. */
 	public void setFullscreenMode (DisplayMode mode) {
-		this.fullscreenMode = (WebGPUDisplayMode)mode;
+		this.fullscreenMode = (WebGPUGraphics.WebGPUDisplayMode)mode;
 	}
 
 	/** Sets the window title. If null, the application listener's class name is used. */

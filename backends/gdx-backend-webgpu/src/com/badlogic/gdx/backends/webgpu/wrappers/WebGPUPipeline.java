@@ -17,7 +17,8 @@
 package com.badlogic.gdx.backends.webgpu.wrappers;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplication;
+import com.badlogic.gdx.backends.webgpu.gdx.WebGPUGraphicsBase;
+
 import com.badlogic.gdx.backends.webgpu.gdx.ShaderPrefix;
 import com.badlogic.gdx.backends.webgpu.gdx.WebGPUShaderProgram;
 import com.badlogic.gdx.backends.webgpu.gdx.WebGPUVertexLayout;
@@ -26,7 +27,6 @@ import com.badlogic.gdx.utils.Disposable;
 import jnr.ffi.Pointer;
 
 public class WebGPUPipeline implements Disposable {
-    private final WebGPUApplication app;
     private final WebGPU_JNI webGPU;
     private Pointer pipelineLayout;
     private Pointer pipeline;
@@ -39,8 +39,8 @@ public class WebGPUPipeline implements Disposable {
     }
 
     public WebGPUPipeline(Pointer pipelineLayout, PipelineSpecification spec) {
-        app = (WebGPUApplication) Gdx.app;
-        webGPU = app.getWebGPU();
+        WebGPUGraphicsBase gfx = (WebGPUGraphicsBase) Gdx.graphics;
+        webGPU = gfx.getWebGPU();
 
         this.pipelineLayout = pipelineLayout;
 
@@ -149,7 +149,7 @@ public class WebGPUPipeline implements Disposable {
         pipelineDesc.getMultisample().setAlphaToCoverageEnabled(0);
 
         pipelineDesc.setLayout(pipelineLayout);
-        pipeline = webGPU.wgpuDeviceCreateRenderPipeline(app.getDevice().getHandle(), pipelineDesc);
+        pipeline = webGPU.wgpuDeviceCreateRenderPipeline(gfx.getDevice().getHandle(), pipelineDesc);
 
         if(pipeline == null)
             throw new RuntimeException("Pipeline creation failed");

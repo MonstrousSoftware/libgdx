@@ -17,7 +17,7 @@
 package com.badlogic.gdx.backends.webgpu.wrappers;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplication;
+import com.badlogic.gdx.backends.webgpu.gdx.WebGPUGraphicsBase;
 import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Matrix4;
@@ -68,8 +68,8 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
     private static int calculateStride(int contentSize, int maxSlices){
         int stride = 0;
         if(maxSlices > 1) { // do we use dynamic offsets?
-            WebGPUApplication app = (WebGPUApplication) Gdx.app;
-            int uniformAlignment = (int) app.getSupportedLimits().getLimits().getMinUniformBufferOffsetAlignment();
+            WebGPUGraphicsBase gfx = (WebGPUGraphicsBase) Gdx.graphics;
+            int uniformAlignment = (int) gfx.getSupportedLimits().getLimits().getMinUniformBufferOffsetAlignment();
             stride = ceilToNextMultiple(contentSize, uniformAlignment);
         }
         return stride;

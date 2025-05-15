@@ -2,7 +2,7 @@ package com.badlogic.gdx.backends.webgpu.wrappers;
 
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplication;
+import com.badlogic.gdx.backends.webgpu.gdx.WebGPUGraphicsBase;
 import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;
 import com.badlogic.gdx.utils.Disposable;
@@ -13,31 +13,31 @@ public class WebGPUAdapter implements Disposable {
     private Pointer adapter;
 
     public WebGPUAdapter(Pointer instance, Pointer surface) {
-        WebGPUApplication app = (WebGPUApplication) Gdx.app;
-        webGPU = app.getWebGPU();
+        WebGPUGraphicsBase gfx = (WebGPUGraphicsBase)Gdx.graphics;
+        webGPU = gfx.getWebGPU();
 
         WGPURequestAdapterOptions options = WGPURequestAdapterOptions.createDirect();
         options.setNextInChain();
         options.setCompatibleSurface(surface);
-        options.setBackendType(app.getConfiguration().backend);
+        options.setBackendType(gfx.getRequestedBackendType());
         options.setPowerPreference(WGPUPowerPreference.HighPerformance);
 
-        if(app.getConfiguration().backend == WGPUBackendType.Null)
+        if(gfx.getRequestedBackendType() == WGPUBackendType.Null)
             throw new IllegalStateException("Request Adapter: Back end 'Null' only valid if config.noWindow is true");
 
         // Get Adapter
         adapter = getAdapterSync(instance, options);
         if(adapter == null){
-            System.out.println("Configured adapter back end ("+ app.getConfiguration().backend+") not available, requesting fallback");
+            System.out.println("Configured adapter back end ("+ gfx.getRequestedBackendType()+") not available, requesting fallback");
             options.setBackendType(WGPUBackendType.Undefined);
             options.setPowerPreference(WGPUPowerPreference.HighPerformance);
             adapter = getAdapterSync(instance, options);
         }
 
 
-        app.setSupportedLimits(WGPUSupportedLimits.createDirect());
-        WGPUSupportedLimits supportedLimits = app.getSupportedLimits();
-        app.getWebGPU().wgpuAdapterGetLimits(adapter, supportedLimits);
+        gfx.setSupportedLimits(WGPUSupportedLimits.createDirect());
+        WGPUSupportedLimits supportedLimits = gfx.getSupportedLimits();
+        gfx.getWebGPU().wgpuAdapterGetLimits(adapter, supportedLimits);
 //        System.out.println("adapter maxVertexAttributes " + supportedLimits.getLimits().getMaxVertexAttributes());
 //        System.out.println("adapter maxBindGroups " + supportedLimits.getLimits().getMaxBindGroups());
 //

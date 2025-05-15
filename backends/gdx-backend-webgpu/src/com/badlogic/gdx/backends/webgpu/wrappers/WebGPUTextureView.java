@@ -2,7 +2,7 @@ package com.badlogic.gdx.backends.webgpu.wrappers;
 
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplication;
+import com.badlogic.gdx.backends.webgpu.gdx.WebGPUGraphicsBase;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;
 import com.badlogic.gdx.utils.Disposable;
 import jnr.ffi.Pointer;
@@ -29,8 +29,8 @@ public class WebGPUTextureView implements Disposable {
 
     public WebGPUTextureView(WebGPUTexture texture, WGPUTextureAspect aspect, WGPUTextureViewDimension dimension, WGPUTextureFormat format,
                              int baseMipLevel, int mipLevelCount, int baseArrayLayer, int arrayLayerCount) {
-        WebGPUApplication app = (WebGPUApplication) Gdx.app;
-        webGPU = app.getWebGPU();
+        WebGPUGraphicsBase gfx = (WebGPUGraphicsBase) Gdx.graphics;
+        webGPU = gfx.getWebGPU();
 
         this.aspect = aspect;
         this.dimension = dimension;

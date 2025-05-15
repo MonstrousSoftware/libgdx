@@ -18,7 +18,6 @@ package com.badlogic.gdx.backends.webgpu.gdx;
 
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplication;
 import com.badlogic.gdx.backends.webgpu.webgpu.WGPUSType;
 import com.badlogic.gdx.backends.webgpu.webgpu.WGPUShaderModuleDescriptor;
 import com.badlogic.gdx.backends.webgpu.webgpu.WGPUShaderModuleWGSLDescriptor;
@@ -28,8 +27,8 @@ import com.badlogic.gdx.utils.Disposable;
 import jnr.ffi.Pointer;
 
 public class WebGPUShaderProgram implements Disposable {
-    private final WebGPUApplication app = (WebGPUApplication) Gdx.app;
-    private final WebGPU_JNI webGPU = app.getWebGPU();
+    WebGPUGraphicsBase gfx = (WebGPUGraphicsBase) Gdx.graphics;
+    WebGPU_JNI webGPU = gfx.getWebGPU();
     private String name;
     private Pointer shaderModule;
 
@@ -64,7 +63,7 @@ public class WebGPUShaderProgram implements Disposable {
 
             shaderDesc.getNextInChain().set(shaderCodeDesc.getPointerTo());
 
-        shaderModule = webGPU.wgpuDeviceCreateShaderModule(app.getDevice().getHandle(), shaderDesc);
+        shaderModule = webGPU.wgpuDeviceCreateShaderModule(gfx.getDevice().getHandle(), shaderDesc);
         if(shaderModule == null)
             throw new RuntimeException("ShaderModule: compile failed "+name);
 

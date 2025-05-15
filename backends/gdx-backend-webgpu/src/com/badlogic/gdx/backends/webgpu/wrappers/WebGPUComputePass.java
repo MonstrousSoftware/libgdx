@@ -2,7 +2,7 @@ package com.badlogic.gdx.backends.webgpu.wrappers;
 
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplication;
+import com.badlogic.gdx.backends.webgpu.gdx.WebGPUGraphicsBase;
 import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.backends.webgpu.webgpu.WGPUComputePassDescriptor;
 import com.badlogic.gdx.backends.webgpu.webgpu.WebGPU_JNI;
@@ -14,8 +14,8 @@ public class WebGPUComputePass implements Disposable {
     private final Pointer computePass;
 
     public WebGPUComputePass(WebGPUCommandEncoder commandEncoder) {
-        WebGPUApplication app = (WebGPUApplication) Gdx.app;
-        webGPU = app.getWebGPU();
+        WebGPUGraphicsBase gfx = (WebGPUGraphicsBase) Gdx.graphics;
+        webGPU = gfx.getWebGPU();
 
         // Create a compute pass
         WGPUComputePassDescriptor passDesc = WGPUComputePassDescriptor.createDirect();

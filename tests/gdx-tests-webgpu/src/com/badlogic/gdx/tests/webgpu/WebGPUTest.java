@@ -2,8 +2,9 @@
 package com.badlogic.gdx.tests.webgpu;
 
 import com.badlogic.gdx.*;
-import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplication;
-import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplicationConfiguration;
+import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUApplication;
+import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUApplicationConfiguration;
+import com.badlogic.gdx.backends.webgpu.gdx.WebGPUGraphicsBase;
 import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;
 
@@ -28,10 +29,12 @@ public class WebGPUTest {
 	// application
 	static class TestApp extends ApplicationAdapter {
 		private WebGPUApplication app;
+		private WebGPUGraphicsBase gfx;
 		private WebGPU_JNI webGPU;
 		private Pointer pipeline;
 
 		public void create () {
+			gfx = (WebGPUGraphicsBase)Gdx.graphics;
 			app = (WebGPUApplication)Gdx.app;
 			webGPU = app.getWebGPU();
 			pipeline = initPipeline();
@@ -51,7 +54,7 @@ public class WebGPUTest {
 
 
 			// create a render pass
-			WebGPURenderPass pass = RenderPassBuilder.create("my pass", Color.CORAL, null, null, null, 1, RenderPassType.NO_DEPTH);
+			WebGPURenderPass pass = RenderPassBuilder.create(gfx, "my pass", Color.CORAL, null, null, null, 1, RenderPassType.NO_DEPTH);
 
 			// Select which render pipeline to use
 			pass.setPipeline(pipeline);
@@ -113,7 +116,7 @@ public class WebGPUTest {
 
 			WGPUColorTargetState colorTarget = WGPUColorTargetState.createDirect();
 
-			colorTarget.setFormat(app.getSurfaceFormat()); // match output surface
+			colorTarget.setFormat(gfx.getSurfaceFormat()); // match output surface
 			colorTarget.setBlend(blendState);
 			colorTarget.setWriteMask(WGPUColorWriteMask.All);
 
@@ -129,7 +132,7 @@ public class WebGPUTest {
 			pipelineDesc.getMultisample().setAlphaToCoverageEnabled(0);
 
 			pipelineDesc.setLayout(JavaWebGPU.createNullPointer());
-			pipeline = webGPU.wgpuDeviceCreateRenderPipeline(app.getDevice().getHandle(), pipelineDesc);
+			pipeline = webGPU.wgpuDeviceCreateRenderPipeline(gfx.getDevice().getHandle(), pipelineDesc);
 			if (pipeline.address() == 0) throw new RuntimeException("Pipeline creation failed");
 
 			// We no longer need to access the shader module
@@ -162,7 +165,7 @@ public class WebGPUTest {
 
 			shaderDesc.getNextInChain().set(shaderCodeDesc.getPointerTo());
 
-			Pointer shaderModule = webGPU.wgpuDeviceCreateShaderModule(app.getDevice().getHandle(), shaderDesc);
+			Pointer shaderModule = webGPU.wgpuDeviceCreateShaderModule(gfx.getDevice().getHandle(), shaderDesc);
 			if (shaderModule.address() == 0) throw new RuntimeException("ShaderModule: compile failed.");
 			return shaderModule;
 		}

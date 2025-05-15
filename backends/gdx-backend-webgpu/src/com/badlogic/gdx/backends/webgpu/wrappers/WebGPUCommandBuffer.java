@@ -2,7 +2,7 @@ package com.badlogic.gdx.backends.webgpu.wrappers;
 
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplication;
+import com.badlogic.gdx.backends.webgpu.gdx.WebGPUGraphicsBase;
 import com.badlogic.gdx.backends.webgpu.webgpu.WGPUCommandBufferDescriptor;
 import com.badlogic.gdx.backends.webgpu.webgpu.WebGPU_JNI;
 import com.badlogic.gdx.utils.Disposable;
@@ -13,8 +13,8 @@ public class WebGPUCommandBuffer implements Disposable {
     private final Pointer commandBuffer;
 
     public WebGPUCommandBuffer(WebGPUCommandEncoder encoder ) {
-        WebGPUApplication app = (WebGPUApplication) Gdx.app;
-        webGPU = app.getWebGPU();
+        WebGPUGraphicsBase gfx = (WebGPUGraphicsBase) Gdx.graphics;
+        webGPU = gfx.getWebGPU();
 
         // finish the encoder to give use command buffer
         WGPUCommandBufferDescriptor bufferDescriptor = WGPUCommandBufferDescriptor.createDirect();

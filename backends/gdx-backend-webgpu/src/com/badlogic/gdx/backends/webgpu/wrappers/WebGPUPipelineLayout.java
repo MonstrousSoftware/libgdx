@@ -2,7 +2,7 @@ package com.badlogic.gdx.backends.webgpu.wrappers;
 
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplication;
+import com.badlogic.gdx.backends.webgpu.gdx.WebGPUGraphicsBase;
 import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.backends.webgpu.webgpu.WGPUPipelineLayoutDescriptor;
 import com.badlogic.gdx.backends.webgpu.webgpu.WebGPU_JNI;
@@ -15,13 +15,12 @@ import java.nio.ByteBuffer;
 import static org.lwjgl.system.MemoryStack.stackPush;
 
 public class WebGPUPipelineLayout implements Disposable {
-    private final WebGPUApplication app;
     private final WebGPU_JNI webGPU;
     private final Pointer handle;
 
     public WebGPUPipelineLayout(String label, WebGPUBindGroupLayout... bindGroupLayouts ) {
-        app = (WebGPUApplication) Gdx.app;
-        webGPU = app.getWebGPU();
+        WebGPUGraphicsBase gfx = (WebGPUGraphicsBase) Gdx.graphics;
+        webGPU = gfx.getWebGPU();
 
         int count = bindGroupLayouts.length;
         try (MemoryStack stack = stackPush()) {
@@ -34,7 +33,7 @@ public class WebGPUPipelineLayout implements Disposable {
             pipelineLayoutDesc.setLabel(label);
             pipelineLayoutDesc.setBindGroupLayoutCount(count);
             pipelineLayoutDesc.setBindGroupLayouts(JavaWebGPU.createByteBufferPointer(pLayouts));  // expects an array of layouts in native memory
-            handle = webGPU.wgpuDeviceCreatePipelineLayout(app.getDevice().getHandle(), pipelineLayoutDesc);
+            handle = webGPU.wgpuDeviceCreatePipelineLayout(gfx.getDevice().getHandle(), pipelineLayoutDesc);
         } // free malloced memory
     }
 

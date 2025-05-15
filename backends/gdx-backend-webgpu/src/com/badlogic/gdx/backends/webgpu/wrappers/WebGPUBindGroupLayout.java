@@ -2,7 +2,7 @@ package com.badlogic.gdx.backends.webgpu.wrappers;
 
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplication;
+import com.badlogic.gdx.backends.webgpu.gdx.WebGPUGraphicsBase;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;
 import com.badlogic.gdx.utils.Disposable;
 import jnr.ffi.Pointer;
@@ -13,8 +13,8 @@ import java.util.ArrayList;
  * Encapsulated bind group layout.  Use begin(), addXXX(), end() to define a layout.
  */
 public class WebGPUBindGroupLayout implements Disposable {
-    private final WebGPUApplication app;
     private final WebGPU_JNI webGPU;
+    private WebGPUGraphicsBase gfx;
     private Pointer handle = null;
     private final String label;
     private final ArrayList<WGPUBindGroupLayoutEntry> entries;
@@ -25,8 +25,8 @@ public class WebGPUBindGroupLayout implements Disposable {
     }
 
     public WebGPUBindGroupLayout(String label ) {
-        app = (WebGPUApplication) Gdx.app;
-        webGPU = app.getWebGPU();
+        gfx = (WebGPUGraphicsBase) Gdx.graphics;
+        webGPU = gfx.getWebGPU();
 
         this.label = label;
         entries = new ArrayList<>();
@@ -97,7 +97,7 @@ public class WebGPUBindGroupLayout implements Disposable {
             entryArray[i] = entries.get(i);
         bindGroupLayoutDesc.setEntries( entryArray );
 
-        handle = webGPU.wgpuDeviceCreateBindGroupLayout(app.getDevice().getHandle(), bindGroupLayoutDesc);
+        handle = webGPU.wgpuDeviceCreateBindGroupLayout(gfx.getDevice().getHandle(), bindGroupLayoutDesc);
     }
 
     public Pointer getHandle(){

@@ -3,8 +3,10 @@ package com.badlogic.gdx.tests.webgpu;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplication;
-import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplicationConfiguration;
+
+import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUApplication;
+import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUApplicationConfiguration;
+import com.badlogic.gdx.backends.webgpu.gdx.WebGPUGraphicsBase;
 import com.badlogic.gdx.backends.webgpu.gdx.WebGPUMesh;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.model.WebGPUMeshPart;
 import com.badlogic.gdx.backends.webgpu.wrappers.*;
@@ -63,7 +65,7 @@ public class WebGPUTestMesh {
 		public void render () {
 
 			// create a render pass
-			WebGPURenderPass pass = RenderPassBuilder.create( Color.SKY );
+			WebGPURenderPass pass = RenderPassBuilder.create((WebGPUGraphicsBase)Gdx.graphics,  Color.SKY );
 
 			pass.setPipeline(pipeline);
 

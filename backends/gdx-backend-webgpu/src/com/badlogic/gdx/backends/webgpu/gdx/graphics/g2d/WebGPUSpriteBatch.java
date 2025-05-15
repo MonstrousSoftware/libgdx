@@ -2,7 +2,7 @@ package com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.g2d;
 
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplication;
+import com.badlogic.gdx.backends.webgpu.gdx.WebGPUGraphicsBase;
 import com.badlogic.gdx.backends.webgpu.gdx.WebGPUShaderProgram;
 import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;
@@ -29,8 +29,9 @@ import java.util.Map;
 public class WebGPUSpriteBatch implements Batch {
 
     //private final static String DEFAULT_SHADER = "shaders/sprite.wgsl";
-    private final WebGPUApplication app;
+
     private final WebGPU_JNI webGPU;
+    private WebGPUGraphicsBase gfx;
     private final WebGPUShaderProgram specificShader;
     private final int maxSprites;
     private boolean drawing;
@@ -79,8 +80,8 @@ public class WebGPUSpriteBatch implements Batch {
      * @param specificShader    specific ShaderProgram to use, must be compatible with "sprite.wgsl". Leave null to use the default shader.
      */
     public WebGPUSpriteBatch(int maxSprites, WebGPUShaderProgram specificShader) {
-        app = (WebGPUApplication) Gdx.app;
-        webGPU = app.getWebGPU();
+        gfx = (WebGPUGraphicsBase) Gdx.graphics;
+        webGPU = gfx.getWebGPU();
 
         this.maxSprites = maxSprites;
         this.specificShader = specificShader;
@@ -146,7 +147,7 @@ public class WebGPUSpriteBatch implements Batch {
         }
         indexData.flip();
         Pointer indexDataPtr = Pointer.wrap(JavaWebGPU.getRuntime(), bb);
-        webGPU.wgpuQueueWriteBuffer(app.getQueue().getHandle(), indexBuffer.getHandle(), 0, indexDataPtr, (long) maxSprites *6*Short.BYTES);
+        webGPU.wgpuQueueWriteBuffer(gfx.getQueue().getHandle(), indexBuffer.getHandle(), 0, indexDataPtr, (long) maxSprites *6*Short.BYTES);
     }
 
 
@@ -282,7 +283,7 @@ public class WebGPUSpriteBatch implements Batch {
 
     public void begin(Color clearColor) {
 
-        renderPass = RenderPassBuilder.create(clearColor, app.getConfiguration().samples);
+        renderPass = RenderPassBuilder.create(gfx, clearColor, gfx.getSamples());
 
         if (drawing)
             throw new RuntimeException("Must end() before begin()");
@@ -306,7 +307,7 @@ public class WebGPUSpriteBatch implements Batch {
         if(specificShader == null)
             pipelineSpec.shaderSource = getDefaultShaderSource();
         pipelineSpec.vertexAttributes = vertexAttributes;
-        pipelineSpec.numSamples = app.getConfiguration().samples;
+        pipelineSpec.numSamples = gfx.getSamples();
 
         projectionMatrix.setToOrtho(0f, Gdx.graphics.getWidth(), 0f, Gdx.graphics.getHeight(), -1f, 1f);
         transformMatrix.idt();
@@ -336,7 +337,7 @@ public class WebGPUSpriteBatch implements Batch {
         int numBytes = numRects * 4 * vertexSize;
 
         // append new vertex data to GPU vertex buffer
-        app.getQueue().writeBuffer(vertexBuffer, vbOffset, vertexDataPtr, numBytes);
+        gfx.getQueue().writeBuffer(vertexBuffer, vbOffset, vertexDataPtr, numBytes);
 
         // bind texture
         WebGPUBindGroup bg = makeBindGroup(bindGroupLayout, uniformBuffer, lastTexture);

@@ -27,7 +27,7 @@ public class WebGPUVertexBuffer extends WebGPUBuffer {
         Pointer dataBuf = JavaWebGPU.createDirectPointer( size );
         dataBuf.put(0L, vertexData, 0, vertexData.length);
         // Upload geometry data to the buffer
-        app.getQueue().writeBuffer(this, 0, dataBuf, size);
+        gfx.getQueue().writeBuffer(this, 0, dataBuf, size);
     }
 
     public void setVertices(ArrayList<Float> floats) {
@@ -39,7 +39,7 @@ public class WebGPUVertexBuffer extends WebGPUBuffer {
             vertData.putFloat((long) i *Float.BYTES, floats.get(i));
         }
         // Upload geometry data to the buffer
-        app.getQueue().writeBuffer(this, 0, vertData, size);
+        gfx.getQueue().writeBuffer(this, 0, vertData, size);
     }
 
     public void setVertices(ByteBuffer byteData) {
@@ -48,7 +48,7 @@ public class WebGPUVertexBuffer extends WebGPUBuffer {
         if(sizeInBytes > getSize()) throw new IllegalArgumentException("VertexBuffer.setVertices: ByteBuffer contents too large.");
 
         // Upload data to the buffer
-        app.getQueue().writeBuffer(this, 0, JavaWebGPU.createByteBufferPointer(byteData), sizeInBytes);
+        gfx.getQueue().writeBuffer(this, 0, JavaWebGPU.createByteBufferPointer(byteData), sizeInBytes);
     }
 
 }

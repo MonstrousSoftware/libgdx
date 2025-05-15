@@ -103,7 +103,7 @@ public class WebGPUIndexBuffer extends WebGPUBuffer {
         if(sizeInBytes > getSize()) throw new IllegalArgumentException("IndexBuffer.setIndices: data too large.");
 
         // Upload data to the buffer
-        app.getQueue().writeBuffer(this, 0, JavaWebGPU.createByteBufferPointer(byteData), sizeInBytes);
+        gfx.getQueue().writeBuffer(this, 0, JavaWebGPU.createByteBufferPointer(byteData), sizeInBytes);
     }
 
     /** fill index buffer with raw data. */
@@ -111,6 +111,6 @@ public class WebGPUIndexBuffer extends WebGPUBuffer {
         if(bufferOffset + indexBufferSize > getSize()) throw new IllegalArgumentException("IndexBuffer.setIndices: data too large.");
 
         // Upload data to the buffer
-        app.getQueue().writeBuffer(this, bufferOffset, idata, indexBufferSize);
+        gfx.getQueue().writeBuffer(this, bufferOffset, idata, indexBufferSize);
     }
 }

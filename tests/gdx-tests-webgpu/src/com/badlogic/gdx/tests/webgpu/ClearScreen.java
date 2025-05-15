@@ -1,7 +1,8 @@
 
 package com.badlogic.gdx.tests.webgpu;
 
-import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.utils.WebGPUScreenUtils;
+
+import com.badlogic.gdx.backends.webgpu.gdx.graphics.utils.WebGPUScreenUtils;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.tests.utils.GdxTest;
 

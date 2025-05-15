@@ -17,7 +17,7 @@
 package com.badlogic.gdx.backends.webgpu.wrappers;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplication;
+import com.badlogic.gdx.backends.webgpu.gdx.WebGPUGraphicsBase;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.g2d.WebGPUTextureData;
 import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;
@@ -30,8 +30,8 @@ import java.nio.ByteBuffer;
 
 
 public class WebGPUTexture extends Texture {
-    private final WebGPUApplication app = (WebGPUApplication) Gdx.app;
-    private final WebGPU_JNI webGPU =  app.getWebGPU();
+    WebGPUGraphicsBase gfx = (WebGPUGraphicsBase) Gdx.graphics;
+    private final WebGPU_JNI webGPU = gfx.getWebGPU();
     protected int mipLevelCount;
     private Pointer texture;
     private WebGPUTextureView textureView;
@@ -201,7 +201,7 @@ public class WebGPUTexture extends Texture {
     // numSamples - for anti-aliasing
     //
     protected void create( String label, int mipLevelCount, int textureUsage, WGPUTextureFormat format, int numLayers, int numSamples, WGPUTextureFormat viewFormat) {
-        if (app.getDevice() == null || app.getQueue() == null)
+        if (gfx.getDevice() == null || gfx.getQueue() == null)
             throw new RuntimeException("Texture creation requires device and queue to be available\n");
 
         this.label = label;
@@ -230,7 +230,7 @@ public class WebGPUTexture extends Texture {
             textureDesc.setViewFormats( formatPtr );
         }
 
-        texture = webGPU.wgpuDeviceCreateTexture(app.getDevice().getHandle(), textureDesc);
+        texture = webGPU.wgpuDeviceCreateTexture(gfx.getDevice().getHandle(), textureDesc);
 
         //System.out.println("dimensions: "+textureDesc.getSize().getDepthOrArrayLayers());
 
@@ -255,7 +255,7 @@ public class WebGPUTexture extends Texture {
         samplerDesc.setLodMaxClamp(mipLevelCount);
         samplerDesc.setCompare(WGPUCompareFunction.Undefined);
         samplerDesc.setMaxAnisotropy(1);
-        sampler = webGPU.wgpuDeviceCreateSampler(app.getDevice().getHandle(), samplerDesc);
+        sampler = webGPU.wgpuDeviceCreateSampler(gfx.getDevice().getHandle(), samplerDesc);
 
     }
 
@@ -344,13 +344,13 @@ public class WebGPUTexture extends Texture {
             Pointer pp = JavaWebGPU.createByteBufferPointer(pixelPtr);  // convert ByteBuffer to Pointer
 
             if(mipLevel == 0){
-                webGPU.wgpuQueueWriteTexture(app.getQueue().getHandle(), destination, pp, (long) mipLevelWidth * mipLevelHeight * 4, source, ext);
+                webGPU.wgpuQueueWriteTexture(gfx.getQueue().getHandle(), destination, pp, (long) mipLevelWidth * mipLevelHeight * 4, source, ext);
             } else {
 
                 // wrap byte array in native pointer
                 Pointer pixelData = JavaWebGPU.createByteArrayPointer(pixels);
                 // N.B. using textureDesc.getSize() for param won't work!
-                webGPU.wgpuQueueWriteTexture(app.getQueue().getHandle(), destination, pixelData, (long) mipLevelWidth * mipLevelHeight * 4, source, ext);
+                webGPU.wgpuQueueWriteTexture(gfx.getQueue().getHandle(), destination, pixelData, (long) mipLevelWidth * mipLevelHeight * 4, source, ext);
             }
 
             mipLevelWidth /= 2;
@@ -386,7 +386,7 @@ public class WebGPUTexture extends Texture {
         ext.setHeight(height);
         ext.setDepthOrArrayLayers(1);
 
-        webGPU.wgpuQueueWriteTexture(app.getQueue().getHandle(), destination, data, 4L * width * height, source, ext);
+        webGPU.wgpuQueueWriteTexture(gfx.getQueue().getHandle(), destination, data, 4L * width * height, source, ext);
     }
 
 

@@ -3,11 +3,8 @@ package com.badlogic.gdx.tests.webgpu;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.assets.AssetManager;
-import com.badlogic.gdx.assets.loaders.FileHandleResolver;
-import com.badlogic.gdx.backends.webgpu.gdx.assets.WebGPUTextureLoader;
-import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplication;
-import com.badlogic.gdx.backends.webgpu.lwjgl3.WebGPUApplicationConfiguration;
+import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUApplication;
+import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUApplicationConfiguration;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.g2d.WebGPUBitmapFont;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.g2d.WebGPUSpriteBatch;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;
