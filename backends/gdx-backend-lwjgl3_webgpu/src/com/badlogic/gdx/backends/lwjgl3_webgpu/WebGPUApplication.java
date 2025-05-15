@@ -406,6 +406,10 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 		createWindow(window, config);
 		windows.add(window);
 		currentWindow = save;
+		if (currentWindow != null) {
+			// ensure we switch Gdx back to current window in the render loop.
+			currentWindow.makeCurrent();
+		}
 		return window;
 	}
 
@@ -421,11 +425,7 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 // GLFW.glfwSwapBuffers(windowHandle);
 // }
 
-		if (currentWindow != null) {
-			// the call above to createGlfwWindow switches the OpenGL context to the newly created window,
-			// ensure that the invariant "currentWindow is the window with the current active OpenGL context" holds
-			currentWindow.makeCurrent();
-		}
+
 	}
 
 	static long createGlfwWindow (WebGPUApplicationConfiguration config, long sharedContextWindow) {
