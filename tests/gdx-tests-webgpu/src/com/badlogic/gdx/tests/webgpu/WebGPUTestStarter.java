@@ -38,6 +38,8 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.tests.utils.CommandLineOptions;
 import com.badlogic.gdx.tests.utils.GdxTestWrapper;
 
+
+// test starter
 public class WebGPUTestStarter {
 
 	static CommandLineOptions options;
