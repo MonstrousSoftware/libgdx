@@ -70,9 +70,9 @@ public class WebGPUGraphics extends AbstractGraphics implements WebGPUGraphicsBa
 	public WGPUTextureFormat surfaceFormat;
 	public Pointer targetView;
 	public WebGPUCommandEncoder commandEncoder;
-	public WGPUTextureFormat depthTextureFormat;
+	//public WGPUTextureFormat depthTextureFormat;
 	public WebGPUTexture depthTexture;
-	public WebGPUTextureView depthTextureView;
+	//public WebGPUTextureView depthTextureView;
 	private WGPUSupportedLimits supportedLimits;
 	private WebGPUTexture multiSamplingTexture;
 
@@ -173,14 +173,14 @@ public class WebGPUGraphics extends AbstractGraphics implements WebGPUGraphicsBa
 	public WebGPUTexture getDepthTexture () {
 		return depthTexture;
 	}
-	@Override
-	public WebGPUTextureView getDepthTextureView () {
-		return depthTextureView;
-	}
-	@Override
-	public WGPUTextureFormat getDepthTextureFormat () {
-		return depthTextureFormat;
-	}
+//	@Override
+//	public WebGPUTextureView getDepthTextureView () {
+//		return depthTextureView;
+//	}
+//	@Override
+//	public WGPUTextureFormat getDepthTextureFormat () {
+//		return depthTextureFormat;
+//	}
 
 	@Override
 	public boolean getGPUtimingEnabled() {
@@ -230,24 +230,20 @@ public class WebGPUGraphics extends AbstractGraphics implements WebGPUGraphicsBa
 	// or call this from resize event rather than constructor
 	private void initDepthBuffer(int width, int height, int samples){
 
-		depthTextureFormat = WGPUTextureFormat.Depth24Plus;
+		//depthTextureFormat = WGPUTextureFormat.Depth24Plus;
 
 		depthTexture = new WebGPUTexture("depth texture", width, height, 1, WGPUTextureUsage.RenderAttachment,
-				depthTextureFormat, samples, depthTextureFormat );
+				WGPUTextureFormat.Depth24Plus, samples, WGPUTextureFormat.Depth24Plus );
 
 		// Create the view of the depth texture manipulated by the rasterizer
-		depthTextureView = new WebGPUTextureView(depthTexture, WGPUTextureAspect.DepthOnly, WGPUTextureViewDimension._2D,depthTextureFormat, 0, 1, 0, 1 );
+		//depthTextureView = new WebGPUTextureView(depthTexture, WGPUTextureAspect.DepthOnly, WGPUTextureViewDimension._2D,depthTextureFormat, 0, 1, 0, 1 );
 	}
 
 	private void terminateDepthBuffer(){
-		// Destroy the depth texture and its view
-		if(depthTextureView != null)
-			depthTextureView.dispose();
-
+		// Destroy the depth texture
 		if(depthTexture != null) {
 			depthTexture.dispose();
 		}
-		depthTextureView = null;
 		depthTexture = null;
 	}
 

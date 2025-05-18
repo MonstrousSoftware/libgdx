@@ -234,10 +234,24 @@ public class WebGPUTexture extends Texture {
 
         //System.out.println("dimensions: "+textureDesc.getSize().getDepthOrArrayLayers());
 
-
         // Create the view of the  texture manipulated by the rasterizer
         WGPUTextureViewDimension dimension = (numLayers == 1 ? WGPUTextureViewDimension._2D : (numLayers == 6 ? WGPUTextureViewDimension.Cube: WGPUTextureViewDimension._2DArray));
-        textureView =  new WebGPUTextureView(this, WGPUTextureAspect.All, dimension, format, 0,
+
+        // if this is a depth format, use only the depth aspect for the texture view
+        WGPUTextureAspect aspect;
+        switch(format){
+            case Depth24Plus:
+            case Depth32Float:
+            case Depth24PlusStencil8:
+            case Depth16Unorm:
+            case Depth32FloatStencil8:
+                aspect = WGPUTextureAspect.DepthOnly;
+                break;
+            default:
+                aspect = WGPUTextureAspect.All;
+                break;
+        }
+        textureView =  new WebGPUTextureView(this, aspect, dimension, format, 0,
                 mipLevelCount, 0, numLayers );
 
         // Create a sampler

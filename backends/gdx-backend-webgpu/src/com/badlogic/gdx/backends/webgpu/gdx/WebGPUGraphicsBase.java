@@ -17,8 +17,8 @@ public interface WebGPUGraphicsBase {
     Pointer getTargetView ();
     WebGPUCommandEncoder getCommandEncoder ();
     WebGPUTexture getDepthTexture ();
-    WebGPUTextureView getDepthTextureView ();
-    WGPUTextureFormat getDepthTextureFormat ();
+//    WebGPUTextureView getDepthTextureView ();
+//    WGPUTextureFormat getDepthTextureFormat ();
     boolean getGPUtimingEnabled();
     WGPUBackendType getRequestedBackendType();
     int getSamples();

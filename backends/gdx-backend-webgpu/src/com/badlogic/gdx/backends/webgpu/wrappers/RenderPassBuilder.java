@@ -45,11 +45,11 @@ public class RenderPassBuilder {
 
     public static WebGPURenderPass create(Color clearColor, int sampleCount) {
         WebGPUGraphicsBase gfx = (WebGPUGraphicsBase)Gdx.graphics;
-        return create(clearColor, null, gfx.getDepthTextureFormat(), gfx.getDepthTextureView(), sampleCount);
+        return create(clearColor, null, gfx.getDepthTexture(), sampleCount);
     }
 
-    public static WebGPURenderPass create( Color clearColor, WebGPUTexture outTexture, WGPUTextureFormat depthFormat, WebGPUTextureView depthTextureView, int sampleCount){
-        return create("color pass", clearColor, outTexture, depthFormat, depthTextureView, sampleCount, RenderPassType.COLOR_PASS);
+    public static WebGPURenderPass create( Color clearColor, WebGPUTexture colorTexture, WebGPUTexture depthTexture, int sampleCount){
+        return create("color pass", clearColor, colorTexture, depthTexture, sampleCount, RenderPassType.COLOR_PASS);
     }
 
 
@@ -58,13 +58,13 @@ public class RenderPassBuilder {
      *
      * @param clearColor    background color, null to not clear the screen, e.g. for a UI
      * @param outTexture    output texture, null to render to the screen
-     * @param depthFormat/depthTextureView   output depth texture, can be null
+     * @param depthTexture   output depth texture, can be null
      * @param sampleCount       samples per pixel: 1 or 4
      * @param passType
      * @return
      */
-    public static WebGPURenderPass create(String name, Color clearColor, WebGPUTexture outTexture,  WGPUTextureFormat depthFormat,
-                                          WebGPUTextureView depthTextureView, int sampleCount, RenderPassType passType) {
+    public static WebGPURenderPass create(String name, Color clearColor, WebGPUTexture outTexture,
+                                          WebGPUTexture depthTexture, int sampleCount, RenderPassType passType) {
         WebGPUGraphicsBase gfx = (WebGPUGraphicsBase)Gdx.graphics;
         if(gfx.getCommandEncoder() == null)
             throw new RuntimeException("Encoder must be set before calling WebGPURenderPass.create()");
@@ -138,7 +138,7 @@ public class RenderPassBuilder {
             depthStencilAttachment.setStencilStoreOp(WGPUStoreOp.Undefined);
             depthStencilAttachment.setStencilReadOnly(1L);
 
-            depthStencilAttachment.setView(depthTextureView.getHandle());
+            depthStencilAttachment.setView(depthTexture.getTextureView().getHandle());
 
             renderPassDescriptor.setDepthStencilAttachment(depthStencilAttachment);
         }
@@ -149,7 +149,7 @@ public class RenderPassBuilder {
 
 
         Pointer renderPassPtr = gfx.getWebGPU().wgpuCommandEncoderBeginRenderPass(gfx.getCommandEncoder().getHandle(), renderPassDescriptor);
-        WebGPURenderPass pass = new WebGPURenderPass(renderPassPtr, passType, colorFormat, depthFormat, sampleCount,
+        WebGPURenderPass pass = new WebGPURenderPass(renderPassPtr, passType, colorFormat, depthTexture.getFormat(), sampleCount,
                 outTexture == null ? Gdx.graphics.getWidth() : outTexture.getWidth(),
                 outTexture == null ? Gdx.graphics.getHeight() : outTexture.getHeight());
 
