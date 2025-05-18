@@ -29,7 +29,7 @@
 package com.badlogic.gdx.tests.webgpu;
 
 import com.badlogic.gdx.tests.*;
-import com.badlogic.gdx.tests.SpriteBatchTest;
+import com.badlogic.gdx.tests.webgpu.SpriteBatchTest;
 import com.badlogic.gdx.tests.bench.TiledMapBench;
 import com.badlogic.gdx.tests.conformance.AudioSoundAndMusicIsolationTest;
 import com.badlogic.gdx.tests.conformance.DisplayModeTest;
@@ -72,6 +72,7 @@ public class WebGPUTests {
 	public static final List<Class<? extends GdxTest>> tests = new ArrayList<Class<? extends GdxTest>>(Arrays.asList(
 	// @off
 		ClearScreen.class,
+		SpriteBatchTest.class,
 		StageTest.class,
 		ColorTest.class,
 		FontTest.class,

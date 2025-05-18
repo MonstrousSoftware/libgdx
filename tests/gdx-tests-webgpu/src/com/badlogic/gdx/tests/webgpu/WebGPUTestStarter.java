@@ -16,10 +16,7 @@
 
 package com.badlogic.gdx.tests.webgpu;
 
-import com.badlogic.gdx.ApplicationAdapter;
-import com.badlogic.gdx.ApplicationListener;
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Preferences;
+import com.badlogic.gdx.*;
 import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUApplication;
 import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUApplicationConfiguration;
 import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUGraphics;
@@ -113,6 +110,7 @@ public class WebGPUTestStarter {
 						winConfig.setWindowPosition(((WebGPUGraphics)Gdx.graphics).getWindow().getPositionX() + 40,
 							((WebGPUGraphics)Gdx.graphics).getWindow().getPositionY() + 40);
 						winConfig.useVsync(false);
+						Gdx.app.setLogLevel(Application.LOG_DEBUG);
 						((WebGPUApplication)Gdx.app).newWindow(new GdxTestWrapper(test, false), winConfig);
 						System.out.println("Started test: " + testName);
 						prefs.putString("LastTest", testName);
