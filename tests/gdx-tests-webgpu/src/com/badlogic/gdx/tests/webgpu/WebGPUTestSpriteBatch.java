@@ -79,7 +79,7 @@ public class WebGPUTestSpriteBatch  {
 
 			//batch.setBlendFactor(WGPUBlendFactor.SrcAlpha, WGPUBlendFactor.OneMinusSrcAlpha);
 			batch.draw(texture, 100, 100);
-			batch.draw(texture, 400, 300);
+			batch.draw(texture2, 400, 300);
 			batch.draw(textureAlpha, 200, 400);
 			batch.draw(region, 400, 100);
 

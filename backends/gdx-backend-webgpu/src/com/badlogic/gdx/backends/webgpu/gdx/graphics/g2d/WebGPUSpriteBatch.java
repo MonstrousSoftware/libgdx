@@ -380,6 +380,8 @@ public class WebGPUSpriteBatch implements Batch {
 
         mesh.render(renderPass, GL20.GL_TRIANGLES,rectsDrawn*6, numRects*6);
 
+        mesh.getVerticesBuffer(true);  // get FloatBuffer to put vertex data in
+
 
 //        // Set vertex buffer while encoding the render pass
 //        // use an offset to set the vertex buffer for this batch
