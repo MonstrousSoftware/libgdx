@@ -16,7 +16,11 @@
 
 package com.badlogic.gdx.backends.webgpu.gdx.graphics.utils;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.backends.webgpu.gdx.WebGPUGraphicsBase;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.g2d.WebGPUSpriteBatch;
+import com.badlogic.gdx.backends.webgpu.wrappers.RenderPassBuilder;
+import com.badlogic.gdx.backends.webgpu.wrappers.WebGPURenderPass;
 import com.badlogic.gdx.graphics.Color;
 
 /** WebGPU version to clear the screen
@@ -55,10 +59,9 @@ public final class WebGPUScreenUtils {
 	 * @param applyAntialiasing applies multi-sampling for antialiasing if true. */
 	public static void clear (float r, float g, float b, float a, boolean clearDepth, boolean applyAntialiasing) {
 		backgroundColor.set(r,g,b,a);
-		WebGPUSpriteBatch batch = new WebGPUSpriteBatch();	// heavy, but a static batch wouldn't be disposed
-		batch.begin(backgroundColor);
-		batch.end();
-		batch.dispose();
+		WebGPUGraphicsBase gfx = (WebGPUGraphicsBase) Gdx.graphics;
+		WebGPURenderPass renderPass = RenderPassBuilder.create(backgroundColor, gfx.getSamples());
+		renderPass.end();
 
 		// clearDepth and antiAliasing are ignored
 //

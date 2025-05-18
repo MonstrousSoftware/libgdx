@@ -31,7 +31,7 @@ public class WebGPUSpriteBatch implements Batch {
     //private final static String DEFAULT_SHADER = "shaders/sprite.wgsl";
 
     private final WebGPU_JNI webGPU;
-    private WebGPUGraphicsBase gfx;
+    private final WebGPUGraphicsBase gfx;
     private final WebGPUShaderProgram specificShader;
     private final int maxSprites;
     private boolean drawing;
