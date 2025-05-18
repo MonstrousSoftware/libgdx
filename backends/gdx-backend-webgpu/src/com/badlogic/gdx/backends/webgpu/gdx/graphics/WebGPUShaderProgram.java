@@ -14,10 +14,11 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.badlogic.gdx.backends.webgpu.gdx;
+package com.badlogic.gdx.backends.webgpu.gdx.graphics;
 
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.backends.webgpu.gdx.WebGPUGraphicsBase;
 import com.badlogic.gdx.backends.webgpu.webgpu.WGPUSType;
 import com.badlogic.gdx.backends.webgpu.webgpu.WGPUShaderModuleDescriptor;
 import com.badlogic.gdx.backends.webgpu.webgpu.WGPUShaderModuleWGSLDescriptor;

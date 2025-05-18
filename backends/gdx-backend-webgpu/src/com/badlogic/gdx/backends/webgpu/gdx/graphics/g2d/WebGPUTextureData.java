@@ -14,7 +14,7 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.g2d;
+package com.badlogic.gdx.backends.webgpu.gdx.graphics.g2d;
 
 
 import com.badlogic.gdx.graphics.Pixmap;

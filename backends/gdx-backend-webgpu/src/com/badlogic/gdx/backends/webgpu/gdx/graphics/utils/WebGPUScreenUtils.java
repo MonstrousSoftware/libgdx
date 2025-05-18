@@ -18,7 +18,6 @@ package com.badlogic.gdx.backends.webgpu.gdx.graphics.utils;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.webgpu.gdx.WebGPUGraphicsBase;
-import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.g2d.WebGPUSpriteBatch;
 import com.badlogic.gdx.backends.webgpu.wrappers.RenderPassBuilder;
 import com.badlogic.gdx.backends.webgpu.wrappers.WebGPURenderPass;
 import com.badlogic.gdx.graphics.Color;

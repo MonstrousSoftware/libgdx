@@ -24,6 +24,7 @@ import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUWindowConfiguration;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.viewport.WebGPUScreenViewport;
 import com.badlogic.gdx.backends.webgpu.gdx.scene2d.WebGPUSkin;
 import com.badlogic.gdx.backends.webgpu.gdx.scene2d.WebGPUStage;
+import com.badlogic.gdx.backends.webgpu.webgpu.WGPUBackendType;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -51,6 +52,7 @@ public class WebGPUTestStarter {
 
 		WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
 		config.setWindowedMode(640, 480);
+		//config.backend = WGPUBackendType.Vulkan;
 
 //		if (options.startupTestName != null) {
 //			ApplicationListener test = GdxTests.newTest(options.startupTestName);

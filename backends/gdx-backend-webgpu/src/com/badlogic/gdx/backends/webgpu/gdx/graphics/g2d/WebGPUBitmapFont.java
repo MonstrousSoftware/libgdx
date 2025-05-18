@@ -20,7 +20,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.g2d;
+package com.badlogic.gdx.backends.webgpu.gdx.graphics.g2d;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.webgpu.wrappers.WebGPUTexture;

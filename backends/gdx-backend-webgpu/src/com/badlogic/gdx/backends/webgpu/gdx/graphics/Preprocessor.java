@@ -14,7 +14,7 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.badlogic.gdx.backends.webgpu.gdx;
+package com.badlogic.gdx.backends.webgpu.gdx.graphics;
 
 import java.util.HashMap;
 import java.util.Map;

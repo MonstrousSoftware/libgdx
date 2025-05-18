@@ -1,4 +1,4 @@
-package com.badlogic.gdx.backends.webgpu.gdx;
+package com.badlogic.gdx.backends.webgpu.gdx.graphics;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.WebGPUIndexData;

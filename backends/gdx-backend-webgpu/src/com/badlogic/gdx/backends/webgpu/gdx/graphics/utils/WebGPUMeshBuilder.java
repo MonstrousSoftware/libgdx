@@ -16,7 +16,8 @@
 
 package com.badlogic.gdx.backends.webgpu.gdx.graphics.utils;
 
-import com.badlogic.gdx.backends.webgpu.gdx.WebGPUMesh;
+
+import com.badlogic.gdx.backends.webgpu.gdx.graphics.WebGPUMesh;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.model.WebGPUMeshPart;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
@@ -185,7 +186,7 @@ public class WebGPUMeshBuilder implements MeshPartBuilder {
 
 	/** Starts a new MeshPart. The mesh part is not usable until end() is called. This will reset the current color and vertex
 	 * transformation.
-	 * @see #part(String, int, MeshPart) */
+	 * */
 	public WebGPUMeshPart part (final String id, int primitiveType) {
 		return part(id, primitiveType, new WebGPUMeshPart());
 	}

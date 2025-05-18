@@ -16,7 +16,7 @@
 
 package com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.model;
 
-import com.badlogic.gdx.backends.webgpu.gdx.WebGPUMesh;
+import com.badlogic.gdx.backends.webgpu.gdx.graphics.WebGPUMesh;
 import com.badlogic.gdx.backends.webgpu.wrappers.WebGPURenderPass;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;

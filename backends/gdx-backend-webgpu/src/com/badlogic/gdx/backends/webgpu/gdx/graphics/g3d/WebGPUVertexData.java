@@ -1,7 +1,5 @@
 package com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d;
 
-import com.badlogic.gdx.backends.webgpu.webgpu.WGPUIndexFormat;
-import com.badlogic.gdx.backends.webgpu.wrappers.WebGPUIndexBuffer;
 import com.badlogic.gdx.backends.webgpu.wrappers.WebGPURenderPass;
 import com.badlogic.gdx.backends.webgpu.wrappers.WebGPUVertexBuffer;
 import com.badlogic.gdx.graphics.VertexAttribute;

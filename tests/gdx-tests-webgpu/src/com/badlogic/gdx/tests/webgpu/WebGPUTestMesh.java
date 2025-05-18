@@ -6,8 +6,7 @@ import com.badlogic.gdx.Gdx;
 
 import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUApplication;
 import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUApplicationConfiguration;
-import com.badlogic.gdx.backends.webgpu.gdx.WebGPUGraphicsBase;
-import com.badlogic.gdx.backends.webgpu.gdx.WebGPUMesh;
+import com.badlogic.gdx.backends.webgpu.gdx.graphics.WebGPUMesh;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.model.WebGPUMeshPart;
 import com.badlogic.gdx.backends.webgpu.wrappers.*;
 import com.badlogic.gdx.graphics.*;

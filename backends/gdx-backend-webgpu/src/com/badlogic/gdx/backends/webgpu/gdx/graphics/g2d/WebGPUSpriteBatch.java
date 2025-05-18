@@ -1,9 +1,9 @@
-package com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.g2d;
+package com.badlogic.gdx.backends.webgpu.gdx.graphics.g2d;
 
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.webgpu.gdx.WebGPUGraphicsBase;
-import com.badlogic.gdx.backends.webgpu.gdx.WebGPUShaderProgram;
+import com.badlogic.gdx.backends.webgpu.gdx.graphics.WebGPUShaderProgram;
 import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;
 import com.badlogic.gdx.backends.webgpu.wrappers.*;

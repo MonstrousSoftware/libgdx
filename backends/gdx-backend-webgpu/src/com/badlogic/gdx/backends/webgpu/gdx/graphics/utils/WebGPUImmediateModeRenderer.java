@@ -14,7 +14,7 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.utils;
+package com.badlogic.gdx.backends.webgpu.gdx.graphics.utils;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.webgpu.gdx.WebGPUGraphicsBase;
