@@ -72,6 +72,12 @@ public class WebGPUMesh extends Mesh {
         throw new RuntimeException("Use another constructor for WebGPUMesh");
     }
 
+
+    public VertexData getVertexData(){
+        return vertices;
+    }
+
+
     @Override
     public void render (ShaderProgram shader, int primitiveType, int offset, int count, boolean autoBind){
         //....

@@ -332,6 +332,7 @@ public class Mesh implements Disposable {
 		return this;
 	}
 
+
 	/** Update (a portion of) the vertices. Does not resize the backing buffer.
 	 * @param targetOffset the offset in number of floats of the mesh part.
 	 * @param source the vertex data to update the mesh part with */

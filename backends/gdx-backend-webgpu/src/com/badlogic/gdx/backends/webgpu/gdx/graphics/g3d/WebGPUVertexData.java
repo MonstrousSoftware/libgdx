@@ -57,6 +57,16 @@ public class WebGPUVertexData implements VertexData {
         isDirty = true;
     }
 
+    /** copy floats to specific offset in buffer, expands the buffer limit if necessary */
+    public void setVertices(int targetOffset, float[] vertices, int sourceOffset, int count) {
+        final int pos = byteBuffer.position();
+        ((Buffer)byteBuffer).position(targetOffset * 4);
+        ((Buffer)byteBuffer).limit(targetOffset * 4 + count*4);
+        BufferUtils.copy(vertices, sourceOffset, count, byteBuffer);
+        ((Buffer)byteBuffer).position(pos);
+        isDirty = true;
+    }
+
     @Override
     public void updateVertices(int targetOffset, float[] vertices, int sourceOffset, int count) {
         final int pos = byteBuffer.position();

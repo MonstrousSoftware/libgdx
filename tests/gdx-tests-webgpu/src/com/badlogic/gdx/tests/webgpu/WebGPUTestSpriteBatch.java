@@ -92,13 +92,13 @@ public class WebGPUTestSpriteBatch  {
 
 			font.draw(batch, "Hello, world!", 20, 400);
 
-//			for(int x = 0; x < 600; x++){
-//				batch.draw(textureAlpha, x, 400);
-//			}
+////			for(int x = 0; x < 600; x++){
+////				batch.draw(textureAlpha, x, 400);
+////			}
 
 			batch.end();
 
-			//System.out.println("render calls:"+batch.renderCalls+"rects:"+batch.numRects+"/"+batch.maxSpritesInBatch);
+			//System.out.println("render calls:"+batch.renderCalls+"rects:"+batch.numRects+"/"+batch.maxFillLevel);
 		}
 
 
