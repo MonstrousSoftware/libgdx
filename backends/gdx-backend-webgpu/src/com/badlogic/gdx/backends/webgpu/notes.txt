@@ -269,3 +269,7 @@ This worked but not very efficiently.  In particular there is no means to copy e
 Mesh.setVertices always copies the data to the start of the vertex data.
 Also, it ended up with multiple backing buffers (WebGPUVertexData has a backing buffer to support getVertices()).  So in the end, I went back to directly using VertexBuffer and IndexBuffer and using a
 FloatBuffer to transfer vertex data per batch flush.
+
+
+Worked out why textures were upside down in Scene2d. This is because it mostly draws textureRegions and SpriteBatch is supposed to switch v and v2 for textureRegions.
+Fixed. To check all possible combinations of SpriteBatch.draw...

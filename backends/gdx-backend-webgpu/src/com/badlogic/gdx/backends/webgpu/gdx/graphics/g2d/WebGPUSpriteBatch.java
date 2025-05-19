@@ -418,11 +418,21 @@ public class WebGPUSpriteBatch implements Batch {
 
     public void draw(TextureRegion region, float x, float y){
         // note: v2 is top of glyph, v the bottom
-        this.draw(region.getTexture(), x, y, region.getRegionWidth(), region.getRegionHeight(), region.getU(), region.getV2(), region.getU2(), region.getV());
+        draw(region, x, y, region.getRegionWidth(), region.getRegionHeight());
     }
 
     public void draw(TextureRegion region, float x, float y, float w, float h){
-        this.draw(region.getTexture(), x, y, w, h, region.getU(), region.getV(), region.getU2(), region.getV2());
+        if (!drawing)
+            throw new RuntimeException("SpriteBatch: Must call begin() before draw().");
+
+        if(numSprites == maxSprites)
+            throw new RuntimeException("WebGPUSpriteBatch: Too many sprites. Enlarge maxSprites.");
+
+        if(region.getTexture() != lastTexture) { // changing texture, need to flush what we have so far
+            switchTexture(region.getTexture());
+        }
+        addRect(x, y, w, h, region.getU(), region.getV2(), region.getU2(), region.getV());  // flip v and v2
+        numSprites++;
     }
 
 
