@@ -37,7 +37,7 @@ public class WebGPUSpriteBatch implements Batch {
     private final WebGPUShaderProgram specificShader;
     private final int maxSprites;
     private boolean drawing;
-    private int vertexSize;
+    private final int vertexSize;
     private final ByteBuffer vertexBB;
     private final FloatBuffer vertexData;     // float buffer view on byte buffer
     public int numSprites;
@@ -47,8 +47,7 @@ public class WebGPUSpriteBatch implements Batch {
     private WebGPUIndexBuffer indexBuffer;
     private WebGPUUniformBuffer uniformBuffer;
     private final WebGPUBindGroupLayout bindGroupLayout;
-    private VertexAttributes vertexAttributes;
-    private final VertexAttributes defaultVertexAttributes;
+    private final VertexAttributes vertexAttributes;
     private final WebGPUPipelineLayout pipelineLayout;
     private final PipelineSpecification pipelineSpec;
     private int uniformBufferSize;
@@ -91,7 +90,6 @@ public class WebGPUSpriteBatch implements Batch {
 
         vertexAttributes = new VertexAttributes(new VertexAttribute(VertexAttributes.Usage.Position, 2, ShaderProgram.POSITION_ATTRIBUTE),
                 VertexAttribute.ColorPacked(), VertexAttribute.TexCoords(0) );
-        defaultVertexAttributes = vertexAttributes;
 
         // vertex: x, y, u, v, rgba
         vertexSize = vertexAttributes.vertexSize; // bytes
@@ -103,10 +101,8 @@ public class WebGPUSpriteBatch implements Batch {
         createBuffers();
         fillIndexBuffer(maxSprites);
 
-
         // Create FloatBuffer to hold vertex data per batch, is reset every flush
         vertexBB = BufferUtils.newUnsafeByteBuffer(maxSprites * VERTS_PER_SPRITE * vertexSize);
-        //vertexBB = ByteBuffer.allocateDirect(maxSprites * VERTS_PER_SPRITE * vertexSize);   // 4 vertices per sprite
         vertexBB.order(ByteOrder.nativeOrder());  // important
         vertexData = vertexBB.asFloatBuffer();
 
@@ -262,18 +258,6 @@ public class WebGPUSpriteBatch implements Batch {
         return pipelineSpec.isBlendingEnabled();
     }
 
-    // note: this might invalidate the vertex buffer layout
-    public void setVertexAttributes(VertexAttributes vattr){
-        if (!drawing) // catch incorrect usage
-            throw new RuntimeException("Call begin() before calling setVertexAttributes().");
-        flush();
-        vertexAttributes = vattr;
-        vertexSize = vertexAttributes.vertexSize; // bytes
-        pipelineSpec.vertexAttributes = vattr;
-        pipelineSpec.shader = null;     // force recompile of shader
-        setPipeline();
-    }
-
     public boolean isDrawing () {
         return drawing;
     }
@@ -291,8 +275,6 @@ public class WebGPUSpriteBatch implements Batch {
         numSprites = 0;
         vbOffset = 0;
         vertexData.clear();
-        vertexAttributes = defaultVertexAttributes;
-        vertexSize = vertexAttributes.vertexSize; // bytes
         maxSpritesInBatch = 0;
         renderCalls = 0;
 
@@ -386,8 +368,6 @@ public class WebGPUSpriteBatch implements Batch {
             pipelineSpec.shaderSource = "precompiled"; //shaderProgram.getName();   // todo
             pipelineSpec.recalcHash();
         }
-
-        setPipeline();  // probably not needed because flush() will do it again
     }
 
 
@@ -420,7 +400,7 @@ public class WebGPUSpriteBatch implements Batch {
 
     @Override
     public void setShader(ShaderProgram shader) {
-        throw new IllegalStateException("not implemented");
+        throw new IllegalStateException("not implemented, provide WebGPUShaderProgram");
     }
 
     @Override
@@ -648,7 +628,7 @@ public class WebGPUSpriteBatch implements Batch {
 //    }
 
     // used by Sprite class and BitmapFont
-    public void draw(Texture texture, float[] vertices, int offset, int numFloats){
+    public void draw(Texture texture, float[] spriteVertices, int offset, int numFloats){
         if (!drawing)
             throw new RuntimeException("SpriteBatch: Must call begin() before draw().");
         if(numSprites == maxSprites)
@@ -660,39 +640,9 @@ public class WebGPUSpriteBatch implements Batch {
         int remaining = 20*(maxSprites - numSprites);
         if(numFloats > remaining)   // avoid buffer overflow by truncating as needed
             numFloats = remaining;
-        vertexData.put(vertices, offset, numFloats);
+        vertexData.put(spriteVertices, offset, numFloats);
         numSprites += numFloats/20;
     }
-
-//    public void draw (Texture texture, float[] spriteVertices, int offset, int count) {
-//        if (!drawing) throw new IllegalStateException("SpriteBatch.begin must be called before draw.");
-//
-//        int verticesLength = vertices.length;
-//        int remainingVertices = verticesLength;
-//        if (texture != lastTexture)
-//            switchTexture(texture);
-//        else {
-//            remainingVertices -= idx;
-//            if (remainingVertices == 0) {
-//                flush();
-//                remainingVertices = verticesLength;
-//            }
-//        }
-//        int copyCount = Math.min(remainingVertices, count);
-//
-//        System.arraycopy(spriteVertices, offset, vertices, idx, copyCount);
-//        idx += copyCount;
-//        count -= copyCount;
-//        while (count > 0) {
-//            offset += copyCount;
-//            flush();
-//            copyCount = Math.min(verticesLength, count);
-//            System.arraycopy(spriteVertices, offset, vertices, 0, copyCount);
-//            idx += copyCount;
-//            count -= copyCount;
-//        }
-//    }
-
 
 
     public void draw (TextureRegion region, float x, float y, float originX, float originY, float width, float height,

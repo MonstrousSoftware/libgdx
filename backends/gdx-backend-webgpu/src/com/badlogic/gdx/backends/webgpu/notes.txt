@@ -136,7 +136,7 @@ the WebGPUSpriteBatch is compatible with Batch.
 - setShader() variant with WebGPUShaderProgram instead of ShaderProgram.
 - getShader() always returns null.
 - The blendOpColor and blendOpAlpha are not modified by spritebatch methods and is set to Add.
-- begin() has an extra Color parameter to set the background colour.
+- begin() has an extra optional Color parameter to set the background colour (to use instead of glClear())
 - whereas the libgdx SpriteBatch can handle more sprites than fit in the vertex buffer by flushing and restarting, this does not work
 for WebGPU as the buffer cannot be reused after each draw call but needs to be maintained until the end of the frame.
 If there are too many sprites an exception is thrown. In such a case, use a larger number in the sprite batch constructor.
@@ -262,3 +262,10 @@ Folder structure in backend:
 15/05/2025:
 - Separated out the backend into a platform specific part (gdx-backend-lwjgl3_webgpu) and a shared part (gdx-backend-webgpu). This
 opens up the possibility to add different platform backends.
+
+19/05/2025:
+- Experimented with having WebGPUSpriteBatch make use of WebGPUMesh, like SpriteBatch does.  This would mean some reuse of code and an interesting use case for Mesh.
+This worked but not very efficiently.  In particular there is no means to copy each batch to a particular offset in the GPU vertex buffer (For OpenGL this is not an issue because the vertex buffer can be reused after draw).
+Mesh.setVertices always copies the data to the start of the vertex data.
+Also, it ended up with multiple backing buffers (WebGPUVertexData has a backing buffer to support getVertices()).  So in the end, I went back to directly using VertexBuffer and IndexBuffer and using a
+FloatBuffer to transfer vertex data per batch flush.
