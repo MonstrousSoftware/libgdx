@@ -55,17 +55,17 @@ public class WebGPUTestScene2d {
 
 		@Override
 		public void render () {
-//			batch.begin(Color.FOREST);
-//			batch.draw(region, 400, 400, 100, 100);
-//
-//			// this should show the top left quadrant, but upside down
-//			batch.draw(texture, 10, 10, 128, 128, 0, 0, 0.5f, 0.5f);
-//
-//			// this should show the top left quadrant, and the right way round
-//			batch.draw(region, 300, 300);
-//
-//			//image.getDrawable().draw(batch, 0,0,120, 120);
-//			batch.end();
+			batch.begin(Color.FOREST);
+			batch.draw(region, 300, 400, 100, 100);
+
+			// this should show the top left quadrant, but upside down
+			batch.draw(texture, 300, 10, 128, 128, 0, 0, 0.5f, 0.5f);
+
+			// this should show the top left quadrant, and the right way round
+			batch.draw(region, 300, 300);
+
+			//image.getDrawable().draw(batch, 0,0,120, 120);
+			batch.end();
 
 			stage.act();
 			stage.draw();

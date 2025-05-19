@@ -558,6 +558,7 @@ public class WebGPUSpriteBatch implements Batch {
         addVertex(x2, y2, u, v2);
         addVertex(x3, y3, u2, v2);
         addVertex(x4, y4, u2, v);
+        numSprites++;
     }
 
 
@@ -594,6 +595,7 @@ public class WebGPUSpriteBatch implements Batch {
         addVertex(x, fy2, u, v2);
         addVertex(fx2,fy2, u2, v2);
         addVertex(fx2, y, u2, v);
+        numSprites++;
     }
 
 
@@ -615,6 +617,7 @@ public class WebGPUSpriteBatch implements Batch {
         addVertex(x, fy2, u, v2);
         addVertex(fx2,fy2, u2, v2);
         addVertex(fx2, y, u2, v);
+        numSprites++;
     }
 
 
@@ -747,7 +750,7 @@ public class WebGPUSpriteBatch implements Batch {
         addVertex(x2, y2, u, v2);
         addVertex(x3, y3, u2, v2);
         addVertex(x4, y4, u2, v);
-
+        numSprites++;
     }
 
 
@@ -859,6 +862,7 @@ public class WebGPUSpriteBatch implements Batch {
         addVertex(x2, y2, u2, v2);
         addVertex(x3, y3, u3, v3);
         addVertex(x4, y4, u4, v4);
+        numSprites++;
     }
 
 
@@ -889,6 +893,7 @@ public class WebGPUSpriteBatch implements Batch {
         addVertex(x2, y2, u, v2);
         addVertex(x3, y3, u2, v2);
         addVertex(x4, y4, u2, v);
+        numSprites++;
     }
 
 

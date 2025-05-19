@@ -273,3 +273,7 @@ FloatBuffer to transfer vertex data per batch flush.
 
 Worked out why textures were upside down in Scene2d. This is because it mostly draws textureRegions and SpriteBatch is supposed to switch v and v2 for textureRegions.
 Fixed. To check all possible combinations of SpriteBatch.draw...
+
+Fixed the issue with Scene2dTest that the moving image was the wrong texture.  This was due to some of teh SpriteBatch.draw calls now calling numSprites++.
+
+Scene2dTest mostly works now except for debug lines and drawing the TiledDrawable patch.
