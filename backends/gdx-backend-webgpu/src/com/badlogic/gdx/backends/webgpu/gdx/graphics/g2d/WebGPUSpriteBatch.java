@@ -3,9 +3,7 @@ package com.badlogic.gdx.backends.webgpu.gdx.graphics.g2d;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.webgpu.gdx.WebGPUGraphicsBase;
-import com.badlogic.gdx.backends.webgpu.gdx.graphics.WebGPUMesh;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.WebGPUShaderProgram;
-import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.WebGPUVertexData;
 import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;
 import com.badlogic.gdx.backends.webgpu.wrappers.*;
@@ -16,7 +14,7 @@ import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Affine2;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
-import jnr.ffi.Pointer;
+import com.badlogic.gdx.utils.BufferUtils;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -35,22 +33,16 @@ public class WebGPUSpriteBatch implements Batch {
     private final static int VERTS_PER_SPRITE = 4;
     private final static int INDICES_PER_SPRITE = 6;
 
-    private final WebGPU_JNI webGPU;
     private final WebGPUGraphicsBase gfx;
     private final WebGPUShaderProgram specificShader;
     private final int maxSprites;
     private boolean drawing;
     private int vertexSize;
-//    private float[] vertices;
-//    private int idx;    // index into vertices[]
-//    private int targetOffset;
     private final ByteBuffer vertexBB;
     private final FloatBuffer vertexData;     // float buffer view on byte buffer
-    //rivate final Pointer vertexDataPtr;      // Pointer wrapped around the byte buffer
-    public int numRects;
+    public int numSprites;
     private final Color tint;
     private float tintPacked;
-    //private WebGPUMesh mesh;
     private WebGPUVertexBuffer vertexBuffer;
     private WebGPUIndexBuffer indexBuffer;
     private WebGPUUniformBuffer uniformBuffer;
@@ -66,7 +58,6 @@ public class WebGPUSpriteBatch implements Batch {
     private final Matrix4 combinedMatrix;
     private WebGPURenderPass renderPass;
     private int vbOffset;
-    private int rectsDrawn;
     private final PipelineCache pipelines;
     private WebGPUPipeline prevPipeline;
     public int maxSpritesInBatch;    // most nr of sprites in the batch over its lifetime
@@ -78,7 +69,7 @@ public class WebGPUSpriteBatch implements Batch {
     private final Map<WGPUBlendFactor, Integer> blendGLConstantMap = new HashMap<>(); // vice versa
 
     public WebGPUSpriteBatch() {
-        this(1000); // default nr
+        this(10000); // default nr
     }
 
     public WebGPUSpriteBatch(int maxSprites) {
@@ -92,7 +83,6 @@ public class WebGPUSpriteBatch implements Batch {
      */
     public WebGPUSpriteBatch(int maxSprites, WebGPUShaderProgram specificShader) {
         gfx = (WebGPUGraphicsBase) Gdx.graphics;
-        webGPU = gfx.getWebGPU();
 
         this.maxSprites = maxSprites;
         this.specificShader = specificShader;
@@ -111,19 +101,14 @@ public class WebGPUSpriteBatch implements Batch {
         // allocate data buffers based on default vertex attributes which are assumed to be the worst case.
         // i.e. with setVertexAttributes() you can specify a subset
         createBuffers();
-        //mesh = new WebGPUMesh(true, VERTS_PER_SPRITE*maxSprites, INDICES_PER_SPRITE*maxSprites, vertexAttributes );
         fillIndexBuffer(maxSprites);
-
-        //vertices = new float[maxSprites * vertexSize / Float.BYTES];
-
-        //vertexData = mesh.getVerticesBuffer(true);  // get FloatBuffer to put vertex data in
 
 
         // Create FloatBuffer to hold vertex data per batch, is reset every flush
-        vertexBB = ByteBuffer.allocateDirect(maxSprites * VERTS_PER_SPRITE * vertexSize);   // 4 vertices per sprite
+        vertexBB = BufferUtils.newUnsafeByteBuffer(maxSprites * VERTS_PER_SPRITE * vertexSize);
+        //vertexBB = ByteBuffer.allocateDirect(maxSprites * VERTS_PER_SPRITE * vertexSize);   // 4 vertices per sprite
         vertexBB.order(ByteOrder.nativeOrder());  // important
         vertexData = vertexBB.asFloatBuffer();
-        //vertexDataPtr = Pointer.wrap(JavaWebGPU.getRuntime(), vertexBB);
 
         projectionMatrix = new Matrix4();
         transformMatrix = new Matrix4();
@@ -133,7 +118,6 @@ public class WebGPUSpriteBatch implements Batch {
 
         invTexWidth = 0f;
         invTexHeight = 0f;
-
 
         bindGroupLayout = createBindGroupLayout();
         pipelineLayout = new WebGPUPipelineLayout("SpriteBatch pipeline layout", bindGroupLayout);
@@ -147,29 +131,9 @@ public class WebGPUSpriteBatch implements Batch {
         pipelineSpec.setBlendFactor(WGPUBlendFactor.SrcAlpha, WGPUBlendFactor.OneMinusSrcAlpha);
     }
 
-//    // the index buffer is fixed and only has to be filled on start-up
-//    private void fillIndexBuffer(Mesh mesh, int maxSprites){
-//        short[] indices = new short[6*maxSprites];
-//
-//        short vertexOffset = 0;
-//        for(int i = 0; i < 6*maxSprites; vertexOffset += 4){
-//
-//            // two triangles per sprite
-//            indices[i++] = vertexOffset;
-//            indices[i++] =(short)(vertexOffset + 1);
-//            indices[i++] =(short)(vertexOffset + 2);
-//
-//            indices[i++] = vertexOffset;
-//            indices[i++] = (short)(vertexOffset + 2);
-//            indices[i++] = (short)(vertexOffset + 3);
-//        }
-//        mesh.setIndices(indices);
-//    }
-
     // the index buffer is fixed and only has to be filled on start-up
     private void fillIndexBuffer(int maxSprites){
-        ByteBuffer bb = ByteBuffer.allocateDirect(maxSprites*6*Short.BYTES);
-        bb.order(ByteOrder.nativeOrder());  // important
+        ByteBuffer bb = BufferUtils.newUnsafeByteBuffer(maxSprites*INDICES_PER_SPRITE*Short.BYTES);
         ShortBuffer indexData = bb.asShortBuffer();
         for(int i = 0; i < maxSprites; i++){
             short vertexOffset = (short)(i * 4);
@@ -184,9 +148,7 @@ public class WebGPUSpriteBatch implements Batch {
         }
         indexData.flip();
         indexBuffer.setIndices(bb);
-//        Pointer indexDataPtr = Pointer.wrap(JavaWebGPU.getRuntime(), bb);
-//
-//        webGPU.wgpuQueueWriteBuffer(gfx.getQueue().getHandle(), indexBuffer.getHandle(), 0, indexDataPtr, (long) maxSprites *6*Short.BYTES);
+        BufferUtils.disposeUnsafeByteBuffer(bb);
     }
 
 
@@ -300,7 +262,6 @@ public class WebGPUSpriteBatch implements Batch {
         return pipelineSpec.isBlendingEnabled();
     }
 
-
     // note: this might invalidate the vertex buffer layout
     public void setVertexAttributes(VertexAttributes vattr){
         if (!drawing) // catch incorrect usage
@@ -312,6 +273,7 @@ public class WebGPUSpriteBatch implements Batch {
         pipelineSpec.shader = null;     // force recompile of shader
         setPipeline();
     }
+
     public boolean isDrawing () {
         return drawing;
     }
@@ -321,18 +283,14 @@ public class WebGPUSpriteBatch implements Batch {
     }
 
     public void begin(Color clearColor) {
-
         renderPass = RenderPassBuilder.create(clearColor, gfx.getSamples());
 
         if (drawing)
             throw new RuntimeException("Must end() before begin()");
         drawing = true;
-        numRects = 0;
-        rectsDrawn = 0;
+        numSprites = 0;
         vbOffset = 0;
         vertexData.clear();
-        //idx = 0;    // write pointer into vertices[]
-        //targetOffset = 0;   // offset in GPU vertex buffer
         vertexAttributes = defaultVertexAttributes;
         vertexSize = vertexAttributes.vertexSize; // bytes
         maxSpritesInBatch = 0;
@@ -366,54 +324,34 @@ public class WebGPUSpriteBatch implements Batch {
     }
 
     public void flush() {
-        if(numRects == 0)
+        if(numSprites == 0)
             return;
-        if(numRects > maxSpritesInBatch)
-            maxSpritesInBatch = numRects;
+        if(numSprites > maxSpritesInBatch)
+            maxSpritesInBatch = numSprites;
         renderCalls++;
 
         setPipeline();
-
-
-        // Add number of vertices to the GPU's vertex buffer
-        //
-        int numBytes = numRects * VERTS_PER_SPRITE * vertexSize;
-
-        // append new vertex data to GPU vertex buffer
-
-        vertexBuffer.setVertices(vertexBB, vbOffset, numBytes);
 
         // bind texture
         WebGPUBindGroup bg = makeBindGroup(bindGroupLayout, uniformBuffer, lastTexture);
         renderPass.setBindGroup( 0, bg.getHandle(), 0, JavaWebGPU.createNullPointer());
 
-
-
-        //mesh.setVertices(vertices, 0, idx);    // append vertex data to GPU vertex buffer
-
-
-        // mark vertex buffer as dirty
-        // note that this means the whole vertex buffer is copied again to the GPU overlapping with previous batches
-        // todo support partial vertex buffer updates, i.e. per flush
-
-        //mesh.getVerticesBuffer(true);  // get FloatBuffer to put vertex data in
-
+        // append new vertex data to GPU vertex buffer
+        int numBytes = numSprites * VERTS_PER_SPRITE * vertexSize;
+        vertexBuffer.setVertices(vertexBB, vbOffset, numBytes);
 
         // Set vertex buffer while encoding the render pass
         // use an offset to set the vertex buffer for this batch
         renderPass.setVertexBuffer( 0, vertexBuffer.getHandle(), vbOffset, numBytes);
-        renderPass.setIndexBuffer( indexBuffer.getHandle(), WGPUIndexFormat.Uint16, 0, (long)numRects*6*Short.BYTES);
-        //((WebGPUIndexData)mesh.getIndexData()).bind(renderPass);
+        renderPass.setIndexBuffer( indexBuffer.getHandle(), WGPUIndexFormat.Uint16, 0, (long) numSprites *6*Short.BYTES);
 
-        renderPass.drawIndexed( numRects*6, 1, 0, 0, 0);
+        renderPass.drawIndexed( numSprites *6, 1, 0, 0, 0);
 
         bg.dispose();
 
-        rectsDrawn += numRects;
         vbOffset += numBytes;
-//
         vertexData.clear(); // reset fill position for next batch
-        numRects = 0;   // reset
+        numSprites = 0;   // reset
     }
 
     public void end() {
@@ -454,17 +392,17 @@ public class WebGPUSpriteBatch implements Batch {
 
 
 
-    //@Override
+    @Override
     public Matrix4 getProjectionMatrix() {
         return projectionMatrix;
     }
 
-   // @Override
+    @Override
     public Matrix4 getTransformMatrix() {
         return transformMatrix;
     }
 
-   // @Override
+    @Override
     public void setProjectionMatrix(Matrix4 projection) {
         if(drawing)
             flush();
@@ -512,21 +450,21 @@ public class WebGPUSpriteBatch implements Batch {
         if (!drawing)
             throw new RuntimeException("SpriteBatch: Must call begin() before draw().");
 
-        if(numRects == maxSprites)
+        if(numSprites == maxSprites)
             throw new RuntimeException("WebGPUSpriteBatch: Too many sprites. Enlarge maxSprites.");
 
         if(texture != lastTexture) { // changing texture, need to flush what we have so far
             switchTexture(texture);
         }
         addRect(x, y, width, height, u, v, u2, v2);
-        numRects++;
+        numSprites++;
     }
 
 
     public void draw (Texture texture, float x, float y, float originX, float originY, float width, float height, float scaleX,
                       float scaleY, float rotation, int srcX, int srcY, int srcWidth, int srcHeight, boolean flipX, boolean flipY) {
         if (!drawing) throw new IllegalStateException("SpriteBatch.begin must be called before draw.");
-        if(numRects == maxSprites)
+        if(numSprites == maxSprites)
             throw new RuntimeException("WebGPUSpriteBatch: Too many sprites. Enlarge maxSprites.");
 
         if(texture != lastTexture) { // changing texture, need to flush what we have so far
@@ -637,7 +575,7 @@ public class WebGPUSpriteBatch implements Batch {
     public void draw (Texture texture, float x, float y, float width, float height, int srcX, int srcY, int srcWidth,
                       int srcHeight, boolean flipX, boolean flipY) {
         if (!drawing) throw new IllegalStateException("SpriteBatch.begin must be called before draw.");
-        if(numRects == maxSprites)
+        if(numSprites == maxSprites)
             throw new RuntimeException("WebGPUSpriteBatch: Too many sprites. Enlarge maxSprites.");
 
         if (texture != lastTexture)
@@ -671,7 +609,7 @@ public class WebGPUSpriteBatch implements Batch {
 
     public void draw (Texture texture, float x, float y, int srcX, int srcY, int srcWidth, int srcHeight) {
         if (!drawing) throw new IllegalStateException("SpriteBatch.begin must be called before draw.");
-        if(numRects == maxSprites)
+        if(numSprites == maxSprites)
             throw new RuntimeException("WebGPUSpriteBatch: Too many sprites. Enlarge maxSprites.");
         if (texture != lastTexture)
             switchTexture(texture);
@@ -713,19 +651,17 @@ public class WebGPUSpriteBatch implements Batch {
     public void draw(Texture texture, float[] vertices, int offset, int numFloats){
         if (!drawing)
             throw new RuntimeException("SpriteBatch: Must call begin() before draw().");
-        if(numRects == maxSprites)
+        if(numSprites == maxSprites)
             throw new RuntimeException("WebGPUSpriteBatch: Too many sprites. Enlarge maxSprites.");
 
         if(texture != lastTexture) { // changing texture, need to flush what we have so far
             switchTexture(texture);
         }
-        int remaining = 20*(maxSprites - numRects);
+        int remaining = 20*(maxSprites - numSprites);
         if(numFloats > remaining)   // avoid buffer overflow by truncating as needed
             numFloats = remaining;
         vertexData.put(vertices, offset, numFloats);
-//        for(int i = 0; i < numFloats; i++)
-//            this.vertices[idx++] = vertices[i];
-        numRects+= numFloats/20;
+        numSprites += numFloats/20;
     }
 
 //    public void draw (Texture texture, float[] spriteVertices, int offset, int count) {
@@ -762,7 +698,7 @@ public class WebGPUSpriteBatch implements Batch {
     public void draw (TextureRegion region, float x, float y, float originX, float originY, float width, float height,
                       float scaleX, float scaleY, float rotation) {
         if (!drawing) throw new IllegalStateException("SpriteBatch.begin must be called before draw.");
-        if(numRects == maxSprites)
+        if(numSprites == maxSprites)
             throw new RuntimeException("WebGPUSpriteBatch: Too many sprites. Enlarge maxSprites.");
         Texture texture = region.getTexture();
         if (texture != lastTexture)
@@ -858,7 +794,7 @@ public class WebGPUSpriteBatch implements Batch {
     public void draw (TextureRegion region, float x, float y, float originX, float originY, float width, float height,
                       float scaleX, float scaleY, float rotation, boolean clockwise) {
         if (!drawing) throw new IllegalStateException("SpriteBatch.begin must be called before draw.");
-        if(numRects == maxSprites)
+        if(numSprites == maxSprites)
             throw new RuntimeException("WebGPUSpriteBatch: Too many sprites. Enlarge maxSprites.");
         Texture texture = region.getTexture();
         if (texture != lastTexture)
@@ -968,7 +904,7 @@ public class WebGPUSpriteBatch implements Batch {
 
     public void draw (TextureRegion region, float width, float height, Affine2 transform) {
         if (!drawing) throw new IllegalStateException("SpriteBatch.begin must be called before draw.");
-        if(numRects == maxSprites)
+        if(numSprites == maxSprites)
             throw new RuntimeException("WebGPUSpriteBatch: Too many sprites. Enlarge maxSprites.");
         Texture texture = region.getTexture();
         if (texture != lastTexture)
@@ -1079,15 +1015,15 @@ public class WebGPUSpriteBatch implements Batch {
     }
 
 
-    //@Override
+    @Override
     public void dispose(){
         pipelines.dispose();
-//        mesh.dispose();
         vertexBuffer.dispose();
         indexBuffer.dispose();
         uniformBuffer.dispose();
         bindGroupLayout.dispose();
         pipelineLayout.dispose();
+        BufferUtils.disposeUnsafeByteBuffer(vertexBB);
     }
 
 
