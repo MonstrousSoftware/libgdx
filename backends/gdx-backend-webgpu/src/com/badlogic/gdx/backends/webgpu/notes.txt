@@ -67,7 +67,7 @@ WGPUTexture still needs to be aligned to Texture.
 
 RenderPassBuilder and PipelineSpecification need cleaning up or replacing.
 
-VertexAttributes is reinvented. To be aligned.
+VertexAttributes is reinvented. To be aligned. FIXED
 
 Added depth texture to Window. Applcation exports textureview and textureformat (needed to build render pass).
 
@@ -157,6 +157,8 @@ Glyph subclass is used from the original.
 This also means BitmapFontCache and GlyphLayout need to be copied because of type changes from BitmapFont to WebGPUBitmapFont.
 Unfortunately , that's a lot of duplicated lines for a few trivial changes. But it now works.
 
+Managed to fix it without copying too many other classes, just by overriding all the constructors.
+
 
 Stage
 -----
@@ -222,10 +224,10 @@ Preferred way to clear the screen is to use SpriteBatch.begin(clearColor); which
 - Resource not found: dawn.dll => Created new folder (normal folder, not a module) 'res' under gdx-backend-webgpu (at same level as src). Added dawn.dll and webgpuUtils.dll.
 
 Scene2dTest bugs:
-- moving image is the incorrect texture
+- moving image is the incorrect texture ; FIXED
 - debug lines are not visible (known limitation)
-- checkbox image is upside down
-- some buttons in the vertical button row are not visible. This is because of the patch that is drawn, probably because the scissoring is disabled.
+- checkbox image is upside down : FIXED
+- some buttons in the vertical button row are not visible. This is because of the patch that is drawn (maybe because the scissoring is disabled?).
 
 13/05/2025:
 - Started work on 3d rendering:
@@ -277,3 +279,6 @@ Fixed. To check all possible combinations of SpriteBatch.draw...
 Fixed the issue with Scene2dTest that the moving image was the wrong texture.  This was due to some of teh SpriteBatch.draw calls now calling numSprites++.
 
 Scene2dTest mostly works now except for debug lines and drawing the TiledDrawable patch.
+
+21/05/2025:
+- Added NinePatchTest.  Fixed default texture filtering to Nearest to match LibGDX behaviour. g2d/NinePatch can eb used unaltered as long as you feed it WebGPUTextures, or TextureRegions that refer to one.

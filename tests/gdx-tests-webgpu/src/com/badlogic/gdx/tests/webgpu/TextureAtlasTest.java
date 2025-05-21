@@ -14,36 +14,35 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.badlogic.gdx.tests;
+package com.badlogic.gdx.tests.webgpu;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.InputAdapter;
+import com.badlogic.gdx.backends.webgpu.gdx.graphics.g2d.WebGPUBitmapFont;
+import com.badlogic.gdx.backends.webgpu.gdx.graphics.g2d.WebGPUSpriteBatch;
+import com.badlogic.gdx.backends.webgpu.gdx.graphics.utils.WebGPUScreenUtils;
+import com.badlogic.gdx.backends.webgpu.gdx.graphics.utils.WebGPUShapeRenderer;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.g2d.Animation;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.tests.utils.GdxTest;
 
 public class TextureAtlasTest extends GdxTest {
-	SpriteBatch batch;
+	WebGPUSpriteBatch batch;
 	Sprite badlogic, badlogicSmall, star;
 	TextureAtlas atlas;
 	TextureAtlas jumpAtlas;
 	Animation<TextureRegion> jumpAnimation;
-	BitmapFont font;
+	WebGPUBitmapFont font;
 	float time = 0;
-	ShapeRenderer renderer;
+	WebGPUSpriteBatch renderer;
 
 	public void create () {
-		batch = new SpriteBatch();
-		renderer = new ShapeRenderer();
+		batch = new WebGPUSpriteBatch();
+		renderer = new WebGPUSpriteBatch();
 
 		atlas = new TextureAtlas(Gdx.files.internal("data/pack.atlas"));
 		jumpAtlas = new TextureAtlas(Gdx.files.internal("data/jump.txt"));
@@ -64,9 +63,9 @@ public class TextureAtlasTest extends GdxTest {
 		star = atlas.createSprite("particle-star");
 		star.setPosition(10, 70);
 
-		font = new BitmapFont(Gdx.files.internal("data/font.fnt"), atlas.findRegion("font"), false);
+		font = new WebGPUBitmapFont(); //Gdx.files.internal("data/font.fnt"), atlas.findRegion("font"), false);
 
-		Gdx.gl.glClearColor(0, 1, 0, 1);
+		WebGPUScreenUtils.clear(0, 1, 0, 1);
 
 		Gdx.input.setInputProcessor(new InputAdapter() {
 			public boolean keyUp (int keycode) {
@@ -88,9 +87,9 @@ public class TextureAtlasTest extends GdxTest {
 		time += Gdx.graphics.getDeltaTime();
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-		renderer.begin(ShapeType.Line);
-		renderer.rect(10, 10, 256, 256);
-		renderer.end();
+//		renderer.begin(ShapeType.Line);
+//		//renderer.rect(10, 10, 256, 256);
+//		renderer.end();
 
 		batch.begin();
 		// badlogic.draw(batch);

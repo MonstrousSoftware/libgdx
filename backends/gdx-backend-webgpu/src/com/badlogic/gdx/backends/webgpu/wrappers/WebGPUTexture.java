@@ -261,8 +261,8 @@ public class WebGPUTexture extends Texture {
         samplerDesc.setAddressModeU(WGPUAddressMode.Repeat);
         samplerDesc.setAddressModeV(WGPUAddressMode.Repeat);
         samplerDesc.setAddressModeW(WGPUAddressMode.Repeat);
-        samplerDesc.setMagFilter(WGPUFilterMode.Linear);
-        samplerDesc.setMinFilter(WGPUFilterMode.Linear);
+        samplerDesc.setMagFilter(WGPUFilterMode.Nearest);       // default filter in LibGDX is nearest for min and mag filter
+        samplerDesc.setMinFilter(WGPUFilterMode.Nearest);
         samplerDesc.setMipmapFilter(WGPUMipmapFilterMode.Linear);
 
         samplerDesc.setLodMinClamp(0);
