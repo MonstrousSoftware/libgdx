@@ -43,4 +43,5 @@ public class WebGPUStage extends Stage {
 	public WebGPUStage(Viewport viewport) {
 		super(viewport, new WebGPUSpriteBatch());
 	}
+
 }

@@ -188,7 +188,7 @@ Actor.java  	    355 public void setParent (@Null Group parent) {
 Dialog.java         119 public void setStage (Stage stage)
 Group.java          403 public void setStage (Stage stage)
 SelectBox.java      591 public void setStage
-
+Update 22/05: These changes are no longer needed and were reverted.
 
 
 
