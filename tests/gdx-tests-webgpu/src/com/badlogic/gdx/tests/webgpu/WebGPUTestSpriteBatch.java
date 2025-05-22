@@ -83,6 +83,7 @@ public class WebGPUTestSpriteBatch  {
 			batch.draw(textureAlpha, 200, 400);
 			batch.draw(region, 400, 100);
 
+
 			batch.draw(texture2, 400, 300);
 
 			//batch.disableBlending();

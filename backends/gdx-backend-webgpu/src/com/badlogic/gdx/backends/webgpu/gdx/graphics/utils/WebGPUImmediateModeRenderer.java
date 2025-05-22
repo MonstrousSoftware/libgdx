@@ -131,7 +131,7 @@ public class WebGPUImmediateModeRenderer implements ImmediateModeRenderer {
 	}
 
 	public void setShader (ShaderProgram shader) {
-		// ignored
+		throw new RuntimeException("WebGPUImmediateModeRenderer: setShader() not supported");
 	}
 
 	public ShaderProgram getShader () {

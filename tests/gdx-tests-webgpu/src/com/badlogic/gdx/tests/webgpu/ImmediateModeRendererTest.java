@@ -55,6 +55,19 @@ public class ImmediateModeRendererTest extends GdxTest {
 		renderer.color(0, 0, 1, 1);
 		renderer.vertex(0f, 0.5f, 0);
 		renderer.end();
+
+//		renderer.begin(projMatrix, GL20.GL_TRIANGLES);
+//		renderer.setTexture(texture);
+//		renderer.texCoord(0, 0);
+//		renderer.color(1, 0, 0, 1);
+//		renderer.vertex(-0.8f, -0.2f, 0);
+//		renderer.texCoord(1, 0);
+//		renderer.color(0, 1, 0, 1);
+//		renderer.vertex(0.2f, -0.8f, 0);
+//		renderer.texCoord(0.5f, 1);
+//		renderer.color(0, 0, 1, 1);
+//		renderer.vertex(0f, 0.8f, 0);
+//		renderer.end();
 	}
 
 

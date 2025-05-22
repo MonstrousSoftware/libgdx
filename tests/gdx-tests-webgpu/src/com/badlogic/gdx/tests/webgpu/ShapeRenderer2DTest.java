@@ -17,10 +17,8 @@
 package com.badlogic.gdx.tests.webgpu;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUApplication;
 import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUApplicationConfiguration;
-import com.badlogic.gdx.backends.webgpu.gdx.graphics.g2d.WebGPUBitmapFont;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.g2d.WebGPUSpriteBatch;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.utils.WebGPUScreenUtils;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.utils.WebGPUShapeRenderer;
@@ -28,13 +26,9 @@ import com.badlogic.gdx.backends.webgpu.wrappers.WebGPUTexture;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.PerspectiveCamera;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.tests.utils.GdxTest;
-import com.badlogic.gdx.tests.utils.PerspectiveCamController;
 
-public class ShapeRenderer2Test extends GdxTest {
+public class ShapeRenderer2DTest extends GdxTest {
 
 	WebGPUShapeRenderer renderer;
 	Camera cam;
@@ -48,21 +42,19 @@ public class ShapeRenderer2Test extends GdxTest {
 		config.setWindowedMode(640, 480);
 		config.setTitle("WebGPUTest");
 
-		new WebGPUApplication(new ShapeRenderer2Test(), config);
+		new WebGPUApplication(new ShapeRenderer2DTest(), config);
 	}
 
 	public void create () {
 		renderer = new WebGPUShapeRenderer();
-//		cam = new PerspectiveCamera(47, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-//		cam.position.set(0, 0, 2);
-//		cam.near = 0.1f;
 
-		cam = new OrthographicCamera();
+		cam = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		// important to set near and far for WebGPU clip space
+		cam.near = -1;
+		cam.far = 1;
+		cam.update();
 
-		System.out.println(renderer.getProjectionMatrix().toString());
-
-//		cam = new OrthographicCamera();
-//		cam.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		System.out.println(cam.combined.toString());
 
 		batch = new WebGPUSpriteBatch();
 		texture = new WebGPUTexture(Gdx.files.internal("data/badlogicsmall.jpg"));
@@ -72,13 +64,18 @@ public class ShapeRenderer2Test extends GdxTest {
 
 		WebGPUScreenUtils.clear(Color.TEAL);
 
-		cam.update();
-		//renderer.setProjectionMatrix(cam.combined);
-
+		renderer.setProjectionMatrix(cam.combined);
 
 		renderer.begin(WebGPUShapeRenderer.ShapeType.Filled);
 		renderer.setColor(1, 0, 1, 0.5f);
-		renderer.circle(320, 240, 50);
+		// note: shape renderer has (0,0) at centre screen, unlike SpriteBatch
+		renderer.circle(0, 0, 50);
+		renderer.end();
+
+		renderer.begin(WebGPUShapeRenderer.ShapeType.Line);
+		renderer.setColor(Color.RED);
+		// note: shape renderer has (0,0) at centre screen, unlike SpriteBatch
+		renderer.circle(0, 0, 75);
 		renderer.end();
 
 

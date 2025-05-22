@@ -296,8 +296,32 @@ When we set an ortho view instead of
 we need to do
 	mat.setToOrtho(0, w, 0, h, 1, -1);
 
+This also needs to be clear to users, and will be easy to overlook.
+Likewise when using an Ortho Camera for a 2d scene: cam.near must be set to 1 and cam.far to -1.
+There is no point in using cam.projection.setToOrtho(....) because cam.update() recalculates the projection matrix.
+
+Side bar: how did we arrive to near = 1 and far = -1?
+The setOrtho code in Matrix4 uses:
+    zOrtho = -2/(f-n)
+    tz = -(f+n)/(f-n)
+
+We want a zOrtho of 1 and tz of 0 (from comparison with Webgpu matrix calculations).
+
+So, solve:
+    -2/(f-n) = 1            I
+    -(f+n)/(f-n) = 0        II
+
+From II it follows f = -n and f <> n
+Substitute in I to get -2/-2n = 1 => 1/n = 1 => n = 1
+=> f = -1
+
+
 
 Also note in example programs there are multiple SR.begin/end within render(). It seems we see only the last one.
+This is also an issue with ImmediateModeRenderer and SpriteBatch.  flush() or end() does not actually send data to the CPU and allow the buffers to be reused.
+The buffers can only be reused once the command buffer is sent to the graphics queue, which happens outside of ApplicationListener.render().
+begin() resets the buffers to the start. Perhaps they should somehow know which is the first begin() of the frame and otherwise just continue filling the same buffer.
+Or submit the command buffer as part of spritebatch.end(), shaperenderer.end() etc. or even at flush().
 
 - Got debug lines more or less working in Stage.  We can set stage.setDebugAll(true) to have debug lines for all elements, of use Actor.setDebug(true).
 Not all options are supported (e.g. debugUnderMouse...)
