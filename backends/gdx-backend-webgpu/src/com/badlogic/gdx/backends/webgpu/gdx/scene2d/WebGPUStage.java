@@ -34,7 +34,8 @@ import com.badlogic.gdx.utils.viewport.Viewport;
  * Just makes sure we use a WebGPUSpriteBatch and a WebGPUViewport.
  */
 public class WebGPUStage extends Stage {
-	private boolean debug = true;
+
+	private boolean debugEnabled = true;
 	private WebGPUShapeRenderer debugShapes;
 	private final Vector2 tmpCoords = new Vector2();
 
@@ -68,11 +69,22 @@ public class WebGPUStage extends Stage {
 		getRoot().draw(batch, 1);
 		batch.end();
 
-		//if (debug) drawDebug();
-		if(debug) drawDebug(camera);
+		// There is a static boolean debug in Stage that indicates if any actor has ever needed debug draw, to avoid calling drawDebug() unless needed.
+		// However we cannot access this package private static member. We add stage.enableDebug() to block debug drawing including the recursive descent.
+		if(debugEnabled)
+			drawDebug(camera);
+	}
+
+	/** Allow debug drawing (default is enabled).
+	 * Set false to disable any debug lines, for a small performance boost
+	 * */
+	public void enableDebug(boolean enable){
+		debugEnabled = enable;
 	}
 
 	private void drawDebug(Camera camera){
+
+		// there is a complicated logic with debug under mouse etc. that is not replicated here.
 
 		if(debugShapes == null){
 			Gdx.app.log("WebGPUStage", "create shape renderer");
@@ -98,6 +110,10 @@ public class WebGPUStage extends Stage {
 	}
 
 	private void drawActorDebug(Actor actor, WebGPUShapeRenderer debugShapes){
+		if(actor == null) return;
+
+		if(!isDebugAll() && !actor.getDebug()) return;
+
 		// Calculate bottom-left position in STAGE coordinates
 		tmpCoords.set(0, 0);
 		actor.localToStageCoordinates(tmpCoords);
@@ -106,11 +122,9 @@ public class WebGPUStage extends Stage {
 
 		float width = actor.getWidth();
 		float height = actor.getHeight();
-		//System.out.println("Actor XYWH: "+actor.getClass()+" "+stageX+", "+stageY+", "+width+", "+height);
 
-		debugShapes.setColor(0,0,1, 0.5f);	// blue 50% opaque
-
-		debugShapes.rect(stageX, stageY, width, height);
+		debugShapes.setColor(getDebugColor());
+		debugShapes.rect(stageX, stageY, actor.getOriginX(), actor.getOriginY(), width, height, actor.getScaleX(), actor.getScaleY(), actor.getRotation());
 	}
 
 }

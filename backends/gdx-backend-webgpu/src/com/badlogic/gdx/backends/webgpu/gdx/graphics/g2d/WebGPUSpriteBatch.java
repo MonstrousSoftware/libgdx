@@ -291,7 +291,7 @@ public class WebGPUSpriteBatch implements Batch {
         pipelineSpec.vertexAttributes = vertexAttributes;
         pipelineSpec.numSamples = gfx.getSamples();
 
-        projectionMatrix.setToOrtho(0f, Gdx.graphics.getWidth(), 0f, Gdx.graphics.getHeight(), -1f, 1f);
+        projectionMatrix.setToOrtho(0f, Gdx.graphics.getWidth(), 0f, Gdx.graphics.getHeight(), 1f, -1f);
         transformMatrix.idt();
         setupMatrices();
     }

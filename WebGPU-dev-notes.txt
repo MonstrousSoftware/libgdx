@@ -287,6 +287,17 @@ Scene2dTest mostly works now except for debug lines and drawing the TiledDrawabl
 22/05/2025:
 - Found an issue with ShapeRenderer that produces no output in a 2D scene. Turns out that Matrix4.setToOrtho() needs to be adapted to range Z from 0 to 1 instead of from -1 to 1
 We render 2d shapes with a Z of 0 and we use depth compare of "Less"
-- Hacked Matrix4 for now.
+
+
+When we set an ortho view instead of
+    mat.setToOrtho2D(0, 0, w, h);
+    (which gets translated to mat.setToOrtho(0, w, 0, h, 0, 1) )
+
+we need to do
+	mat.setToOrtho(0, w, 0, h, 1, -1);
+
 
 Also note in example programs there are multiple SR.begin/end within render(). It seems we see only the last one.
+
+- Got debug lines more or less working in Stage.  We can set stage.setDebugAll(true) to have debug lines for all elements, of use Actor.setDebug(true).
+Not all options are supported (e.g. debugUnderMouse...)

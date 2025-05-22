@@ -30,56 +30,8 @@ import com.badlogic.gdx.utils.Disposable;
 
 
 // Note: only change for WebGPU is to use WebGPUImmediateRenderer
-
-/** Renders points, lines, shape outlines and filled shapes.
- * <p>
- * By default a 2D orthographic projection with the origin in the lower left corner is used and units are specified in screen
- * pixels. This can be changed by configuring the projection matrix, usually using the {@link Camera#combined} matrix. If the
- * screen resolution changes, the projection matrix may need to be updated.
- * <p>
- * Shapes are rendered in batches to increase performance. Standard usage pattern looks as follows:
- * 
- * <pre>
- * {@code
- * camera.update();
- * shapeRenderer.setProjectionMatrix(camera.combined);
- * 
- * shapeRenderer.begin(ShapeType.Line);
- * shapeRenderer.setColor(1, 1, 0, 1);
- * shapeRenderer.line(x, y, x2, y2);
- * shapeRenderer.rect(x, y, width, height);
- * shapeRenderer.circle(x, y, radius);
- * shapeRenderer.end();
- * 
- * shapeRenderer.begin(ShapeType.Filled);
- * shapeRenderer.setColor(0, 1, 0, 1);
- * shapeRenderer.rect(x, y, width, height);
- * shapeRenderer.circle(x, y, radius);
- * shapeRenderer.end();
- * }
- * </pre>
- * 
- * ShapeRenderer has a second matrix called the transformation matrix which is used to rotate, scale and translate shapes in a
- * more flexible manner. The following example shows how to rotate a rectangle around its center using the z-axis as the rotation
- * axis and placing it's center at (20, 12, 2):
- * 
- * <pre>
- * shapeRenderer.begin(ShapeType.Line);
- * shapeRenderer.identity();
- * shapeRenderer.translate(20, 12, 2);
- * shapeRenderer.rotate(0, 0, 1, 90);
- * shapeRenderer.rect(-width / 2, -height / 2, width, height);
- * shapeRenderer.end();
- * </pre>
- * 
- * Matrix operations all use postmultiplication and work just like glTranslate, glScale and glRotate. The last transformation
- * specified will be the first that is applied to a shape (rotate then translate in the above example).
- * <p>
- * The projection and transformation matrices are a state of the ShapeRenderer, just like the color, and will be applied to all
- * shapes until they are changed.
- * @author mzechner
- * @author stbachmann
- * @author Nathan Sweet */
+// Can we subclass from ShapeRenderer?
+//
 public class WebGPUShapeRenderer implements Disposable {
 	/** Shape types to be used with {@link #begin(ShapeType)}.
 	 * @author mzechner, stbachmann */
@@ -122,7 +74,9 @@ public class WebGPUShapeRenderer implements Disposable {
 		} else {
 			renderer = new WebGPUImmediateModeRenderer(maxVertices, false, true, 0, defaultShader);
 		}
-		projectionMatrix.setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		//projectionMatrix.setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		// set to WebGPU clip space instead of OpenGL
+		projectionMatrix.setToOrtho2D(0,  Gdx.graphics.getWidth(), 0, Gdx.graphics.getHeight(), 1, -1);
 		matrixDirty = true;
 	}
 

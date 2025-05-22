@@ -9,6 +9,7 @@ import com.badlogic.gdx.backends.webgpu.gdx.graphics.viewport.WebGPUScreenViewpo
 import com.badlogic.gdx.backends.webgpu.gdx.scene2d.WebGPUSkin;
 import com.badlogic.gdx.backends.webgpu.gdx.scene2d.WebGPUStage;
 import com.badlogic.gdx.backends.webgpu.wrappers.WebGPUTexture;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
@@ -32,13 +33,23 @@ public class StageTest extends GdxTest {
 			config.setTitle("WebGPUTest");
 
 			new WebGPUApplication(new StageTest(), config);
+
+
 		}
 
 		public void create () {
+			Matrix4 mat = new Matrix4();
+			int w = Gdx.graphics.getWidth();
+			int h =  Gdx.graphics.getHeight();
+			mat.setToOrtho(0, w, 0, h, 1, -1);
+			System.out.println(mat.toString());
+
 			viewport = new WebGPUScreenViewport();
 			batch = new WebGPUSpriteBatch();
 
 			stage = new WebGPUStage(viewport);
+			//stage.enableDebug(false);
+			stage.setDebugAll(true);
 			Gdx.input.setInputProcessor(stage);
 
 			skin = new WebGPUSkin(Gdx.files.internal("data/uiskin.json"));
@@ -61,6 +72,7 @@ public class StageTest extends GdxTest {
 			texture = new WebGPUTexture(Gdx.files.internal("data/badlogic.jpg"));
 			Image image = new Image(texture);
 			Slider slider = new Slider(0, 100, 20, false, skin);
+			slider.debug();
 
 			Table table = new Table();
 			table.setFillParent(true);
@@ -74,7 +86,7 @@ public class StageTest extends GdxTest {
 			table.add(image);
 			table.row();
 			table.add(slider);
-			//table.debug();
+			table.debug();
 
 			stage.addActor(table);
 
