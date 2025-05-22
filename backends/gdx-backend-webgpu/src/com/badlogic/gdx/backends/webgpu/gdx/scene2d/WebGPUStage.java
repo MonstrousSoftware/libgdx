@@ -18,9 +18,13 @@ package com.badlogic.gdx.backends.webgpu.gdx.scene2d;
 
 import com.badlogic.gdx.*;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.g2d.WebGPUSpriteBatch;
+import com.badlogic.gdx.backends.webgpu.gdx.graphics.utils.WebGPUShapeRenderer;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.viewport.WebGPUScalingViewport;
+import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.utils.*;
 import com.badlogic.gdx.utils.viewport.ScalingViewport;
@@ -30,6 +34,9 @@ import com.badlogic.gdx.utils.viewport.Viewport;
  * Just makes sure we use a WebGPUSpriteBatch and a WebGPUViewport.
  */
 public class WebGPUStage extends Stage {
+	private boolean debug = true;
+	private WebGPUShapeRenderer debugShapes;
+	private final Vector2 tmpCoords = new Vector2();
 
 	/** Creates a stage with a {@link ScalingViewport} set to {@link Scaling#stretch}. The stage will use its own {@link Batch}
 	 * which will be disposed when the stage is disposed. */
@@ -42,6 +49,68 @@ public class WebGPUStage extends Stage {
 	 * is disposed. */
 	public WebGPUStage(Viewport viewport) {
 		super(viewport, new WebGPUSpriteBatch());
+	}
+
+	/** Override to call an alternative debug drawer */
+	@Override
+	public void draw () {
+
+
+		if (!getRoot().isVisible()) return;
+
+		getViewport().apply(); // Apply viewport changes (updates camera viewport dimensions)
+		Camera camera = getViewport().getCamera();
+		camera.update();
+
+		Batch batch = this.getBatch();
+		batch.setProjectionMatrix(camera.combined);
+		batch.begin();
+		getRoot().draw(batch, 1);
+		batch.end();
+
+		//if (debug) drawDebug();
+		if(debug) drawDebug(camera);
+	}
+
+	private void drawDebug(Camera camera){
+
+		if(debugShapes == null){
+			Gdx.app.log("WebGPUStage", "create shape renderer");
+			debugShapes = new WebGPUShapeRenderer();
+		}
+
+		debugShapes.setProjectionMatrix(camera.combined);
+		debugShapes.begin(WebGPUShapeRenderer.ShapeType.Line);
+		drawRecursiveDebug(getRoot(), debugShapes);
+		debugShapes.end();
+	}
+
+	private void drawRecursiveDebug(Actor actor, WebGPUShapeRenderer debugShapes){
+		drawActorDebug(actor, debugShapes);
+
+		// Recurse for groups
+		if (actor instanceof Group) {
+			SnapshotArray<Actor> children = ((Group) actor).getChildren();
+			for (int i = 0; i < children.size; i++) {
+				drawRecursiveDebug(children.get(i), debugShapes);
+			}
+		}
+	}
+
+	private void drawActorDebug(Actor actor, WebGPUShapeRenderer debugShapes){
+		// Calculate bottom-left position in STAGE coordinates
+		tmpCoords.set(0, 0);
+		actor.localToStageCoordinates(tmpCoords);
+		float stageX = tmpCoords.x;
+		float stageY = tmpCoords.y;
+
+		float width = actor.getWidth();
+		float height = actor.getHeight();
+		//System.out.println("Actor XYWH: "+actor.getClass()+" "+stageX+", "+stageY+", "+width+", "+height);
+
+		debugShapes.setColor(0,0,1, 0.5f);	// blue 50% opaque
+
+		debugShapes.rect(stageX, stageY, width, height);
 	}
 
 }

@@ -282,3 +282,11 @@ Scene2dTest mostly works now except for debug lines and drawing the TiledDrawabl
 
 21/05/2025:
 - Added NinePatchTest.  Fixed default texture filtering to Nearest to match LibGDX behaviour. g2d/NinePatch can eb used unaltered as long as you feed it WebGPUTextures, or TextureRegions that refer to one.
+
+
+22/05/2025:
+- Found an issue with ShapeRenderer that produces no output in a 2D scene. Turns out that Matrix4.setToOrtho() needs to be adapted to range Z from 0 to 1 instead of from -1 to 1
+We render 2d shapes with a Z of 0 and we use depth compare of "Less"
+- Hacked Matrix4 for now.
+
+Also note in example programs there are multiple SR.begin/end within render(). It seems we see only the last one.

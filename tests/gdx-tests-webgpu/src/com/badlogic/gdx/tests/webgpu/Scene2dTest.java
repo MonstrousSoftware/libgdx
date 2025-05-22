@@ -87,7 +87,7 @@ public class Scene2dTest extends GdxTest {
 		for (int i = 0; i < 5; i++)
 			h.addActor(new TextButton("button " + i, skin));
 		h.addActor(new TextButton("some taller\nbutton", skin));
-		table = new Table(); //.debug();
+		table = new Table().debug();
 		table.add(h);
 		table.pack();
 		table.setPosition(130, 100);
@@ -134,6 +134,7 @@ public class Scene2dTest extends GdxTest {
 
 		button.setPosition(50, 50);
 		stage.addActor(button);
+
 
 // List select = new List(skin);
 // select.setBounds(200, 200, 100, 100);
@@ -197,10 +198,10 @@ public class Scene2dTest extends GdxTest {
 		stage.addActor(checkBoxLeft);
 		stage.addActor(checkBoxRight);
 
-//		buttonLeft.debug();
-//		buttonRight.debug();
-//		checkBoxLeft.debug();
-//		checkBoxRight.debug();
+		buttonLeft.debug();
+		buttonRight.debug();
+		checkBoxLeft.debug();
+		checkBoxRight.debug();
 	}
 
 	public void render () {

@@ -580,7 +580,7 @@ public class Matrix4 implements Serializable {
 	 * @param near The near clipping plane
 	 * @param far The far clipping plane
 	 * @return This matrix for the purpose of chaining methods together. */
-	public Matrix4 setToOrtho (float left, float right, float bottom, float top, float near, float far) {
+	public Matrix4 setToOrthoOrig (float left, float right, float bottom, float top, float near, float far) {
 		float x_orth = 2 / (right - left);
 		float y_orth = 2 / (top - bottom);
 		float z_orth = -2 / (far - near);
@@ -588,6 +588,34 @@ public class Matrix4 implements Serializable {
 		float tx = -(right + left) / (right - left);
 		float ty = -(top + bottom) / (top - bottom);
 		float tz = -(far + near) / (far - near);
+
+		val[M00] = x_orth;
+		val[M10] = 0;
+		val[M20] = 0;
+		val[M30] = 0;
+		val[M01] = 0;
+		val[M11] = y_orth;
+		val[M21] = 0;
+		val[M31] = 0;
+		val[M02] = 0;
+		val[M12] = 0;
+		val[M22] = z_orth;
+		val[M32] = 0;
+		val[M03] = tx;
+		val[M13] = ty;
+		val[M23] = tz;
+		val[M33] = 1;
+		return this;
+	}
+
+	public Matrix4 setToOrtho (float left, float right, float bottom, float top, float near, float far) {
+		float x_orth = 2 / (right - left);
+		float y_orth = 2 / (top - bottom);
+		float z_orth = -1 / (near - far);           // note the - sign
+
+		float tx = -(right + left) / (right - left);
+		float ty = -(top + bottom) / (top - bottom);
+		float tz = - near / (far - near);
 
 		val[M00] = x_orth;
 		val[M10] = 0;

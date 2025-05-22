@@ -2,6 +2,8 @@
 package com.badlogic.gdx.tests.webgpu;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUApplication;
+import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUApplicationConfiguration;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.g2d.WebGPUSpriteBatch;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.viewport.WebGPUScreenViewport;
 import com.badlogic.gdx.backends.webgpu.gdx.scene2d.WebGPUSkin;
@@ -21,6 +23,16 @@ public class StageTest extends GdxTest {
 		private WebGPUStage stage;
 		private WebGPUSkin skin;
 		private WebGPUTexture texture;
+
+		// launcher
+		public static void main (String[] argv) {
+
+			WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
+			config.setWindowedMode(640, 480);
+			config.setTitle("WebGPUTest");
+
+			new WebGPUApplication(new StageTest(), config);
+		}
 
 		public void create () {
 			viewport = new WebGPUScreenViewport();

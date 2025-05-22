@@ -106,7 +106,7 @@ public class WebGPUShapeRenderer implements Disposable {
 	private final Color color = new Color(1, 1, 1, 1);
 	private ShapeType shapeType;
 	private boolean autoShapeType;
-	private float defaultRectLineWidth = 0.75f;
+	private final float defaultRectLineWidth = 0.75f;
 
 	public WebGPUShapeRenderer() {
 		this(5000);
@@ -1238,4 +1238,6 @@ public class WebGPUShapeRenderer implements Disposable {
 	public void dispose () {
 		renderer.dispose();
 	}
+
+
 }
