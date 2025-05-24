@@ -3,6 +3,8 @@ package com.badlogic.gdx.backends.webgpu.gdx.graphics.g2d;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.webgpu.gdx.WebGPUGraphicsBase;
+import com.badlogic.gdx.backends.webgpu.gdx.graphics.Binder;
+import com.badlogic.gdx.backends.webgpu.gdx.graphics.BindingDictionary;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.WebGPUShaderProgram;
 import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;
@@ -15,6 +17,7 @@ import com.badlogic.gdx.math.Affine2;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.utils.BufferUtils;
+import com.badlogic.gdx.utils.Null;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -47,6 +50,7 @@ public class WebGPUSpriteBatch implements Batch {
     private WebGPUIndexBuffer indexBuffer;
     private WebGPUUniformBuffer uniformBuffer;
     private final WebGPUBindGroupLayout bindGroupLayout;
+    private final WebGPUBindGroup bg;
     private final VertexAttributes vertexAttributes;
     private final WebGPUPipelineLayout pipelineLayout;
     private final PipelineSpecification pipelineSpec;
@@ -66,6 +70,7 @@ public class WebGPUSpriteBatch implements Batch {
     private float invTexHeight;
     private final Map<Integer, WGPUBlendFactor> blendConstantMap = new HashMap<>(); // mapping GL vs WebGPU constants
     private final Map<WGPUBlendFactor, Integer> blendGLConstantMap = new HashMap<>(); // vice versa
+    private final Binder binder;
 
     public WebGPUSpriteBatch() {
         this(10000); // default nr
@@ -87,6 +92,10 @@ public class WebGPUSpriteBatch implements Batch {
         this.specificShader = specificShader;
 
         drawing = false;
+        binder = new Binder();
+        binder.defineUniform("uniforms", 0, 0);
+        binder.defineUniform("texture", 0, 1);
+        binder.defineUniform("textureSampler", 0, 2);
 
         vertexAttributes = new VertexAttributes(new VertexAttribute(VertexAttributes.Usage.Position, 2, ShaderProgram.POSITION_ATTRIBUTE),
                 VertexAttribute.ColorPacked(), VertexAttribute.TexCoords(0) );
@@ -116,6 +125,8 @@ public class WebGPUSpriteBatch implements Batch {
         invTexHeight = 0f;
 
         bindGroupLayout = createBindGroupLayout();
+        bg = new WebGPUBindGroup(bindGroupLayout);
+        bg.setBuffer(0, 0, uniformBuffer);
         pipelineLayout = new WebGPUPipelineLayout("SpriteBatch pipeline layout", bindGroupLayout);
 
         pipelines = new PipelineCache();
@@ -125,6 +136,12 @@ public class WebGPUSpriteBatch implements Batch {
         // default blending values
         pipelineSpec.enableBlending();
         pipelineSpec.setBlendFactor(WGPUBlendFactor.SrcAlpha, WGPUBlendFactor.OneMinusSrcAlpha);
+
+        // use provided (compiled) shader or else use default shader (source)
+        // this can be overruled with setShader()
+        pipelineSpec.shader = specificShader;
+        if(specificShader == null)
+            pipelineSpec.shaderSource = getDefaultShaderSource();
     }
 
     // the index buffer is fixed and only has to be filled on start-up
@@ -285,9 +302,7 @@ public class WebGPUSpriteBatch implements Batch {
 
         pipelineSpec.enableBlending();
         pipelineSpec.disableDepthTest();
-        pipelineSpec.shader = specificShader;
-        if(specificShader == null)
-            pipelineSpec.shaderSource = getDefaultShaderSource();
+
         pipelineSpec.vertexAttributes = vertexAttributes;
         pipelineSpec.numSamples = gfx.getSamples();
 
@@ -303,6 +318,11 @@ public class WebGPUSpriteBatch implements Batch {
         lastTexture = (WebGPUTexture)texture;
         invTexWidth = 1.0f / texture.getWidth();
         invTexHeight = 1.0f / texture.getHeight();
+
+        //bindMap.setUniform("texture", lastTexture.getTextureView());
+        //BindingDictionary.BindingMap bm = binder.findUniform("texture");
+        bg.setTexture(1, 1, lastTexture.getTextureView());
+        bg.setSampler(2, 2, lastTexture.getSampler());
     }
 
     public void flush() {
@@ -315,7 +335,8 @@ public class WebGPUSpriteBatch implements Batch {
         setPipeline();
 
         // bind texture
-        WebGPUBindGroup bg = makeBindGroup(bindGroupLayout, uniformBuffer, lastTexture);
+        //updateBindGroup(bg, uniformBuffer, lastTexture);
+        //bg.create();
         renderPass.setBindGroup( 0, bg.getHandle(), 0, JavaWebGPU.createNullPointer());
 
         // append new vertex data to GPU vertex buffer
@@ -329,7 +350,7 @@ public class WebGPUSpriteBatch implements Batch {
 
         renderPass.drawIndexed( numSprites *6, 1, 0, 0, 0);
 
-        bg.dispose();
+        //bg.release();
 
         vbOffset += numBytes;
         vertexData.clear(); // reset fill position for next batch
@@ -355,8 +376,14 @@ public class WebGPUSpriteBatch implements Batch {
         }
     }
 
-    public void setShader(WebGPUShaderProgram shaderProgram) {
-        flush();
+    /** Set shader to use instead of the default shader or the shader provided
+     * in the constructor.
+     * Use null to reset to default shader
+     */
+    public void setShader(@Null WebGPUShaderProgram shaderProgram) {
+        if(pipelineSpec.shader == shaderProgram) return;
+        if(drawing)
+            flush();
         if (shaderProgram == null) {
             pipelineSpec.shader = specificShader;
             if (specificShader == null)
@@ -969,19 +996,20 @@ public class WebGPUSpriteBatch implements Batch {
     }
 
 
-    private WebGPUBindGroup makeBindGroup(WebGPUBindGroupLayout bindGroupLayout, WebGPUBuffer uniformBuffer, WebGPUTexture texture) {
-        WebGPUBindGroup bg = new WebGPUBindGroup(bindGroupLayout);
-        bg.begin();
-        bg.addBuffer(0, uniformBuffer);
-        bg.addTexture(1, texture.getTextureView());
-        bg.addSampler(2, texture.getSampler());
-        bg.end();
-        return bg;
-    }
+//    private void updateBindGroup(WebGPUBindGroup bg, WebGPUBuffer uniformBuffer, WebGPUTexture texture) {
+//        //WebGPUBindGroup bg = new WebGPUBindGroup(bindGroupLayout);
+//        bg.begin();
+//        bg.addBuffer(0, uniformBuffer);
+//        bg.addTexture(1, texture.getTextureView());
+//        bg.addSampler(2, texture.getSampler());
+//        bg.end();
+//        //return bg;
+//    }
 
 
     @Override
     public void dispose(){
+        bg.dispose();
         pipelines.dispose();
         vertexBuffer.dispose();
         indexBuffer.dispose();

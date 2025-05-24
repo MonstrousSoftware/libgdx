@@ -100,6 +100,11 @@ public class WebGPUBindGroupLayout implements Disposable {
         handle = webGPU.wgpuDeviceCreateBindGroupLayout(gfx.getDevice().getHandle(), bindGroupLayoutDesc);
     }
 
+    public int getEntryCount(){
+        if(handle == null) throw new RuntimeException("Call after end()");
+        return entries.size();
+    }
+
     public Pointer getHandle(){
         if(handle == null)
             throw new RuntimeException("BindGroupLayout not defined, did you forget to call end()?");

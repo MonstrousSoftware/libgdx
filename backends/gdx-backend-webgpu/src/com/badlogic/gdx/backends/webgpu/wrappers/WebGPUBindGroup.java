@@ -9,98 +9,151 @@ import com.badlogic.gdx.backends.webgpu.webgpu.WebGPU_JNI;
 import com.badlogic.gdx.utils.Disposable;
 import jnr.ffi.Pointer;
 
-import java.util.ArrayList;
-
 /**
- * Encapsulated bind group.  Use begin(), addXXX(), end() to define a layout.
+ * Encapsulated bind group.  Used to bind values to a shader.
+ *
+ * Example:
+ *      WebGPUBindGroup bg = new WebGPUBindGroup(bindGroupLayout);
+ *      bg.begin();
+ *      bg.addBuffer(buffer);
+ *      bg.addTexture(textureView);
+ *      bg.addSampler(sampler);
+ *      bg.end();
+ *
+ *      Note the sequence and types must correspond to what is defined in the
+ *      BindGroupLayout.
+ *
+ *      Alternatively:
+ *      bg.setBuffer(0, buffer);
+ *      bg.setTexture(1, textureView);
+ *      bg.setSampler(2, sampler);
+ *      bg.create();
+ *
+ *      This allows also to only update specific bindings.
+ *      create() is implied by getHandle().
  */
 public class WebGPUBindGroup implements Disposable {
     private final WebGPU_JNI webGPU;
     private Pointer handle = null;
-    private WebGPUGraphicsBase gfx;
+    private final WebGPUGraphicsBase gfx;
 
-    private final WebGPUBindGroupLayout layout;
-    private final ArrayList<WGPUBindGroupEntry> entries;
+    private final WGPUBindGroupDescriptor bindGroupDescriptor;
+    private final WGPUBindGroupEntry[] entryArray;
+    private final int numEntries;
+    private int entryIndex;
+    private boolean dirty;  // has an entry changed?
+
 
     public WebGPUBindGroup(WebGPUBindGroupLayout layout) {
         gfx = (WebGPUGraphicsBase) Gdx.graphics;
         webGPU = gfx.getWebGPU();
 
-        this.layout = layout;
-        entries = new ArrayList<>();
+        numEntries = layout.getEntryCount();
+
+        // Create a bind group descriptor and an array of BindGroupEntry
+        //
+        bindGroupDescriptor = WGPUBindGroupDescriptor.createDirect();
+        bindGroupDescriptor.setNextInChain()
+                .setLayout(layout.getHandle())
+                .setEntryCount(numEntries);
+
+        entryArray = new WGPUBindGroupEntry[numEntries];
+        for (int i = 0; i < numEntries; i++)
+            entryArray[i] = WGPUBindGroupEntry.createDirect();
     }
 
     public void begin() {
-        entries.clear();
+        entryIndex = 0;
         handle = null;
     }
 
-    /**
-     * Add binding for a buffer.
-     *
-     * @param bindingId         integer as in the shader, 0, 1, 2, ...
-     */
+    /** bind a (subrange of a) buffer. */
     public void addBuffer(int bindingId, WebGPUBuffer buffer, int offset, long size) {
-        WGPUBindGroupEntry entry = WGPUBindGroupEntry.createDirect();
+        setBuffer(entryIndex++, bindingId, buffer, offset, size);
+    }
+
+    /** bind a buffer */
+    public void addBuffer(int bindingId, WebGPUBuffer buffer) {
+        setBuffer(entryIndex++, bindingId, buffer);
+    }
+
+    /** bind a texture view */
+    public void addTexture(int bindingId, WebGPUTextureView textureView) {
+        setTexture(entryIndex++, bindingId, textureView);
+    }
+
+    /** bind a sampler */
+    public void addSampler(int bindingId, Pointer sampler) {
+        setSampler(entryIndex++, bindingId, sampler);
+    }
+
+    /** creates the bind group */
+    public Pointer end() {
+        return create();
+    }
+
+    /** bind a buffer. */
+    public void setBuffer(int index, int bindingId, WebGPUBuffer buffer) {
+        setBuffer(index, bindingId, buffer, 0, buffer.getSize());
+    }
+
+    /** bind a (subrange of a) buffer. */
+    public void setBuffer(int index, int bindingId, WebGPUBuffer buffer, int offset, long size) {
+        if(index >= numEntries) throw new ArrayIndexOutOfBoundsException("Too many entries. See BindGroupLayout");
+        WGPUBindGroupEntry entry = entryArray[index];
         entry.setBinding(bindingId);
         entry.setBuffer(buffer.getHandle());
         entry.setOffset(offset);
         entry.setSize(size);
-        entries.add(entry);
+        dirty = true;
     }
 
-    // shorthand to add whole buffer with no offset
-    public void addBuffer(int bindingId, WebGPUBuffer buffer) {
-        addBuffer(bindingId, buffer, 0, buffer.getSize());
-    }
-
-    public void addTexture(int bindingId, WebGPUTextureView textureView) {
-        WGPUBindGroupEntry entry = WGPUBindGroupEntry.createDirect();
+    public void setTexture(int index, int bindingId, WebGPUTextureView textureView) {
+        if(index >= numEntries) throw new ArrayIndexOutOfBoundsException("Too many entries. See BindGroupLayout");
+        WGPUBindGroupEntry entry = entryArray[index];
         entry.setBinding(bindingId);
         entry.setTextureView(textureView.getHandle());
-        entries.add(entry);
+        dirty = true;
     }
 
-    public void addSampler(int bindingId, Pointer sampler) {
-        WGPUBindGroupEntry entry = WGPUBindGroupEntry.createDirect();
+    /** bind a sampler */
+    public void setSampler(int index, int bindingId, Pointer sampler) {
+        if(index >= numEntries) throw new ArrayIndexOutOfBoundsException("Too many entries. See BindGroupLayout");
+        WGPUBindGroupEntry entry = entryArray[index];
         entry.setBinding(bindingId);
         entry.setSampler(sampler);
-        entries.add(entry);
+        dirty = true;
     }
 
 
-    // fallback option
-    public void addBindGroupEntry(int bindingId, WGPUBindGroupEntry entry) {
-        entry.setBinding(bindingId);
-        entries.add(entry);
-    }
-
-    // todo other types
-
-    public void end() {
-        // Create a bind group
-        WGPUBindGroupDescriptor bindGroupDescriptor = WGPUBindGroupDescriptor.createDirect();
-        bindGroupDescriptor.setNextInChain()
-                .setLayout(layout.getHandle())
-                .setEntryCount(entries.size());
-
-        WGPUBindGroupEntry[] entryArray = new WGPUBindGroupEntry[entries.size()];
-        for (int i = 0; i < entries.size(); i++)
-            entryArray[i] = entries.get(i);
-        bindGroupDescriptor.setEntries(entryArray);
-
-        handle = webGPU.wgpuDeviceCreateBindGroup(gfx.getDevice().getHandle(), bindGroupDescriptor);
+    /** creates the bind group */
+    public Pointer create() {
+        if(dirty) {
+            if(handle != null) {
+                //System.out.println("Releasing bind group");
+                webGPU.wgpuBindGroupRelease(handle);
+            }
+            //System.out.println("Creating bind group");
+            bindGroupDescriptor.setEntries(entryArray);
+            handle = webGPU.wgpuDeviceCreateBindGroup(gfx.getDevice().getHandle(), bindGroupDescriptor);
+            dirty = false;
+        }
+        return handle;
     }
 
     public Pointer getHandle() {
-        if (handle == null)
-            throw new RuntimeException("BindGroup not defined, did you forget to call end()?");
+        if(dirty)
+            create();
         return handle;
     }
 
     @Override
     public void dispose() {
-        webGPU.wgpuBindGroupRelease(handle);
+        if(handle != null) {
+            //System.out.println("Releasing bind group");
+            webGPU.wgpuBindGroupRelease(handle);
+            handle = null;
+        }
     }
 
 }
