@@ -132,7 +132,8 @@ public class WebGPUSpriteBatch implements Batch {
         binder.setBuffer("uniforms", uniformBuffer, 0, uniformBuffer.getSize());
 
         // todo do this via binder
-        pipelineLayout = new WebGPUPipelineLayout("SpriteBatch pipeline layout", bindGroupLayout);
+        pipelineLayout = binder.getPipelineLayout("SpriteBatch pipeline layout");
+        //pipelineLayout = new WebGPUPipelineLayout("SpriteBatch pipeline layout", bindGroupLayout);
 
         pipelines = new PipelineCache();
         pipelineSpec = new PipelineSpecification(vertexAttributes, this.specificShader);
@@ -1017,7 +1018,7 @@ public class WebGPUSpriteBatch implements Batch {
         indexBuffer.dispose();
         uniformBuffer.dispose();
         bindGroupLayout.dispose();
-        pipelineLayout.dispose();
+        //pipelineLayout.dispose();
         BufferUtils.disposeUnsafeByteBuffer(vertexBB);
     }
 
