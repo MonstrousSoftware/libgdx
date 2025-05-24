@@ -29,6 +29,9 @@ public class WebGPUScreenViewport extends WebGPUViewport {
 	/** Creates a new viewport using a new {@link OrthographicCamera}. */
 	public WebGPUScreenViewport() {
 		this(new OrthographicCamera());
+		// adapt camera near/far for WebGPU clip space
+		getCamera().far = -1;
+		getCamera().near = 1;
 	}
 
 	public WebGPUScreenViewport(Camera camera) {

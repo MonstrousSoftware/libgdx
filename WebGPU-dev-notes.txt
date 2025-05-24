@@ -325,3 +325,9 @@ Or submit the command buffer as part of spritebatch.end(), shaperenderer.end() e
 
 - Got debug lines more or less working in Stage.  We can set stage.setDebugAll(true) to have debug lines for all elements, of use Actor.setDebug(true).
 Not all options are supported (e.g. debugUnderMouse...)
+
+24/05/2025:
+- did scene2d debug() stop working? ShapeRenderer2DTest still works.
+=> Had to set near/far values in Viewport and Stage
+
+

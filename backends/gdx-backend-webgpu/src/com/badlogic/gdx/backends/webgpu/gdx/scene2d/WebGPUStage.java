@@ -44,6 +44,9 @@ public class WebGPUStage extends Stage {
 	public WebGPUStage() {
 		super(new WebGPUScalingViewport(Scaling.stretch, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), new OrthographicCamera()),
 			new WebGPUSpriteBatch());
+		// adapt camera near/far for WebGPU clip space
+		getCamera().far = -1;
+		getCamera().near = 1;
 	}
 
 	/** Creates a stage with the specified viewport. The stage will use its own {@link Batch} which will be disposed when the stage
@@ -71,7 +74,8 @@ public class WebGPUStage extends Stage {
 
 		// There is a static boolean debug in Stage that indicates if any actor has ever needed debug draw, to avoid calling drawDebug() unless needed.
 		// However we cannot access this package private static member. We add stage.enableDebug() to block debug drawing including the recursive descent.
-		if(debugEnabled)
+		// (but maybe this is not a good idea as it can lead to confusion why debug doesn't work)
+		//if(debugEnabled)
 			drawDebug(camera);
 	}
 

@@ -66,23 +66,25 @@ public class ShapeRenderer2DTest extends GdxTest {
 
 		renderer.setProjectionMatrix(cam.combined);
 
-		renderer.begin(WebGPUShapeRenderer.ShapeType.Filled);
+		renderer.begin(WebGPUShapeRenderer.ShapeType.Line);
 		renderer.setColor(1, 0, 1, 0.5f);
 		// note: shape renderer has (0,0) at centre screen, unlike SpriteBatch
 		renderer.circle(0, 0, 50);
 		renderer.end();
 
-		renderer.begin(WebGPUShapeRenderer.ShapeType.Line);
-		renderer.setColor(Color.RED);
-		// note: shape renderer has (0,0) at centre screen, unlike SpriteBatch
-		renderer.circle(0, 0, 75);
-		renderer.end();
+		// bug: using multiple begin/end pairs leads to errors
 
-
-		batch.setProjectionMatrix(cam.combined);
-		batch.begin();
-		batch.draw(texture, 100, 100);
-		batch.end();
+//		renderer.begin(WebGPUShapeRenderer.ShapeType.Line);
+//		renderer.setColor(Color.RED);
+//		// note: shape renderer has (0,0) at centre screen, unlike SpriteBatch
+//		renderer.circle(0, 0, 75);
+//		renderer.end();
+//
+//
+//		batch.setProjectionMatrix(cam.combined);
+//		batch.begin();
+//		batch.draw(texture, 100, 100);
+//		batch.end();
 	}
 
 	@Override

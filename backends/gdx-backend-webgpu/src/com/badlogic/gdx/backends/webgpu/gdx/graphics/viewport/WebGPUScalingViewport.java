@@ -41,6 +41,9 @@ public class WebGPUScalingViewport extends WebGPUViewport {
 	/** Creates a new viewport using a new {@link OrthographicCamera}. */
 	public WebGPUScalingViewport(Scaling scaling, float worldWidth, float worldHeight) {
 		this(scaling, worldWidth, worldHeight, new OrthographicCamera());
+		// adapt camera near/far for WebGPU clip space
+		getCamera().far = -1;
+		getCamera().near = 1;
 	}
 
 	public WebGPUScalingViewport(Scaling scaling, float worldWidth, float worldHeight, Camera camera) {
@@ -56,6 +59,8 @@ public class WebGPUScalingViewport extends WebGPUViewport {
 
 		// Center.
 		setScreenBounds((screenWidth - viewportWidth) / 2, (screenHeight - viewportHeight) / 2, viewportWidth, viewportHeight);
+
+
 
 		apply(centerCamera);
 	}

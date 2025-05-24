@@ -47,6 +47,7 @@ public class Scene2dTest extends GdxTest {
 
 	public void create () {
 		stage = new WebGPUStage();
+		//stage.setDebugAll(true);
 		Gdx.input.setInputProcessor(stage);
 
 		region = new TextureRegion(new WebGPUTexture("data/badlogic.jpg"));
@@ -77,7 +78,7 @@ public class Scene2dTest extends GdxTest {
 		for (int i = 0; i < 10; i++)
 			g.addActor(new TextButton("button " + i, skin));
 		g.addActor(new TextButton("longer button", skin));
-		Table table = new Table(); //.debug();
+		Table table = new Table().debug();
 		table.add(g);
 		table.pack();
 		table.setPosition(5, 100);
