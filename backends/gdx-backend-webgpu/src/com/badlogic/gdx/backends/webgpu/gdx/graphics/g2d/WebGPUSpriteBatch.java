@@ -50,7 +50,6 @@ public class WebGPUSpriteBatch implements Batch {
     private WebGPUIndexBuffer indexBuffer;
     private WebGPUUniformBuffer uniformBuffer;
     private final WebGPUBindGroupLayout bindGroupLayout;
-    private final WebGPUBindGroup bg;
     private final VertexAttributes vertexAttributes;
     private final WebGPUPipelineLayout pipelineLayout;
     private final PipelineSpecification pipelineSpec;
@@ -92,10 +91,8 @@ public class WebGPUSpriteBatch implements Batch {
         this.specificShader = specificShader;
 
         drawing = false;
-        binder = new Binder();
-        binder.defineUniform("uniforms", 0, 0);
-        binder.defineUniform("texture", 0, 1);
-        binder.defineUniform("textureSampler", 0, 2);
+
+
 
         vertexAttributes = new VertexAttributes(new VertexAttribute(VertexAttributes.Usage.Position, 2, ShaderProgram.POSITION_ATTRIBUTE),
                 VertexAttribute.ColorPacked(), VertexAttribute.TexCoords(0) );
@@ -125,8 +122,16 @@ public class WebGPUSpriteBatch implements Batch {
         invTexHeight = 0f;
 
         bindGroupLayout = createBindGroupLayout();
-        bg = new WebGPUBindGroup(bindGroupLayout);
-        bg.setBuffer(0, 0, uniformBuffer);
+
+        binder = new Binder();
+        binder.defineGroup(0, bindGroupLayout);
+        binder.defineUniform("uniforms", 0, 0);
+        binder.defineUniform("texture", 0, 1);
+        binder.defineUniform("textureSampler", 0, 2);
+
+        binder.setBuffer("uniforms", uniformBuffer, 0, uniformBuffer.getSize());
+
+        // todo do this via binder
         pipelineLayout = new WebGPUPipelineLayout("SpriteBatch pipeline layout", bindGroupLayout);
 
         pipelines = new PipelineCache();
@@ -319,10 +324,8 @@ public class WebGPUSpriteBatch implements Batch {
         invTexWidth = 1.0f / texture.getWidth();
         invTexHeight = 1.0f / texture.getHeight();
 
-        //bindMap.setUniform("texture", lastTexture.getTextureView());
-        //BindingDictionary.BindingMap bm = binder.findUniform("texture");
-        bg.setTexture(1, 1, lastTexture.getTextureView());
-        bg.setSampler(2, 2, lastTexture.getSampler());
+        binder.setTexture("texture",lastTexture.getTextureView());
+        binder.setSampler("textureSampler",lastTexture.getSampler());
     }
 
     public void flush() {
@@ -335,9 +338,8 @@ public class WebGPUSpriteBatch implements Batch {
         setPipeline();
 
         // bind texture
-        //updateBindGroup(bg, uniformBuffer, lastTexture);
-        //bg.create();
-        renderPass.setBindGroup( 0, bg.getHandle(), 0, JavaWebGPU.createNullPointer());
+        //binder.bindGroup(renderPass, 0);
+        renderPass.setBindGroup( 0, binder.getBindGroup(0).getHandle(), 0, JavaWebGPU.createNullPointer());
 
         // append new vertex data to GPU vertex buffer
         int numBytes = numSprites * VERTS_PER_SPRITE * vertexSize;
@@ -1009,7 +1011,7 @@ public class WebGPUSpriteBatch implements Batch {
 
     @Override
     public void dispose(){
-        bg.dispose();
+        binder.dispose();
         pipelines.dispose();
         vertexBuffer.dispose();
         indexBuffer.dispose();
