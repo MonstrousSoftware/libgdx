@@ -22,11 +22,11 @@ public class Binder implements Disposable {
     private WebGPUPipelineLayout pipelineLayout;
 
     public static class BufferInfo {
-        WebGPUBuffer buffer;
+        WebGPUUniformBuffer buffer;
         int offset;
         long size;
 
-        public BufferInfo(WebGPUBuffer buffer, int offset, long size) {
+        public BufferInfo(WebGPUUniformBuffer buffer, int offset, long size) {
             this.buffer = buffer;
             this.offset = offset;
             this.size = size;
@@ -61,9 +61,30 @@ public class Binder implements Disposable {
         if(mapping == null) throw new RuntimeException("Uniform name "+name+" not defined.");
         WebGPUBindGroup bindGroup = getBindGroup(mapping.groupId);
 
-        bindGroup.setBuffer(mapping.index, mapping.bindingId, buffer, offset, size);
+        bindGroup.setBuffer( mapping.bindingId, buffer, offset, size);
 
-        buffers.put(mapping.index, new BufferInfo(buffer, offset, size));
+        // keep hold of the buffer information, we may need it for uniforms.
+    //    buffers.put(mapping.index, new BufferInfo(buffer, offset, size));
+    }
+
+    public void setUniformMatrix(String name, Matrix4 matrix){
+        BindingDictionary.BindingMap mapping = bindMap.findUniform(name);
+        if(mapping == null) throw new RuntimeException("Uniform name "+name+" not defined.");
+        if(mapping.offset < 0) throw new RuntimeException("Uniform name "+name+" is not defined in a uniform buffer.");
+
+//        BufferInfo bufferInfo = buffers.get();
+//
+//        WebGPUUniformBuffer buffer = bufferInfo.buffer;
+//        buffer.set(bufferInfo.offset + mapping.offset, matrix);
+    }
+
+    public void setBuffer(int groupId, int bindingId, WebGPUBuffer buffer, int offset, long size ){
+        WebGPUBindGroup bindGroup = getBindGroup(groupId);
+        bindGroup.setBuffer(bindingId, buffer, offset, size);
+
+        // keep hold of the buffer information, we may need it for uniforms.
+        // which key to use?
+        //buffers.put(mapping.index, new BufferInfo(buffer, offset, size));
     }
 
     public void setTexture(String name, WebGPUTextureView textureView ){
@@ -71,24 +92,21 @@ public class Binder implements Disposable {
         if(mapping == null) throw new RuntimeException("Uniform name "+name+" not defined.");
         WebGPUBindGroup bindGroup = getBindGroup(mapping.groupId);
 
-        bindGroup.setTexture(mapping.index, mapping.bindingId, textureView);
+        bindGroup.setTexture(mapping.bindingId, textureView);
     }
 
-    public void setUniformMatrix(String name, Matrix4 matrix){
-        BindingDictionary.BindingMap mapping = bindMap.findUniform(name);
-        if(mapping == null) throw new RuntimeException("Uniform name "+name+" not defined.");
 
-//        WebGPUUniformBuffer buffer = bufferInfo.buffer;
-//        buffer.set(bufferInfo.offset + mapping.offset, matrix);
-    }
 
     public void setSampler(String name, Pointer sampler){
         BindingDictionary.BindingMap mapping = bindMap.findUniform(name);
         if(mapping == null) throw new RuntimeException("Uniform name "+name+" not defined.");
         WebGPUBindGroup bindGroup = getBindGroup(mapping.groupId);
 
-        bindGroup.setSampler(mapping.index, mapping.bindingId, sampler);
+        bindGroup.setSampler(mapping.bindingId, sampler);
     }
+
+
+
 
     /** find or create bind group */
     public WebGPUBindGroup getBindGroup(int groupId){

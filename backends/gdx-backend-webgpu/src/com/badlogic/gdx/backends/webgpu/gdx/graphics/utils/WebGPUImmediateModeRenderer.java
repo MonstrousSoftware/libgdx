@@ -323,9 +323,9 @@ public class WebGPUImmediateModeRenderer implements ImmediateModeRenderer {
 	private WebGPUBindGroup makeBindGroup(WebGPUBindGroupLayout bindGroupLayout, WebGPUBuffer uniformBuffer, WebGPUTexture texture) {
 		WebGPUBindGroup bg = new WebGPUBindGroup(bindGroupLayout);
 		bg.begin();
-		bg.addBuffer(0, uniformBuffer);
-		bg.addTexture(1, texture.getTextureView());
-		bg.addSampler(2, texture.getSampler());
+		bg.setBuffer(0, uniformBuffer);
+		bg.setTexture(1, texture.getTextureView());
+		bg.setSampler(2, texture.getSampler());
 		bg.end();
 		return bg;
 	}

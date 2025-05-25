@@ -9,6 +9,9 @@ import com.badlogic.gdx.backends.webgpu.webgpu.WebGPU_JNI;
 import com.badlogic.gdx.utils.Disposable;
 import jnr.ffi.Pointer;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Encapsulated bind group.  Used to bind values to a shader.
  *
@@ -37,10 +40,11 @@ public class WebGPUBindGroup implements Disposable {
     private Pointer handle = null;
     private final WebGPUGraphicsBase gfx;
 
+    private final WebGPUBindGroupLayout layout;
     private final WGPUBindGroupDescriptor bindGroupDescriptor;
     private final WGPUBindGroupEntry[] entryArray;
+    private final Map<Integer, Integer> bindingIndex;
     private final int numEntries;
-    private int entryIndex;
     private boolean dirty;  // has an entry changed?
 
 
@@ -48,6 +52,7 @@ public class WebGPUBindGroup implements Disposable {
         gfx = (WebGPUGraphicsBase) Gdx.graphics;
         webGPU = gfx.getWebGPU();
 
+        this.layout = layout;
         numEntries = layout.getEntryCount();
 
         // Create a bind group descriptor and an array of BindGroupEntry
@@ -57,35 +62,35 @@ public class WebGPUBindGroup implements Disposable {
                 .setLayout(layout.getHandle())
                 .setEntryCount(numEntries);
 
+        bindingIndex = new HashMap<>();
         entryArray = new WGPUBindGroupEntry[numEntries];
         for (int i = 0; i < numEntries; i++)
             entryArray[i] = WGPUBindGroupEntry.createDirect();
     }
 
     public void begin() {
-        entryIndex = 0;
         handle = null;
     }
 
-    /** bind a (subrange of a) buffer. */
-    public void addBuffer(int bindingId, WebGPUBuffer buffer, int offset, long size) {
-        setBuffer(entryIndex++, bindingId, buffer, offset, size);
-    }
-
-    /** bind a buffer */
-    public void addBuffer(int bindingId, WebGPUBuffer buffer) {
-        setBuffer(entryIndex++, bindingId, buffer);
-    }
-
-    /** bind a texture view */
-    public void addTexture(int bindingId, WebGPUTextureView textureView) {
-        setTexture(entryIndex++, bindingId, textureView);
-    }
-
-    /** bind a sampler */
-    public void addSampler(int bindingId, Pointer sampler) {
-        setSampler(entryIndex++, bindingId, sampler);
-    }
+//    /** bind a (subrange of a) buffer. */
+//    public void addBuffer(int bindingId, WebGPUBuffer buffer, int offset, long size) {
+//        setBuffer(bindingId, buffer, offset, size);
+//    }
+//
+//    /** bind a buffer */
+//    public void addBuffer(int bindingId, WebGPUBuffer buffer) {
+//        setBuffer(bindingId, buffer);
+//    }
+//
+//    /** bind a texture view */
+//    public void addTexture(int bindingId, WebGPUTextureView textureView) {
+//        setTexture( bindingId, textureView);
+//    }
+//
+//    /** bind a sampler */
+//    public void addSampler(int bindingId, Pointer sampler) {
+//        setSampler(bindingId, sampler);
+//    }
 
     /** creates the bind group */
     public Pointer end() {
@@ -93,13 +98,25 @@ public class WebGPUBindGroup implements Disposable {
     }
 
     /** bind a buffer. */
-    public void setBuffer(int index, int bindingId, WebGPUBuffer buffer) {
-        setBuffer(index, bindingId, buffer, 0, buffer.getSize());
+    public void setBuffer( int bindingId, WebGPUBuffer buffer) {
+        setBuffer( bindingId, buffer, 0, buffer.getSize());
+    }
+
+    /** find index of bindingId or create a new index of this is a new bindingId */
+    private int findIndex(int bindingId){
+        // should we check against the binding id's from the layout?
+        Integer index = bindingIndex.get(bindingId);
+        if(index == null){
+            index = bindingIndex.size();
+            if(index >= numEntries) throw new ArrayIndexOutOfBoundsException("Too many entries. See BindGroupLayout");
+            bindingIndex.put(index, bindingId);
+        }
+        return index;
     }
 
     /** bind a (subrange of a) buffer. */
-    public void setBuffer(int index, int bindingId, WebGPUBuffer buffer, int offset, long size) {
-        if(index >= numEntries) throw new ArrayIndexOutOfBoundsException("Too many entries. See BindGroupLayout");
+    public void setBuffer(int bindingId, WebGPUBuffer buffer, int offset, long size) {
+        int index = findIndex(bindingId);
         WGPUBindGroupEntry entry = entryArray[index];
         entry.setBinding(bindingId);
         entry.setBuffer(buffer.getHandle());
@@ -108,8 +125,8 @@ public class WebGPUBindGroup implements Disposable {
         dirty = true;
     }
 
-    public void setTexture(int index, int bindingId, WebGPUTextureView textureView) {
-        if(index >= numEntries) throw new ArrayIndexOutOfBoundsException("Too many entries. See BindGroupLayout");
+    public void setTexture(int bindingId, WebGPUTextureView textureView) {
+        int index = findIndex(bindingId);
         WGPUBindGroupEntry entry = entryArray[index];
         entry.setBinding(bindingId);
         entry.setTextureView(textureView.getHandle());
@@ -117,8 +134,8 @@ public class WebGPUBindGroup implements Disposable {
     }
 
     /** bind a sampler */
-    public void setSampler(int index, int bindingId, Pointer sampler) {
-        if(index >= numEntries) throw new ArrayIndexOutOfBoundsException("Too many entries. See BindGroupLayout");
+    public void setSampler(int bindingId, Pointer sampler) {
+        int index = findIndex(bindingId);
         WGPUBindGroupEntry entry = entryArray[index];
         entry.setBinding(bindingId);
         entry.setSampler(sampler);
@@ -126,7 +143,7 @@ public class WebGPUBindGroup implements Disposable {
     }
 
 
-    /** creates the bind group */
+    /** creates the bind group. (also implicitly called by getHandle()) */
     public Pointer create() {
         if(dirty) {
             if(handle != null) {

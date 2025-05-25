@@ -12,13 +12,11 @@ public class BindingDictionary {
         int groupId;
         int bindingId;
         int offset;     // used for uniforms in a uniform buffer
-        int index;  // in order of definition
 
-        public BindingMap(int groupId, int bindingId, int offset, int index) {
+        public BindingMap(int groupId, int bindingId, int offset) {
             this.groupId = groupId;
             this.bindingId = bindingId;
-            this.offset  = offset;
-            this.index = index;
+            this.offset  = offset;      // -1 if this is a binding group entry, >= 0 for uniform buffer offsets
         }
     }
 
@@ -26,18 +24,15 @@ public class BindingDictionary {
     private final Map<Integer, Integer> entriesPerGroup = new HashMap<>();
 
     public void defineUniform(String name, int groupId, int bindingId){
-        defineUniform(name, groupId, bindingId, -1);
+        // store binding information under the uniform name
+        BindingMap bm = new BindingMap(groupId, bindingId, -1);
+        map.put(name, bm);
     }
 
+    /** define uniform for given offset within a uniform buffer at (groupId, bindingId) */
     public void defineUniform(String name, int groupId, int bindingId, int offset){
-        // find sequence number of bindingId within the specific group
-        Integer index = entriesPerGroup.get(groupId);
-        if(index == null)
-            index = 0;
-        entriesPerGroup.put(groupId, index+1);
-
         // store binding information under the uniform name
-        BindingMap bm = new BindingMap(groupId, bindingId, offset, index);
+        BindingMap bm = new BindingMap(groupId, bindingId, offset);
         map.put(name, bm);
     }
 

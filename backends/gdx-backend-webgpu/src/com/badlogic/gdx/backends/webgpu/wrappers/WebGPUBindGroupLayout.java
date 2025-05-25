@@ -8,6 +8,8 @@ import com.badlogic.gdx.utils.Disposable;
 import jnr.ffi.Pointer;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Encapsulated bind group layout.  Use begin(), addXXX(), end() to define a layout.
@@ -17,7 +19,7 @@ public class WebGPUBindGroupLayout implements Disposable {
     private WebGPUGraphicsBase gfx;
     private Pointer handle = null;
     private final String label;
-    private final ArrayList<WGPUBindGroupLayoutEntry> entries;
+    private final Map<Integer, WGPUBindGroupLayoutEntry> entries;   // map from bindingId
 
 
     public WebGPUBindGroupLayout() {
@@ -29,7 +31,7 @@ public class WebGPUBindGroupLayout implements Disposable {
         webGPU = gfx.getWebGPU();
 
         this.label = label;
-        entries = new ArrayList<>();
+        entries = new HashMap<>();
     }
 
     public void begin(){
@@ -40,7 +42,7 @@ public class WebGPUBindGroupLayout implements Disposable {
     /**
      * Add binding layout for a buffer.
      *
-     * @param bindingId integer as in the shader, 0, 1, 2, ...
+     * @param bindingId integer as in the shader, 0, 1, 2, ...  they don't have to be sequential or in order!
      * @param visibility e.g. WGPUShaderStage.Fragment (or combination using OR operator)
      * @param bufferBindingType e.g. WGPUBufferBindingType.ReadOnlyStorage
      */
@@ -50,7 +52,7 @@ public class WebGPUBindGroupLayout implements Disposable {
         bindingLayout.getBuffer().setMinBindingSize(minBindingSize);
         bindingLayout.getBuffer().setHasDynamicOffset(hasDynamicOffset? 1L : 0L);
 
-        entries.add(bindingLayout);
+        entries.put(bindingId, bindingLayout);
     }
 
     public void addTexture(int bindingId, long visibility, WGPUTextureSampleType sampleType, WGPUTextureViewDimension viewDimension, boolean multiSampled ){
@@ -58,20 +60,20 @@ public class WebGPUBindGroupLayout implements Disposable {
         bindingLayout.getTexture().setMultisampled(multiSampled? 1L : 0L);
         bindingLayout.getTexture().setSampleType(sampleType);
         bindingLayout.getTexture().setViewDimension(viewDimension);
-        entries.add(bindingLayout);
+        entries.put(bindingId, bindingLayout);
     }
     public void addStorageTexture(int bindingId, long visibility, WGPUStorageTextureAccess access, WGPUTextureFormat format, WGPUTextureViewDimension viewDimension ){
         WGPUBindGroupLayoutEntry bindingLayout = addBinding(bindingId, visibility);
         bindingLayout.getStorageTexture().setAccess(access);
         bindingLayout.getStorageTexture().setFormat(format);
         bindingLayout.getStorageTexture().setViewDimension(viewDimension);
-        entries.add(bindingLayout);
+        entries.put(bindingId, bindingLayout);
     }
 
     public void addSampler(int bindingId, long visibility, WGPUSamplerBindingType samplerType ){
         WGPUBindGroupLayoutEntry bindingLayout = addBinding(bindingId, visibility);
         bindingLayout.getSampler().setType(samplerType);
-        entries.add(bindingLayout);
+        entries.put(bindingId, bindingLayout);
     }
 
 
@@ -93,8 +95,9 @@ public class WebGPUBindGroupLayout implements Disposable {
         bindGroupLayoutDesc.setLabel(label);
         bindGroupLayoutDesc.setEntryCount(entries.size());
         WGPUBindGroupLayoutEntry[] entryArray = new WGPUBindGroupLayoutEntry[entries.size()];
-        for(int i = 0; i < entries.size(); i++)
-            entryArray[i] = entries.get(i);
+        int i = 0;
+        for(WGPUBindGroupLayoutEntry entry : entries.values())
+            entryArray[i++] = entry;
         bindGroupLayoutDesc.setEntries( entryArray );
 
         handle = webGPU.wgpuDeviceCreateBindGroupLayout(gfx.getDevice().getHandle(), bindGroupLayoutDesc);
