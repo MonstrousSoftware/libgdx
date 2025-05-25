@@ -32,7 +32,7 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
     private final int uniformStride;
     private final int maxSlices;
     private final Pointer floatData;
-    private int offset;
+    private int appendOffset;
 
 
     public WebGPUUniformBuffer(int contentSize, long usage){
@@ -86,58 +86,66 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
     }
 
     public void beginFill(){
-        offset = 0;
+        appendOffset = 0;
     }
 
     public void pad(int bytes){
-        offset += bytes;
+        appendOffset += bytes;
     }
 
     public int getOffset(){
-        return offset;
+        return appendOffset;
     }
 
     public void setOffset(int offset){
-        this.offset = offset;
+        this.appendOffset = offset;
     }
 
     public void append( int value ){
-        floatData.putInt(offset, value);
-        offset += Integer.BYTES;
+        floatData.putInt(appendOffset, value);
+        appendOffset += Integer.BYTES;
     }
 
     public void append( float f ){
-        floatData.putFloat(offset, f);
-        offset += Float.BYTES;
+        floatData.putFloat(appendOffset, f);
+        appendOffset += Float.BYTES;
         //offset += 4*Float.BYTES;           // with padding!
     }
 
     public void append( Matrix4 mat ){
+        set(appendOffset, mat);
+        appendOffset += 16*Float.BYTES;
+    }
+
+    public void set(int offset, Matrix4 mat ){
         floatData.put(offset, mat.val, 0, 16);
-        offset += 16*Float.BYTES;
     }
 
     public void append( Vector3 vec ){
-        floatData.putFloat(offset+0*Float.BYTES, vec.x);
-        floatData.putFloat(offset+1*Float.BYTES, vec.y);
-        floatData.putFloat(offset+2*Float.BYTES, vec.z);
-        offset += 4*Float.BYTES;           // with padding!
+        set(appendOffset, vec);
+        appendOffset += 4*Float.BYTES;           // with padding!
+    }
+
+    public void set( int offset, Vector3 vec ){
+        floatData.putFloat(offset +0*Float.BYTES, vec.x);
+        floatData.putFloat(offset +1*Float.BYTES, vec.y);
+        floatData.putFloat(offset +2*Float.BYTES, vec.z);
     }
 
     public void append( Color color ){
-        floatData.putFloat(offset+0*Float.BYTES, color.r);
-        floatData.putFloat(offset+1*Float.BYTES, color.g);
-        floatData.putFloat(offset+2*Float.BYTES, color.b);
-        floatData.putFloat(offset+3*Float.BYTES, color.a);
-        offset += 4*Float.BYTES;
+        floatData.putFloat(appendOffset +0*Float.BYTES, color.r);
+        floatData.putFloat(appendOffset +1*Float.BYTES, color.g);
+        floatData.putFloat(appendOffset +2*Float.BYTES, color.b);
+        floatData.putFloat(appendOffset +3*Float.BYTES, color.a);
+        appendOffset += 4*Float.BYTES;
     }
 
     public void append( float r, float g, float b, float a ){
-        floatData.putFloat(offset+0*Float.BYTES, r);
-        floatData.putFloat(offset+1*Float.BYTES, g);
-        floatData.putFloat(offset+2*Float.BYTES, b);
-        floatData.putFloat(offset+3*Float.BYTES, a);
-        offset += 4*Float.BYTES;
+        floatData.putFloat(appendOffset +0*Float.BYTES, r);
+        floatData.putFloat(appendOffset +1*Float.BYTES, g);
+        floatData.putFloat(appendOffset +2*Float.BYTES, b);
+        floatData.putFloat(appendOffset +3*Float.BYTES, a);
+        appendOffset += 4*Float.BYTES;
     }
 
     /** Write buffer data to the GPU */
@@ -147,7 +155,7 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
 
     /** Fill the given slice of the uniform buffer. Writes data to the GPU. destOffset should be a multiple of uniformStride. */
     public void endFill(int destOffset){
-        int dataSize = offset;
+        int dataSize = appendOffset;
         if(dataSize > contentSize) throw new RuntimeException("Overflow in UniformBuffer: content ("+dataSize+") > size ("+contentSize+").");
         if(destOffset > getSize()-dataSize) throw new IllegalArgumentException("UniformBuffer: offset too large.");
         write(destOffset, floatData, dataSize);

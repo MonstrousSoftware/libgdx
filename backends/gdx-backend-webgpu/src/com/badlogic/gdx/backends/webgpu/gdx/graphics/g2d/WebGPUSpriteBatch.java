@@ -126,6 +126,7 @@ public class WebGPUSpriteBatch implements Batch {
         binder = new Binder();
         binder.defineGroup(0, bindGroupLayout);
         binder.defineUniform("uniforms", 0, 0);
+        binder.defineUniform("projectionMatrix", 0, 0, 0);
         binder.defineUniform("texture", 0, 1);
         binder.defineUniform("textureSampler", 0, 2);
 
@@ -982,6 +983,7 @@ public class WebGPUSpriteBatch implements Batch {
     }
 
     private void setUniforms(){
+        //binder.setUniformMatrix("projectionMatrix", combinedMatrix);
         uniformBuffer.beginFill();
         uniformBuffer.append(combinedMatrix);
         uniformBuffer.endFill();

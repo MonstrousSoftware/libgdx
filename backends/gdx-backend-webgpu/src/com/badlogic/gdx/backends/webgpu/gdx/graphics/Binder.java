@@ -2,6 +2,7 @@ package com.badlogic.gdx.backends.webgpu.gdx.graphics;
 
 import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.backends.webgpu.wrappers.*;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.utils.Disposable;
 import jnr.ffi.Pointer;
 
@@ -17,12 +18,26 @@ public class Binder implements Disposable {
     private final BindingDictionary bindMap;
     private final Map<Integer, WebGPUBindGroupLayout> groupLayouts;
     private final Map<Integer, WebGPUBindGroup> groups;
+    private final Map<Integer, BufferInfo> buffers;
     private WebGPUPipelineLayout pipelineLayout;
+
+    public static class BufferInfo {
+        WebGPUBuffer buffer;
+        int offset;
+        long size;
+
+        public BufferInfo(WebGPUBuffer buffer, int offset, long size) {
+            this.buffer = buffer;
+            this.offset = offset;
+            this.size = size;
+        }
+    }
 
     public Binder() {
         bindMap = new BindingDictionary();
         groupLayouts = new HashMap<>();
         groups = new HashMap<>();
+        buffers = new HashMap<>();
     }
 
     public void defineGroup(int groupId, WebGPUBindGroupLayout layout){
@@ -34,12 +49,21 @@ public class Binder implements Disposable {
         bindMap.defineUniform(name, groupId, bindingId);
     }
 
+    /** Associates a name with a groupId + bindingId + offset.
+     *  This is for a uniform in a uniform buffer.
+     *  */
+    public void defineUniform(String name, int groupId, int bindingId, int offset){
+        bindMap.defineUniform(name, groupId, bindingId, offset);
+    }
+
     public void setBuffer(String name, WebGPUBuffer buffer, int offset, long size ){
         BindingDictionary.BindingMap mapping = bindMap.findUniform(name);
         if(mapping == null) throw new RuntimeException("Uniform name "+name+" not defined.");
         WebGPUBindGroup bindGroup = getBindGroup(mapping.groupId);
 
         bindGroup.setBuffer(mapping.index, mapping.bindingId, buffer, offset, size);
+
+        buffers.put(mapping.index, new BufferInfo(buffer, offset, size));
     }
 
     public void setTexture(String name, WebGPUTextureView textureView ){
@@ -48,6 +72,14 @@ public class Binder implements Disposable {
         WebGPUBindGroup bindGroup = getBindGroup(mapping.groupId);
 
         bindGroup.setTexture(mapping.index, mapping.bindingId, textureView);
+    }
+
+    public void setUniformMatrix(String name, Matrix4 matrix){
+        BindingDictionary.BindingMap mapping = bindMap.findUniform(name);
+        if(mapping == null) throw new RuntimeException("Uniform name "+name+" not defined.");
+
+//        WebGPUUniformBuffer buffer = bufferInfo.buffer;
+//        buffer.set(bufferInfo.offset + mapping.offset, matrix);
     }
 
     public void setSampler(String name, Pointer sampler){
