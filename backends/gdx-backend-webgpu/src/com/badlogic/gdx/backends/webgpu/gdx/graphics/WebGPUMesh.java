@@ -98,7 +98,7 @@ public class WebGPUMesh extends Mesh {
         // HACK: we had to make Mesh.vertices protected for this
         ((WebGPUVertexData)vertices).bind(renderPass);
 
-  //      renderPass.setBindGroup( 0, bg.getHandle(), 0, JavaWebGPU.createNullPointer());
+        //renderPass.setBindGroup( 0, bg.getHandle(), 0, JavaWebGPU.createNullPointer());
 
         if( getIndexData() != null) {
             renderPass.drawIndexed(size, 1, offset, 0, 0);

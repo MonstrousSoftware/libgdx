@@ -1,8 +1,11 @@
 package com.badlogic.gdx.backends.webgpu.gdx.graphics;
 
-import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.backends.webgpu.wrappers.*;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.Vector4;
 import com.badlogic.gdx.utils.Disposable;
 import jnr.ffi.Pointer;
 
@@ -11,7 +14,6 @@ import java.util.Map;
 
 /** Manages bind groups and provides methods for binding by uniform name.
  *
- * todo add support for uniforms in UB
  * todo incorpotate into ShaderProg? Shader?
  */
 public class Binder implements Disposable {
@@ -56,35 +58,32 @@ public class Binder implements Disposable {
         bindMap.defineUniform(name, groupId, bindingId, offset);
     }
 
-    public void setBuffer(String name, WebGPUBuffer buffer, int offset, long size ){
+    // to do specific  for uniform buffer
+    public void setBuffer(String name, WebGPUUniformBuffer buffer, int offset, long size ){
         BindingDictionary.BindingMap mapping = bindMap.findUniform(name);
         if(mapping == null) throw new RuntimeException("Uniform name "+name+" not defined.");
         WebGPUBindGroup bindGroup = getBindGroup(mapping.groupId);
-
         bindGroup.setBuffer( mapping.bindingId, buffer, offset, size);
-
         // keep hold of the buffer information, we may need it for uniforms.
-    //    buffers.put(mapping.index, new BufferInfo(buffer, offset, size));
+        buffers.put(combine(mapping.groupId, mapping.bindingId), new BufferInfo(buffer, offset, size));
     }
 
-    public void setUniformMatrix(String name, Matrix4 matrix){
+
+    public WebGPUUniformBuffer getBuffer(String name){
         BindingDictionary.BindingMap mapping = bindMap.findUniform(name);
         if(mapping == null) throw new RuntimeException("Uniform name "+name+" not defined.");
         if(mapping.offset < 0) throw new RuntimeException("Uniform name "+name+" is not defined in a uniform buffer.");
-
-//        BufferInfo bufferInfo = buffers.get();
-//
-//        WebGPUUniformBuffer buffer = bufferInfo.buffer;
-//        buffer.set(bufferInfo.offset + mapping.offset, matrix);
+        BufferInfo bufferInfo = buffers.get(combine(mapping.groupId, mapping.bindingId));
+        return bufferInfo.buffer;
     }
 
-    public void setBuffer(int groupId, int bindingId, WebGPUBuffer buffer, int offset, long size ){
+    // todo allow more generic buffers?
+    public void setBuffer(int groupId, int bindingId, WebGPUUniformBuffer buffer, int offset, long size ){
         WebGPUBindGroup bindGroup = getBindGroup(groupId);
         bindGroup.setBuffer(bindingId, buffer, offset, size);
 
         // keep hold of the buffer information, we may need it for uniforms.
-        // which key to use?
-        //buffers.put(mapping.index, new BufferInfo(buffer, offset, size));
+        buffers.put(combine(groupId, bindingId), new BufferInfo(buffer, offset, size));
     }
 
     public void setTexture(String name, WebGPUTextureView textureView ){
@@ -95,8 +94,6 @@ public class Binder implements Disposable {
         bindGroup.setTexture(mapping.bindingId, textureView);
     }
 
-
-
     public void setSampler(String name, Pointer sampler){
         BindingDictionary.BindingMap mapping = bindMap.findUniform(name);
         if(mapping == null) throw new RuntimeException("Uniform name "+name+" not defined.");
@@ -105,7 +102,74 @@ public class Binder implements Disposable {
         bindGroup.setSampler(mapping.bindingId, sampler);
     }
 
+    // hack to use tuple as single key
+    private int combine(int groupId, int bindingId){
+        return groupId << 16 + bindingId;
+    }
 
+
+
+    public void setUniform(String name, float value){
+        BindingDictionary.BindingMap mapping = bindMap.findUniform(name);
+        if(mapping == null) throw new RuntimeException("Uniform name "+name+" not defined.");
+        if(mapping.offset < 0) throw new RuntimeException("Uniform name "+name+" is not defined in a uniform buffer.");
+
+        BufferInfo bufferInfo = buffers.get(combine(mapping.groupId, mapping.bindingId));
+
+        WebGPUUniformBuffer buffer = bufferInfo.buffer;
+        buffer.set(bufferInfo.offset + mapping.offset, value);
+        buffer.flush(); // todo use dirty flag or something
+    }
+
+    public void setUniform(String name, Vector2 vec){
+        BindingDictionary.BindingMap mapping = bindMap.findUniform(name);
+        if(mapping == null) throw new RuntimeException("Uniform name "+name+" not defined.");
+        if(mapping.offset < 0) throw new RuntimeException("Uniform name "+name+" is not defined in a uniform buffer.");
+        BufferInfo bufferInfo = buffers.get(combine(mapping.groupId, mapping.bindingId));
+        WebGPUUniformBuffer buffer = bufferInfo.buffer;
+        buffer.set(bufferInfo.offset + mapping.offset, vec);
+        buffer.flush(); // todo use dirty flag or something
+    }
+
+    public void setUniform(String name, Vector3 vec){
+        BindingDictionary.BindingMap mapping = bindMap.findUniform(name);
+        if(mapping == null) throw new RuntimeException("Uniform name "+name+" not defined.");
+        if(mapping.offset < 0) throw new RuntimeException("Uniform name "+name+" is not defined in a uniform buffer.");
+        BufferInfo bufferInfo = buffers.get(combine(mapping.groupId, mapping.bindingId));
+        WebGPUUniformBuffer buffer = bufferInfo.buffer;
+        buffer.set(bufferInfo.offset + mapping.offset, vec);
+        buffer.flush(); // todo use dirty flag or something
+    }
+
+    public void setUniform(String name, Vector4 vec){
+        BindingDictionary.BindingMap mapping = bindMap.findUniform(name);
+        if(mapping == null) throw new RuntimeException("Uniform name "+name+" not defined.");
+        if(mapping.offset < 0) throw new RuntimeException("Uniform name "+name+" is not defined in a uniform buffer.");
+        BufferInfo bufferInfo = buffers.get(combine(mapping.groupId, mapping.bindingId));
+        WebGPUUniformBuffer buffer = bufferInfo.buffer;
+        buffer.set(bufferInfo.offset + mapping.offset, vec);
+        buffer.flush(); // todo use dirty flag or something
+    }
+
+    public void setUniform(String name, Matrix4 matrix){
+        BindingDictionary.BindingMap mapping = bindMap.findUniform(name);
+        if(mapping == null) throw new RuntimeException("Uniform name "+name+" not defined.");
+        if(mapping.offset < 0) throw new RuntimeException("Uniform name "+name+" is not defined in a uniform buffer.");
+        BufferInfo bufferInfo = buffers.get(combine(mapping.groupId, mapping.bindingId));
+        WebGPUUniformBuffer buffer = bufferInfo.buffer;
+        buffer.set(bufferInfo.offset + mapping.offset, matrix);
+        buffer.flush(); // todo use dirty flag or something
+    }
+
+    public void setUniform(String name, Color col){
+        BindingDictionary.BindingMap mapping = bindMap.findUniform(name);
+        if(mapping == null) throw new RuntimeException("Uniform name "+name+" not defined.");
+        if(mapping.offset < 0) throw new RuntimeException("Uniform name "+name+" is not defined in a uniform buffer.");
+        BufferInfo bufferInfo = buffers.get(combine(mapping.groupId, mapping.bindingId));
+        WebGPUUniformBuffer buffer = bufferInfo.buffer;
+        buffer.set(bufferInfo.offset + mapping.offset, col);
+        buffer.flush(); // todo use dirty flag or something
+    }
 
 
     /** find or create bind group */

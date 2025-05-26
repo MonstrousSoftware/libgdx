@@ -21,7 +21,9 @@ import com.badlogic.gdx.backends.webgpu.gdx.WebGPUGraphicsBase;
 import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.Vector4;
 import jnr.ffi.Pointer;
 
 // todo auto padding between elements
@@ -117,20 +119,12 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
         appendOffset += 16*Float.BYTES;
     }
 
-    public void set(int offset, Matrix4 mat ){
-        floatData.put(offset, mat.val, 0, 16);
-    }
-
     public void append( Vector3 vec ){
         set(appendOffset, vec);
         appendOffset += 4*Float.BYTES;           // with padding!
     }
 
-    public void set( int offset, Vector3 vec ){
-        floatData.putFloat(offset +0*Float.BYTES, vec.x);
-        floatData.putFloat(offset +1*Float.BYTES, vec.y);
-        floatData.putFloat(offset +2*Float.BYTES, vec.z);
-    }
+
 
     public void append( Color color ){
         floatData.putFloat(appendOffset +0*Float.BYTES, color.r);
@@ -160,5 +154,47 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
         if(destOffset > getSize()-dataSize) throw new IllegalArgumentException("UniformBuffer: offset too large.");
         write(destOffset, floatData, dataSize);
     }
+
+    // to be trimmed
+    /* call this after any set or a sequence of sets to write the floatData to the GPU buffer */
+    public void flush(){
+        write(0, floatData, contentSize);
+    }
+
+
+
+    public void set(int offset, float value ){
+        floatData.putFloat(offset, value);
+    }
+
+    public void set( int offset, Vector2 vec ){
+        floatData.putFloat(offset, vec.x);
+        floatData.putFloat(offset +Float.BYTES, vec.y);
+    }
+
+    public void set( int offset, Vector3 vec ){
+        floatData.putFloat(offset, vec.x);
+        floatData.putFloat(offset +Float.BYTES, vec.y);
+        floatData.putFloat(offset +2*Float.BYTES, vec.z);
+    }
+
+    public void set( int offset, Vector4 vec ){
+        floatData.putFloat(offset, vec.x);
+        floatData.putFloat(offset +Float.BYTES, vec.y);
+        floatData.putFloat(offset +2*Float.BYTES, vec.z);
+        floatData.putFloat(offset +3*Float.BYTES, vec.w);
+    }
+
+    public void set(int offset, Matrix4 mat ){
+        floatData.put(offset, mat.val, 0, 16);
+    }
+
+    public void set( int offset, Color col ){
+        floatData.putFloat(offset, col.r);
+        floatData.putFloat(offset +Float.BYTES, col.g);
+        floatData.putFloat(offset +2*Float.BYTES,col.b);
+        floatData.putFloat(offset +3*Float.BYTES, col.a);
+    }
+
 
 }

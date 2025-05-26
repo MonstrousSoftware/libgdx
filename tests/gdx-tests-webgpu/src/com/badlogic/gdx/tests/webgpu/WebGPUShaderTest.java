@@ -14,7 +14,7 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
-// demonstrates the use of shaders
+// demonstrates the use of ShaderProgram in combination with SpriteBatch
 //
 public class WebGPUShaderTest {
 
@@ -39,6 +39,7 @@ public class WebGPUShaderTest {
 
 		public void create () {
 
+			// alternative shader program to be used instead of the default one.
 			shaderProgram = new WebGPUShaderProgram("my shader", getShaderSource(), "");
 
 			batch = new WebGPUSpriteBatch();
@@ -83,6 +84,9 @@ public class WebGPUShaderTest {
 			font.dispose();
 		}
 
+		/* shader source must be compatible with the default one with regard to bindings and vertex attributes
+
+		 */
 		private String getShaderSource() {
 			return "\n" +
 					"struct Uniforms {\n" +

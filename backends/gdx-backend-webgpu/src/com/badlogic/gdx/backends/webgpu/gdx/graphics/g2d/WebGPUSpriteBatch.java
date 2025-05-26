@@ -4,7 +4,6 @@ package com.badlogic.gdx.backends.webgpu.gdx.graphics.g2d;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.webgpu.gdx.WebGPUGraphicsBase;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.Binder;
-import com.badlogic.gdx.backends.webgpu.gdx.graphics.BindingDictionary;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.WebGPUShaderProgram;
 import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;
@@ -124,17 +123,21 @@ public class WebGPUSpriteBatch implements Batch {
         bindGroupLayout = createBindGroupLayout();
 
         binder = new Binder();
+        // define group
         binder.defineGroup(0, bindGroupLayout);
+        // define bindings in the group
         binder.defineUniform("uniforms", 0, 0);
-        binder.defineUniform("projectionMatrix", 0, 0, 0);
         binder.defineUniform("texture", 0, 1);
         binder.defineUniform("textureSampler", 0, 2);
+        // define uniforms in uniform buffer (binding 0) with their offset
+        binder.defineUniform("projectionMatrix", 0, 0, 0);
 
+        // set binding 0 to uniform buffer
         binder.setBuffer("uniforms", uniformBuffer, 0, uniformBuffer.getSize());
+        // bindings 1 and 2 are done in switchTexture()
 
-        // todo do this via binder
+        // get pipeline layout which aggregates all the bind group layouts
         pipelineLayout = binder.getPipelineLayout("SpriteBatch pipeline layout");
-        //pipelineLayout = new WebGPUPipelineLayout("SpriteBatch pipeline layout", bindGroupLayout);
 
         pipelines = new PipelineCache();
         pipelineSpec = new PipelineSpecification(vertexAttributes, this.specificShader);
@@ -293,6 +296,7 @@ public class WebGPUSpriteBatch implements Batch {
     public void begin(Color clearColor) {
         renderPass = RenderPassBuilder.create(clearColor, gfx.getSamples());
 
+
         if (drawing)
             throw new RuntimeException("Must end() before begin()");
         drawing = true;
@@ -315,7 +319,9 @@ public class WebGPUSpriteBatch implements Batch {
 
         projectionMatrix.setToOrtho(0f, Gdx.graphics.getWidth(), 0f, Gdx.graphics.getHeight(), 1f, -1f);
         transformMatrix.idt();
-        setupMatrices();
+
+        setProjectionMatrix(projectionMatrix);
+        //setupMatrices();
     }
 
     protected void switchTexture (Texture texture) {
@@ -418,7 +424,7 @@ public class WebGPUSpriteBatch implements Batch {
         if(drawing)
             flush();
         projectionMatrix.set(projection);
-        setupMatrices();
+        updateMatrices();
     }
 
     @Override
@@ -426,7 +432,7 @@ public class WebGPUSpriteBatch implements Batch {
         if(drawing)
             flush();
         transformMatrix.set(transform);
-        setupMatrices();
+        updateMatrices();
     }
 
     @Override
@@ -977,16 +983,9 @@ public class WebGPUSpriteBatch implements Batch {
         uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize,WGPUBufferUsage.CopyDst |WGPUBufferUsage.Uniform  );
     }
 
-    private void setupMatrices(){
+    private void updateMatrices(){
         combinedMatrix.set(projectionMatrix).mul(transformMatrix);
-        setUniforms();
-    }
-
-    private void setUniforms(){
-        //binder.setUniformMatrix("projectionMatrix", combinedMatrix);
-        uniformBuffer.beginFill();
-        uniformBuffer.append(combinedMatrix);
-        uniformBuffer.endFill();
+        binder.setUniform("projectionMatrix", combinedMatrix);
     }
 
     private WebGPUBindGroupLayout createBindGroupLayout() {
