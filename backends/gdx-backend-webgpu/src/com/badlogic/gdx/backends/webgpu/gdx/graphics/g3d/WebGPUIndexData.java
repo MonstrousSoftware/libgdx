@@ -94,7 +94,8 @@ public class WebGPUIndexData implements IndexData {
     public void bind(WebGPURenderPass renderPass){
         bind();
         // bind index buffer to render pass
-        renderPass.setIndexBuffer( indexBuffer.getHandle(), WGPUIndexFormat.Uint16, 0, indexBuffer.getSize());
+        long size = indexBuffer.getSize();
+        renderPass.setIndexBuffer( indexBuffer.getHandle(), WGPUIndexFormat.Uint16, 0, size);
     }
 
     @Override

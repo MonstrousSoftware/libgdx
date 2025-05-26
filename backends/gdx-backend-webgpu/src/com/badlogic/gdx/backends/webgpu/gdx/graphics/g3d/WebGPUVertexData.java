@@ -90,7 +90,7 @@ public class WebGPUVertexData implements VertexData {
     @Override
     public void bind(ShaderProgram shader) {
         if(isDirty){
-            int numBytes = buffer.position() * Float.BYTES;
+            int numBytes = buffer.limit() * Float.BYTES;
             vertexBuffer.setVertices(byteBuffer, 0, numBytes);
             isDirty = false;
         }
