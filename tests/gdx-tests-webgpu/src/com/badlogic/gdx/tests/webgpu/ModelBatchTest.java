@@ -25,6 +25,7 @@ import com.badlogic.gdx.backends.webgpu.gdx.graphics.g2d.WebGPUSpriteBatch;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.WebGPUModelBatch;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.model.WebGPUMeshPart;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.utils.WebGPUScreenUtils;
+import com.badlogic.gdx.backends.webgpu.gdx.graphics.viewport.WebGPUScreenViewport;
 import com.badlogic.gdx.backends.webgpu.wrappers.WebGPUTexture;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.Material;
@@ -33,6 +34,7 @@ import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.tests.utils.GdxTest;
 import com.badlogic.gdx.tests.utils.PerspectiveCamController;
+import com.badlogic.gdx.utils.viewport.FitViewport;
 
 public class ModelBatchTest extends GdxTest {
 
@@ -44,6 +46,7 @@ public class ModelBatchTest extends GdxTest {
 	WebGPUMesh mesh;
 	Renderable renderable;
 	Renderable renderable2;
+
 
 	// launcher
 	public static void main (String[] argv) {
@@ -60,6 +63,8 @@ public class ModelBatchTest extends GdxTest {
 		cam = new PerspectiveCamera(47, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		cam.position.set(0, 0, 2);
 		cam.near = 0.1f;
+
+
 		controller = new PerspectiveCamController(cam);
 		Gdx.input.setInputProcessor(controller);
 		batch = new WebGPUSpriteBatch();
@@ -103,6 +108,14 @@ public class ModelBatchTest extends GdxTest {
 		batch.begin();
 		font.draw(batch, "fps: " + Gdx.graphics.getFramesPerSecond(), 0, 20);
 		batch.end();
+	}
+
+	@Override
+	public void resize(int width, int height) {
+		cam.viewportWidth = width;
+		cam.viewportHeight = height;
+		cam.update();
+
 	}
 
 	@Override

@@ -91,6 +91,7 @@ public class WebGPUGraphics extends AbstractGraphics implements WebGPUGraphicsBa
 				// gl20.glViewport(0, 0, backBufferWidth, backBufferHeight);
 				window.getListener().resize(getWidth(), getHeight());
 				update();
+				onResize();
 				//window.renderFrame();
 				// window.getListener().render();
 				// GLFW.glfwSwapBuffers(windowHandle);
@@ -225,6 +226,15 @@ public class WebGPUGraphics extends AbstractGraphics implements WebGPUGraphicsBa
 		initSwapChain(width, height, vsync);
 		initDepthBuffer(width, height, samples);
 	}
+
+	private void onResize(){
+		terminateDepthBuffer();
+		webGPU.wgpuSurfaceUnconfigure(surface);
+
+		initSwapChain(getWidth(), getHeight(), app.getConfiguration().vSyncEnabled);
+		initDepthBuffer(getWidth(), getHeight(), getSamples());
+	}
+
 
 	// todo handle resize
 	// or call this from resize event rather than constructor
