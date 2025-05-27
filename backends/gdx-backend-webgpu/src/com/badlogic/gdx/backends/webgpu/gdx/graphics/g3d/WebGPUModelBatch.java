@@ -42,7 +42,6 @@ public class WebGPUModelBatch implements Disposable {
     private WebGPURenderPass renderPass;
     private final Color clearColor;
     private final Binder binder;
-    private final WebGPUUniformBuffer uniformBuffer;
     private final Array<Renderable> renderables;
     private final WebGPUPipelineLayout pipelineLayout;
     private final PipelineCache pipelines;
@@ -68,19 +67,28 @@ public class WebGPUModelBatch implements Disposable {
         // define groups
         binder.defineGroup(0, createFrameBindGroupLayout());
         binder.defineGroup(1, createMaterialBindGroupLayout());
+        binder.defineGroup(2, createInstancingBindGroupLayout());
         // define bindings in the groups
         binder.defineUniform("uniforms", 0, 0);
         binder.defineUniform("diffuseTexture", 1, 1);
         binder.defineUniform("diffuseSampler", 1, 2);
-        // define uniforms in uniform buffer (binding 0) with their offset
+        binder.defineUniform("instanceUniforms", 2, 0);
+        // define uniforms in uniform buffers with their offset
         binder.defineUniform("projectionMatrix", 0, 0, 0);
+        binder.defineUniform("modelMatrix", 2, 0, 0);               // todo names to be standardized
 
         // Create uniform buffer for the projection matrix
         int uniformBufferSize = 16 * Float.BYTES;
-        uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize,WGPUBufferUsage.CopyDst |WGPUBufferUsage.Uniform  );
+        WebGPUUniformBuffer uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst | WGPUBufferUsage.Uniform);
 
         // set binding 0 to uniform buffer
         binder.setBuffer("uniforms", uniformBuffer, 0, uniformBufferSize);
+
+        int instanceSize = 16*Float.BYTES;      // data size per instance
+        // todo is this a uniform buffer or a storage buffer?
+        WebGPUUniformBuffer instanceBuffer = new WebGPUUniformBuffer(instanceSize, WGPUBufferUsage.CopyDst | WGPUBufferUsage.Uniform);
+
+        binder.setBuffer("instanceUniforms", instanceBuffer, 0, instanceSize);
 
         binder.setTexture("diffuseTexture", texture.getTextureView());
         binder.setSampler("diffuseSampler", texture.getSampler());
@@ -140,6 +148,9 @@ public class WebGPUModelBatch implements Disposable {
 
         Renderable renderable = renderables.get(0); // to do loop
 
+        binder.setUniform("modelMatrix", renderable.worldTransform);
+        binder.bindGroup(renderPass, 2);
+
         WebGPUPipeline pipeline = pipelines.findPipeline( pipelineLayout.getHandle(), pipelineSpec);
         renderPass.setPipeline(pipeline.getHandle());
 
@@ -187,6 +198,14 @@ public class WebGPUModelBatch implements Disposable {
         return layout;
     }
 
+    private WebGPUBindGroupLayout createInstancingBindGroupLayout(){
+        WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch Binding Group Layout (instance)");
+        layout.begin();
+        layout.addBuffer(0, WGPUShaderStage.Vertex , WGPUBufferBindingType.Uniform, 16*Float.BYTES, false);     // todo ReadOnlyStorage?
+        layout.end();
+        return layout;
+    }
+
 
     private String getDefaultShaderSource() {
         return "// basic model batch shader\n" +
@@ -194,10 +213,14 @@ public class WebGPUModelBatch implements Disposable {
                 "struct FrameUniforms {\n" +
                 "    projectionMatrix: mat4x4f,\n" +
                 "};\n" +
+                "struct InstanceUniforms {\n" +
+                "    modelMatrix: mat4x4f,\n" +
+                "};\n" +
                 "\n" +
                 "@group(0) @binding(0) var<uniform> uFrame: FrameUniforms;\n" +
                 "@group(1) @binding(1) var diffuseTexture:        texture_2d<f32>;\n" +
                 "@group(1) @binding(2) var diffuseSampler:       sampler;\n" +
+                "@group(2) @binding(0) var<uniform> uInstance: InstanceUniforms;\n" +
                 "\n" +
                 "\n" +
                 "struct VertexInput {\n" +
@@ -216,7 +239,7 @@ public class WebGPUModelBatch implements Disposable {
                 "fn vs_main(in: VertexInput) -> VertexOutput {\n" +
                 "   var out: VertexOutput;\n" +
                 "\n" +
-                "   let worldPosition =  uFrame.projectionMatrix* vec4f(in.position, 1.0);\n" +
+                "   let worldPosition =  uFrame.projectionMatrix* uInstance.modelMatrix * vec4f(in.position, 1.0);\n" +
                 "   out.position = worldPosition;\n" +
                 "   out.uv = in.uv;\n" +
                 "   out.color = in.color;\n" +

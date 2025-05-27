@@ -70,7 +70,7 @@ public class Binder implements Disposable {
     }
 
 
-    public WebGPUUniformBuffer getBuffer(String name){
+    public WebGPUBuffer getBuffer(String name){
         BindingDictionary.BindingMap mapping = bindMap.findUniform(name);
         if(mapping == null) throw new RuntimeException("Uniform name "+name+" not defined.");
         if(mapping.offset < 0) throw new RuntimeException("Uniform name "+name+" is not defined in a uniform buffer.");

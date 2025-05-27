@@ -36,6 +36,7 @@ import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.tests.utils.GdxTest;
 import com.badlogic.gdx.tests.utils.PerspectiveCamController;
 import com.badlogic.gdx.utils.ScreenUtils;
@@ -83,6 +84,9 @@ public class ModelBatchTest extends GdxTest {
 	}
 
 	public void render () {
+		float delta = Gdx.graphics.getDeltaTime();
+		renderable.worldTransform.rotate(Vector3.Y, delta*45f);
+
 		WebGPUScreenUtils.clear(Color.TEAL);
 		cam.update();
 
