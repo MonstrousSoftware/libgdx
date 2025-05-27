@@ -14,6 +14,8 @@ import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g3d.Renderable;
+import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
+import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Affine2;
 import com.badlogic.gdx.math.MathUtils;
@@ -30,38 +32,50 @@ import java.nio.ShortBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888;
+
 /**
  * Class to render model instances.
  */
 public class WebGPUModelBatch implements Disposable {
 
-
     private final WebGPUGraphicsBase gfx;
+    private final int maxInstances;
     private boolean drawing;
-    private Camera camera;
     private WebGPURenderPass renderPass;
     private final Color clearColor;
     private final Binder binder;
+    private final WebGPUUniformBuffer instanceBuffer;
     private final Array<Renderable> renderables;
+    private int numRenderables;
     private final WebGPUPipelineLayout pipelineLayout;
     private final PipelineCache pipelines;
     private final PipelineSpecification pipelineSpec;
     private final VertexAttributes vertexAttributes;
-    private final WebGPUTexture texture;
+    private WebGPUTexture lastTexture;
+    private final WebGPUTexture defaultTexture;
+
 
 
     /** Create a ModelBatch.
      *
      */
     public WebGPUModelBatch() {
+        this(1000);
+    }
+
+    public WebGPUModelBatch(int maxInstances) {
         gfx = (WebGPUGraphicsBase) Gdx.graphics;
+
+        this.maxInstances = maxInstances;
 
         drawing = false;
         clearColor = new Color(Color.GRAY);
 
-        texture = new WebGPUTexture(Gdx.files.internal("data/badlogic.jpg"));       // TMP
-
-
+        Pixmap pixmap = new Pixmap(1,1,RGBA8888);
+        pixmap.setColor(Color.PINK);
+        pixmap.fill();
+        defaultTexture = new WebGPUTexture(pixmap);
 
         binder = new Binder();
         // define groups
@@ -75,7 +89,7 @@ public class WebGPUModelBatch implements Disposable {
         binder.defineUniform("instanceUniforms", 2, 0);
         // define uniforms in uniform buffers with their offset
         binder.defineUniform("projectionMatrix", 0, 0, 0);
-        binder.defineUniform("modelMatrix", 2, 0, 0);               // todo names to be standardized
+        //binder.defineUniform("modelMatrix", 2, 0, 0);
 
         // Create uniform buffer for the projection matrix
         int uniformBufferSize = 16 * Float.BYTES;
@@ -85,13 +99,13 @@ public class WebGPUModelBatch implements Disposable {
         binder.setBuffer("uniforms", uniformBuffer, 0, uniformBufferSize);
 
         int instanceSize = 16*Float.BYTES;      // data size per instance
-        // todo is this a uniform buffer or a storage buffer?
-        WebGPUUniformBuffer instanceBuffer = new WebGPUUniformBuffer(instanceSize, WGPUBufferUsage.CopyDst | WGPUBufferUsage.Uniform);
 
-        binder.setBuffer("instanceUniforms", instanceBuffer, 0, instanceSize);
+        // for now we use a uniform buffer, but we organize data as an array of modelMatrix
+        // and write with an dynamic offset (numRenderables * sizeof matrix4)
+        instanceBuffer = new WebGPUUniformBuffer(instanceSize*maxInstances, WGPUBufferUsage.CopyDst | WGPUBufferUsage.Storage);
 
-        binder.setTexture("diffuseTexture", texture.getTextureView());
-        binder.setSampler("diffuseSampler", texture.getSampler());
+        binder.setBuffer("instanceUniforms", instanceBuffer, 0, instanceSize*maxInstances);
+
 
         // get pipeline layout which aggregates all the bind group layouts
         pipelineLayout = binder.getPipelineLayout("ModelBatch pipeline layout");
@@ -118,7 +132,7 @@ public class WebGPUModelBatch implements Disposable {
 
 
     public void begin(final Camera camera) {
-        this.camera = camera;
+        //this.camera = camera;
 
         if (drawing)
             throw new RuntimeException("Must end() before begin()");
@@ -131,10 +145,14 @@ public class WebGPUModelBatch implements Disposable {
         // bind group 0 once per frame
         binder.bindGroup(renderPass, 0);
 
-        binder.bindGroup(renderPass, 1);
+        // idem for group 2, we will fill in the buffer as we go
+        binder.bindGroup(renderPass, 2);
+
+        lastTexture = null;     // force a texture bind on the first texture we encounter
 
 
         renderables.clear();
+        numRenderables = 0;     // index into instance buffer
 
     }
 
@@ -146,21 +164,52 @@ public class WebGPUModelBatch implements Disposable {
         if(renderables.size == 0)
             return;
 
-        Renderable renderable = renderables.get(0); // to do loop
+        for(Renderable renderable : renderables) {
 
-        binder.setUniform("modelMatrix", renderable.worldTransform);
-        binder.bindGroup(renderPass, 2);
+            // renderable-specific data
+            int offset = numRenderables * 16 * Float.BYTES;
+            instanceBuffer.set(offset,  renderable.worldTransform);
 
-        WebGPUPipeline pipeline = pipelines.findPipeline( pipelineLayout.getHandle(), pipelineSpec);
-        renderPass.setPipeline(pipeline.getHandle());
+            // apply renderable's material
+            WebGPUTexture texture;
+            if(renderable.material.has(TextureAttribute.Diffuse)) {
+                TextureAttribute ta = (TextureAttribute) renderable.material.get(TextureAttribute.Diffuse);
+                assert ta != null;
+                Texture tex = ta.textureDescription.texture;
+                texture = (WebGPUTexture)tex;
+            } else {
+                texture = defaultTexture;
+            }
+            if(texture != lastTexture) { // avoid unnecessary binds
+                binder.setTexture("diffuseTexture", texture.getTextureView());
+                binder.setSampler("diffuseSampler", texture.getSampler());
+                binder.bindGroup(renderPass, 1);    // material bind group
+                lastTexture = texture;
+            }
 
-        Mesh mesh = renderable.meshPart.mesh;
 
-        if (!(mesh instanceof WebGPUMesh))
-            throw new RuntimeException("WebGPUMeshPart supports only WebGPUMesh");
-        ((WebGPUMesh)mesh).render(renderPass, renderable.meshPart.primitiveType, renderable.meshPart.offset, renderable.meshPart.size);
+            WebGPUPipeline pipeline = pipelines.findPipeline(pipelineLayout.getHandle(), pipelineSpec);
+            renderPass.setPipeline(pipeline.getHandle());
 
-        //meshPart.render(renderPass);
+            final MeshPart meshPart = renderable.meshPart;
+            if (!(meshPart.mesh instanceof WebGPUMesh))
+                throw new RuntimeException("WebGPUMeshPart supports only WebGPUMesh");
+            final WebGPUMesh mesh = (WebGPUMesh) meshPart.mesh;
+
+            // use an instance offset to find the right modelMatrix in the instanceBuffer
+            mesh.render(renderPass, meshPart.primitiveType, meshPart.offset, meshPart.size, 1, numRenderables);
+
+            // we can't use this, because meshPart was unmodified and doesn't know about WebGPUMesh
+            // and we're not using WebGPUMeshPart because then we need to modify Renderable.
+            //renderable.meshPart.render(renderPass);
+
+            numRenderables++;
+            if(numRenderables >= maxInstances) {
+                Gdx.app.error("WebGPUModelBatch", "Too many instances, max is "+maxInstances);
+                numRenderables--;
+                break;
+            }
+        }
 
     }
 
@@ -169,6 +218,7 @@ public class WebGPUModelBatch implements Disposable {
             throw new RuntimeException("Cannot end() without begin()");
         drawing = false;
         flush();
+        instanceBuffer.flush();
         renderPass.end();
         renderPass = null;
     }
@@ -201,7 +251,7 @@ public class WebGPUModelBatch implements Disposable {
     private WebGPUBindGroupLayout createInstancingBindGroupLayout(){
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch Binding Group Layout (instance)");
         layout.begin();
-        layout.addBuffer(0, WGPUShaderStage.Vertex , WGPUBufferBindingType.Uniform, 16*Float.BYTES, false);     // todo ReadOnlyStorage?
+        layout.addBuffer(0, WGPUShaderStage.Vertex , WGPUBufferBindingType.ReadOnlyStorage, 16L *Float.BYTES*maxInstances, false);
         layout.end();
         return layout;
     }
@@ -213,14 +263,14 @@ public class WebGPUModelBatch implements Disposable {
                 "struct FrameUniforms {\n" +
                 "    projectionMatrix: mat4x4f,\n" +
                 "};\n" +
-                "struct InstanceUniforms {\n" +
+                "struct ModelUniforms {\n" +
                 "    modelMatrix: mat4x4f,\n" +
                 "};\n" +
                 "\n" +
                 "@group(0) @binding(0) var<uniform> uFrame: FrameUniforms;\n" +
                 "@group(1) @binding(1) var diffuseTexture:        texture_2d<f32>;\n" +
                 "@group(1) @binding(2) var diffuseSampler:       sampler;\n" +
-                "@group(2) @binding(0) var<uniform> uInstance: InstanceUniforms;\n" +
+                "@group(2) @binding(0) var<storage, read> instances: array<ModelUniforms>;\n"+
                 "\n" +
                 "\n" +
                 "struct VertexInput {\n" +
@@ -236,10 +286,10 @@ public class WebGPUModelBatch implements Disposable {
                 "};\n" +
                 "\n" +
                 "@vertex\n" +
-                "fn vs_main(in: VertexInput) -> VertexOutput {\n" +
+                "fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOutput {\n" +
                 "   var out: VertexOutput;\n" +
                 "\n" +
-                "   let worldPosition =  uFrame.projectionMatrix* uInstance.modelMatrix * vec4f(in.position, 1.0);\n" +
+                "   let worldPosition =  uFrame.projectionMatrix* instances[instance].modelMatrix * vec4f(in.position, 1.0);\n" +
                 "   out.position = worldPosition;\n" +
                 "   out.uv = in.uv;\n" +
                 "   out.color = in.color;\n" +

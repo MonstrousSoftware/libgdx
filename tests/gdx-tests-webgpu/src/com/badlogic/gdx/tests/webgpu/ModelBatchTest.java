@@ -17,7 +17,6 @@
 package com.badlogic.gdx.tests.webgpu;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUApplication;
 import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUApplicationConfiguration;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.WebGPUMesh;
@@ -26,20 +25,14 @@ import com.badlogic.gdx.backends.webgpu.gdx.graphics.g2d.WebGPUSpriteBatch;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.WebGPUModelBatch;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.model.WebGPUMeshPart;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.utils.WebGPUScreenUtils;
-import com.badlogic.gdx.backends.webgpu.gdx.graphics.utils.WebGPUShapeRenderer;
-import com.badlogic.gdx.backends.webgpu.wrappers.PipelineSpecification;
-import com.badlogic.gdx.backends.webgpu.wrappers.WebGPUPipeline;
-import com.badlogic.gdx.backends.webgpu.wrappers.WebGPUPipelineLayout;
+import com.badlogic.gdx.backends.webgpu.wrappers.WebGPUTexture;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Renderable;
-import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
-import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.tests.utils.GdxTest;
 import com.badlogic.gdx.tests.utils.PerspectiveCamController;
-import com.badlogic.gdx.utils.ScreenUtils;
 
 public class ModelBatchTest extends GdxTest {
 
@@ -49,8 +42,8 @@ public class ModelBatchTest extends GdxTest {
 	WebGPUSpriteBatch batch;
 	WebGPUBitmapFont font;
 	WebGPUMesh mesh;
-	WebGPUMeshPart meshPart;
 	Renderable renderable;
+	Renderable renderable2;
 
 	// launcher
 	public static void main (String[] argv) {
@@ -72,32 +65,39 @@ public class ModelBatchTest extends GdxTest {
 		batch = new WebGPUSpriteBatch();
 		font = new WebGPUBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
 
-		Material mat = new Material(ColorAttribute.createDiffuse(Color.GREEN));
+
+		Material mat1 = new Material(TextureAttribute.createDiffuse(new WebGPUTexture(Gdx.files.internal("data/planet_earth.png"))));
+		Material mat2 = new Material(TextureAttribute.createDiffuse(new WebGPUTexture(Gdx.files.internal("data/badlogic.jpg"))));
 
 
-		createMesh();
+		final WebGPUMeshPart meshPart = createMeshPart();
 		renderable = new Renderable();
 		renderable.meshPart.set(meshPart);
 		renderable.worldTransform.idt();
-		renderable.material = mat;
+		renderable.material = mat1;
+
+		renderable2 = new Renderable();
+		renderable2.meshPart.set(meshPart);
+		renderable2.worldTransform.idt().trn(0,1,-3);
+		renderable2.material = mat2;
 
 	}
 
 	public void render () {
 		float delta = Gdx.graphics.getDeltaTime();
 		renderable.worldTransform.rotate(Vector3.Y, delta*45f);
+		renderable2.worldTransform.rotate(Vector3.Y, -delta*45f);
 
 		WebGPUScreenUtils.clear(Color.TEAL);
+
 		cam.update();
-
-
 		modelBatch.begin(cam);
+
+		modelBatch.render(renderable2);
 
 		modelBatch.render(renderable);
 
-
 		modelBatch.end();
-
 
 
 		batch.begin();
@@ -111,9 +111,10 @@ public class ModelBatchTest extends GdxTest {
 		font.dispose();
 		modelBatch.dispose();
 		mesh.dispose();
+
 	}
 
-	public void createMesh () {
+	public WebGPUMeshPart createMeshPart() {
 		VertexAttributes vattr = new VertexAttributes(VertexAttribute.Position(),  VertexAttribute.TexCoords(0), VertexAttribute.ColorUnpacked());
 
 		mesh = new WebGPUMesh(true, 8, 12, vattr);
@@ -134,6 +135,6 @@ public class ModelBatchTest extends GdxTest {
 		int offset = 0;	// offset in the indices array, since the mesh is indexed
 		int size = 12;	// nr of indices, since the mesh is indexed
 		int type = GL20.GL_TRIANGLES;	// primitive type using GL constant
-		meshPart = new WebGPUMeshPart("part", mesh, offset, size, type);
+		return new WebGPUMeshPart("part", mesh, offset, size, type);
 	}
 }

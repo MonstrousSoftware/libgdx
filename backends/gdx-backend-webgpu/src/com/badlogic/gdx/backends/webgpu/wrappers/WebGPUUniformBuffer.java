@@ -161,7 +161,9 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
         write(0, floatData, contentSize);
     }
 
-
+    public Pointer getFloatData() {
+        return floatData;
+    }
 
     public void set(int offset, float value ){
         floatData.putFloat(offset, value);

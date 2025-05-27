@@ -86,7 +86,7 @@ public class WebGPUMesh extends Mesh {
         // use an offset to set the vertex buffer for this batch
     }
 
-    public void render (WebGPURenderPass renderPass, int primitiveType, int offset, int size){
+    public void render (WebGPURenderPass renderPass, int primitiveType, int offset, int size, int numInstances, int firstInstance){
         //....
         //Gdx.app.log("WebGPUMesh", "render(renderPass)");
 
@@ -101,9 +101,9 @@ public class WebGPUMesh extends Mesh {
         //renderPass.setBindGroup( 0, bg.getHandle(), 0, JavaWebGPU.createNullPointer());
 
         if( getIndexData() != null) {
-            renderPass.drawIndexed(size, 1, offset, 0, 0);
+            renderPass.drawIndexed(size, numInstances, offset, 0, firstInstance);
         } else {
-            renderPass.draw(size, 1, offset, 0);
+            renderPass.draw(size, numInstances, offset, firstInstance);
         }
 
     }

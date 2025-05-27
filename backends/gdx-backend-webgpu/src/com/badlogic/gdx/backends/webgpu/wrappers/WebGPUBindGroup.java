@@ -43,7 +43,7 @@ public class WebGPUBindGroup implements Disposable {
     private final WebGPUBindGroupLayout layout;
     private final WGPUBindGroupDescriptor bindGroupDescriptor;
     private final WGPUBindGroupEntry[] entryArray;
-    private final Map<Integer, Integer> bindingIndex;
+    private final Map<Integer, Integer> bindingIndex;       // array index per bindingId (bindingId's can skip numbers)
     private final int numEntries;
     private boolean dirty;  // has an entry changed?
 
@@ -112,7 +112,7 @@ public class WebGPUBindGroup implements Disposable {
         if(index == null){
             index = bindingIndex.size();
             if(index >= numEntries) throw new ArrayIndexOutOfBoundsException("Too many entries. See BindGroupLayout");
-            bindingIndex.put(index, bindingId);
+            bindingIndex.put(bindingId, index);
         }
         return index;
     }

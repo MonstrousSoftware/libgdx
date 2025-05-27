@@ -54,6 +54,6 @@ public class WebGPUMeshPart extends MeshPart {
 	public void render (WebGPURenderPass renderPass) {
 		if (!(mesh instanceof WebGPUMesh))
 			throw new RuntimeException("WebGPUMeshPart supports only WebGPUMesh");
-		((WebGPUMesh)mesh).render(renderPass, primitiveType, offset, size);
+		((WebGPUMesh)mesh).render(renderPass, primitiveType, offset, size, 1, 0);
 	}
 }
