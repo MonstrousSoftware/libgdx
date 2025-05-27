@@ -49,6 +49,7 @@ public class WebGPUModelBatch implements Disposable {
     private final PipelineCache pipelines;
     private final PipelineSpecification pipelineSpec;
     private final VertexAttributes vertexAttributes;
+    private final WebGPUTexture texture;
 
 
     /** Create a ModelBatch.
@@ -60,6 +61,8 @@ public class WebGPUModelBatch implements Disposable {
         drawing = false;
         clearColor = new Color(Color.GRAY);
 
+        texture = new WebGPUTexture(Gdx.files.internal("data/badlogic.jpg"));       // TMP
+
 
         bindGroupLayout = createBindGroupLayout();
 
@@ -68,11 +71,10 @@ public class WebGPUModelBatch implements Disposable {
         binder.defineGroup(0, bindGroupLayout);
         // define bindings in the group
         binder.defineUniform("uniforms", 0, 0);
-//        binder.defineUniform("texture", 0, 1);
-//        binder.defineUniform("textureSampler", 0, 2);
+        binder.defineUniform("diffuseTexture", 0, 1);
+        binder.defineUniform("diffuseSampler", 0, 2);
         // define uniforms in uniform buffer (binding 0) with their offset
         binder.defineUniform("projectionMatrix", 0, 0, 0);
-
 
         // Create uniform buffer for the projection matrix
         int uniformBufferSize = 16 * Float.BYTES;
@@ -81,6 +83,8 @@ public class WebGPUModelBatch implements Disposable {
         // set binding 0 to uniform buffer
         binder.setBuffer("uniforms", uniformBuffer, 0, uniformBufferSize);
 
+        binder.setTexture("diffuseTexture", texture.getTextureView());
+        binder.setSampler("diffuseSampler", texture.getSampler());
 
         // get pipeline layout which aggregates all the bind group layouts
         pipelineLayout = binder.getPipelineLayout("ModelBatch pipeline layout");
@@ -117,6 +121,10 @@ public class WebGPUModelBatch implements Disposable {
 
         binder.setUniform("projectionMatrix", camera.combined);
 
+        // bind group 0 once per frame
+        binder.bindGroup(renderPass, 0);
+
+
         renderables.clear();
 
     }
@@ -133,8 +141,6 @@ public class WebGPUModelBatch implements Disposable {
 
         WebGPUPipeline pipeline = pipelines.findPipeline( pipelineLayout.getHandle(), pipelineSpec);
         renderPass.setPipeline(pipeline.getHandle());
-
-        renderPass.setBindGroup( 0, binder.getBindGroup(0).getHandle(), 0, JavaWebGPU.createNullPointer());
 
         Mesh mesh = renderable.meshPart.mesh;
 
@@ -167,8 +173,8 @@ public class WebGPUModelBatch implements Disposable {
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch bind group layout");
         layout.begin();
         layout.addBuffer(0, WGPUShaderStage.Vertex, WGPUBufferBindingType.Uniform, 16*Float.BYTES, false);
-//        layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D, false);
-//        layout.addSampler(2, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering );
+        layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D, false);
+        layout.addSampler(2, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering );
 
         layout.end();
         return layout;
@@ -183,9 +189,8 @@ public class WebGPUModelBatch implements Disposable {
                 "};\n" +
                 "\n" +
                 "@group(0) @binding(0) var<uniform> uFrame: FrameUniforms;\n" +
-                "\n" +
-                "//@group(1) @binding(1) var albedoTexture:        texture_2d<f32>;\n" +
-                "//@group(1) @binding(2) var textureSampler:       sampler;\n" +
+                "@group(0) @binding(1) var diffuseTexture:        texture_2d<f32>;\n" +
+                "@group(0) @binding(2) var diffuseSampler:       sampler;\n" +
                 "\n" +
                 "\n" +
                 "struct VertexInput {\n" +
@@ -215,8 +220,8 @@ public class WebGPUModelBatch implements Disposable {
                 "\n" +
                 "@fragment\n" +
                 "fn fs_main(in : VertexOutput) -> @location(0) vec4f {\n" +
-                "    var color: vec3f = in.color.rgb;\n" +
-                "    return vec4f(color, 1);\n" +
+                "    let color = in.color * textureSample(diffuseTexture, diffuseSampler, in.uv);\n" +
+                "    return color;\n" +
                 "}";
     }
 

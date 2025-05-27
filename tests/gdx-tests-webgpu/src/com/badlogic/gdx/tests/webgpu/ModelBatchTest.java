@@ -112,18 +112,23 @@ public class ModelBatchTest extends GdxTest {
 	public void createMesh () {
 		VertexAttributes vattr = new VertexAttributes(VertexAttribute.Position(),  VertexAttribute.TexCoords(0), VertexAttribute.ColorUnpacked());
 
-		mesh = new WebGPUMesh(true, 4, 6, vattr);
+		mesh = new WebGPUMesh(true, 8, 12, vattr);
 		mesh.setVertices(new float[]{
-				-0.5f, -0.5f, 0, 	0, 1, 	1,0,1,1,
-				0.5f, -0.5f, 0, 	1,1,	0,1,1,1,
-				0.5f, 0.5f, 0, 		1,0,	1,1,0,1,
-				-0.5f, 0.5f, 0, 	0,0,	0,1,0,1,
+				-0.5f, -0.5f, 0.5f, 	0, 1, 	1,0,1,1,
+				0.5f, -0.5f, 0.5f, 	1,1,	0,1,1,1,
+				0.5f, 0.5f, 0.5f, 		1,0,	1,1,0,1,
+				-0.5f, 0.5f, 0.5f, 	0,0,	0,1,0,1,
+
+				-0.5f, -0.5f, -0.5f, 	0, 1, 	1,0,1,1,
+				0.5f, -0.5f, -0.5f, 	1,1,	0,1,1,1,
+				0.5f, 0.5f, -0.5f, 		1,0,	1,1,0,1,
+				-0.5f, 0.5f, -0.5f, 	0,0,	0,1,0,1,
 		});
 
-		mesh.setIndices(new short[] {0, 1, 2, 	2, 3, 0});
+		mesh.setIndices(new short[] {0, 1, 2, 	2, 3, 0, 	4, 5, 6,  6, 7, 4});
 
 		int offset = 0;	// offset in the indices array, since the mesh is indexed
-		int size = 6;	// nr of indices, since the mesh is indexed
+		int size = 12;	// nr of indices, since the mesh is indexed
 		int type = GL20.GL_TRIANGLES;	// primitive type using GL constant
 		meshPart = new WebGPUMeshPart("part", mesh, offset, size, type);
 	}

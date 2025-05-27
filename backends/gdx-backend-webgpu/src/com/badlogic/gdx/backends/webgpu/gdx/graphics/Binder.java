@@ -1,5 +1,6 @@
 package com.badlogic.gdx.backends.webgpu.gdx.graphics;
 
+import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.backends.webgpu.wrappers.*;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Matrix4;
@@ -198,10 +199,11 @@ public class Binder implements Disposable {
         return pipelineLayout;
     }
 
-//    public void bindGroup(WebGPURenderPass renderPass, int groupId ){
-//        WebGPUBindGroup bindGroup = groups.get(groupId);
-//        renderPass.setBindGroup( 0, bindGroup.getHandle(), 0, JavaWebGPU.createNullPointer());
-//    }
+    /** bind the bind group related to groupId to the render pass */
+    public void bindGroup(WebGPURenderPass renderPass, int groupId ){
+        WebGPUBindGroup bindGroup = groups.get(groupId);
+        renderPass.setBindGroup( 0, bindGroup.getHandle(), 0, JavaWebGPU.createNullPointer());
+    }
 
     @Override
     public void dispose() {

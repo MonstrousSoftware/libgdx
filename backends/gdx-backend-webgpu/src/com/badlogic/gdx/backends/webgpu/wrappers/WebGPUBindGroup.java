@@ -64,8 +64,11 @@ public class WebGPUBindGroup implements Disposable {
 
         bindingIndex = new HashMap<>();
         entryArray = new WGPUBindGroupEntry[numEntries];
-        for (int i = 0; i < numEntries; i++)
+        for (int i = 0; i < numEntries; i++) {
             entryArray[i] = WGPUBindGroupEntry.createDirect();
+            setDefault(entryArray[i]);
+        }
+
     }
 
     public void begin() {
@@ -140,6 +143,12 @@ public class WebGPUBindGroup implements Disposable {
         entry.setBinding(bindingId);
         entry.setSampler(sampler);
         dirty = true;
+    }
+
+    private void setDefault(WGPUBindGroupEntry entry){
+        entry.setBuffer(null);
+        entry.setSampler(null);
+        entry.setTextureView(null);
     }
 
 
