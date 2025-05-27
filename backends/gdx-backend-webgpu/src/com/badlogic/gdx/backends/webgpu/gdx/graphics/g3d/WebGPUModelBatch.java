@@ -88,7 +88,7 @@ public class WebGPUModelBatch implements Disposable {
         binder.defineUniform("diffuseSampler", 1, 2);
         binder.defineUniform("instanceUniforms", 2, 0);
         // define uniforms in uniform buffers with their offset
-        binder.defineUniform("projectionMatrix", 0, 0, 0);
+        binder.defineUniform("projectionViewTransform", 0, 0, 0);
         //binder.defineUniform("modelMatrix", 2, 0, 0);
 
         // Create uniform buffer for the projection matrix
@@ -140,7 +140,7 @@ public class WebGPUModelBatch implements Disposable {
 
         renderPass = RenderPassBuilder.create(null, gfx.getSamples());
 
-        binder.setUniform("projectionMatrix", camera.combined);
+        binder.setUniform("projectionViewTransform", camera.combined);
 
         // bind group 0 once per frame
         binder.bindGroup(renderPass, 0);
@@ -261,7 +261,7 @@ public class WebGPUModelBatch implements Disposable {
         return "// basic model batch shader\n" +
                 "\n" +
                 "struct FrameUniforms {\n" +
-                "    projectionMatrix: mat4x4f,\n" +
+                "    projectionViewTransform: mat4x4f,\n" +
                 "};\n" +
                 "struct ModelUniforms {\n" +
                 "    modelMatrix: mat4x4f,\n" +
@@ -289,8 +289,7 @@ public class WebGPUModelBatch implements Disposable {
                 "fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOutput {\n" +
                 "   var out: VertexOutput;\n" +
                 "\n" +
-                "   let worldPosition =  uFrame.projectionMatrix* instances[instance].modelMatrix * vec4f(in.position, 1.0);\n" +
-                "   out.position = worldPosition;\n" +
+                "   out.position =  uFrame.projectionViewTransform * instances[instance].modelMatrix * vec4f(in.position, 1.0);\n" +
                 "   out.uv = in.uv;\n" +
                 "   out.color = in.color;\n" +
                 "\n" +
