@@ -41,7 +41,6 @@ public class WebGPUModelBatch implements Disposable {
     private Camera camera;
     private WebGPURenderPass renderPass;
     private final Color clearColor;
-    private final WebGPUBindGroupLayout bindGroupLayout;
     private final Binder binder;
     private final WebGPUUniformBuffer uniformBuffer;
     private final Array<Renderable> renderables;
@@ -64,15 +63,15 @@ public class WebGPUModelBatch implements Disposable {
         texture = new WebGPUTexture(Gdx.files.internal("data/badlogic.jpg"));       // TMP
 
 
-        bindGroupLayout = createBindGroupLayout();
 
         binder = new Binder();
-        // define group
-        binder.defineGroup(0, bindGroupLayout);
-        // define bindings in the group
+        // define groups
+        binder.defineGroup(0, createFrameBindGroupLayout());
+        binder.defineGroup(1, createMaterialBindGroupLayout());
+        // define bindings in the groups
         binder.defineUniform("uniforms", 0, 0);
-        binder.defineUniform("diffuseTexture", 0, 1);
-        binder.defineUniform("diffuseSampler", 0, 2);
+        binder.defineUniform("diffuseTexture", 1, 1);
+        binder.defineUniform("diffuseSampler", 1, 2);
         // define uniforms in uniform buffer (binding 0) with their offset
         binder.defineUniform("projectionMatrix", 0, 0, 0);
 
@@ -124,6 +123,8 @@ public class WebGPUModelBatch implements Disposable {
         // bind group 0 once per frame
         binder.bindGroup(renderPass, 0);
 
+        binder.bindGroup(renderPass, 1);
+
 
         renderables.clear();
 
@@ -169,13 +170,19 @@ public class WebGPUModelBatch implements Disposable {
 
     }
 
-    private WebGPUBindGroupLayout createBindGroupLayout() {
-        WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch bind group layout");
+    private WebGPUBindGroupLayout createFrameBindGroupLayout() {
+        WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch bind group layout (frame)");
         layout.begin();
         layout.addBuffer(0, WGPUShaderStage.Vertex, WGPUBufferBindingType.Uniform, 16*Float.BYTES, false);
+        layout.end();
+        return layout;
+    }
+
+    private WebGPUBindGroupLayout createMaterialBindGroupLayout() {
+        WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch bind group layout (material)");
+        layout.begin();
         layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D, false);
         layout.addSampler(2, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering );
-
         layout.end();
         return layout;
     }
@@ -189,8 +196,8 @@ public class WebGPUModelBatch implements Disposable {
                 "};\n" +
                 "\n" +
                 "@group(0) @binding(0) var<uniform> uFrame: FrameUniforms;\n" +
-                "@group(0) @binding(1) var diffuseTexture:        texture_2d<f32>;\n" +
-                "@group(0) @binding(2) var diffuseSampler:       sampler;\n" +
+                "@group(1) @binding(1) var diffuseTexture:        texture_2d<f32>;\n" +
+                "@group(1) @binding(2) var diffuseSampler:       sampler;\n" +
                 "\n" +
                 "\n" +
                 "struct VertexInput {\n" +

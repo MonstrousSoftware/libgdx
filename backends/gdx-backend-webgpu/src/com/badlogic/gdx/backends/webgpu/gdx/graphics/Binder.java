@@ -191,6 +191,8 @@ public class Binder implements Disposable {
         // the method will return the cached layout with the original label.
         if(pipelineLayout == null){
             WebGPUBindGroupLayout[] layouts = new WebGPUBindGroupLayout[groupLayouts.size()];
+
+            // does this need to be in sequential order of group id? Can group id's skip numbers?
             int i = 0;
             for(WebGPUBindGroupLayout layout : groupLayouts.values())
                 layouts[i++] = layout;
@@ -202,7 +204,7 @@ public class Binder implements Disposable {
     /** bind the bind group related to groupId to the render pass */
     public void bindGroup(WebGPURenderPass renderPass, int groupId ){
         WebGPUBindGroup bindGroup = groups.get(groupId);
-        renderPass.setBindGroup( 0, bindGroup.getHandle(), 0, JavaWebGPU.createNullPointer());
+        renderPass.setBindGroup( groupId, bindGroup.getHandle(), 0, JavaWebGPU.createNullPointer());
     }
 
     @Override
