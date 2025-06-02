@@ -13,17 +13,16 @@ import com.badlogic.gdx.backends.webgpu.wrappers.*;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.Renderable;
+import com.badlogic.gdx.graphics.g3d.RenderableProvider;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Affine2;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.BufferUtils;
-import com.badlogic.gdx.utils.Disposable;
-import com.badlogic.gdx.utils.Null;
+import com.badlogic.gdx.utils.*;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -53,8 +52,25 @@ public class WebGPUModelBatch implements Disposable {
     private final PipelineSpecification pipelineSpec;
     private WebGPUTexture lastTexture;
     private final WebGPUTexture defaultTexture;
+    protected final RenderablePool renderablesPool = new RenderablePool();
 
+    protected static class RenderablePool extends FlushablePool<Renderable> {
+        @Override
+        protected Renderable newObject () {
+            return new Renderable();
+        }
 
+        @Override
+        public Renderable obtain () {
+            Renderable renderable = super.obtain();
+            renderable.environment = null;
+            renderable.material = null;
+            renderable.meshPart.set("", null, 0, 0, 0);
+            renderable.shader = null;
+            renderable.userData = null;
+            return renderable;
+        }
+    }
 
     /** Create a ModelBatch.
      *
@@ -71,6 +87,7 @@ public class WebGPUModelBatch implements Disposable {
         drawing = false;
         clearColor = new Color(Color.GRAY);
 
+        // fallback texture
         Pixmap pixmap = new Pixmap(1,1,RGBA8888);
         pixmap.setColor(Color.PINK);
         pixmap.fill();
@@ -155,6 +172,10 @@ public class WebGPUModelBatch implements Disposable {
 
     public void render(Renderable renderable){
         renderables.add(renderable);
+    }
+
+    public void render (final RenderableProvider renderableProvider) {
+        renderableProvider.getRenderables(renderables, renderablesPool);
     }
 
     public void flush() {

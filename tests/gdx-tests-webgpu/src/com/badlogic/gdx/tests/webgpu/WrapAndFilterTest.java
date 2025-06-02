@@ -23,7 +23,6 @@ import com.badlogic.gdx.tests.utils.GdxTest;
 import com.badlogic.gdx.utils.Align;
 
 /** Test of texture wrap and filter methods.
- *
  * todo: select box has a visual issue.
  */
 public class WrapAndFilterTest extends GdxTest {
@@ -61,7 +60,7 @@ public class WrapAndFilterTest extends GdxTest {
 //			texture.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
 
 
-			region = new TextureRegion(texture, 0f,0f,2f,2f);
+			region = new TextureRegion(texture, 0f,0f,2f,2f);		// uv outside 1.0 range to show off wrap mode
 
 			font = new WebGPUBitmapFont();
 
@@ -171,8 +170,6 @@ public class WrapAndFilterTest extends GdxTest {
 			batch.draw(texture, 350, 0, 256, 256);
 			batch.draw(texture, 400, 0, 512, 512);
 			batch.draw(texture, 500, 0, 1024, 1024);
-
-
 
 			font.draw(batch, "Use the controls to test texture wrap and filter modes", 20, 400);
 

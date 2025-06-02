@@ -30,25 +30,28 @@ import com.badlogic.gdx.backends.webgpu.wrappers.WebGPUTexture;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Renderable;
+import com.badlogic.gdx.graphics.g3d.RenderableProvider;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BoxShapeBuilder;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.tests.utils.GdxTest;
 import com.badlogic.gdx.tests.utils.PerspectiveCamController;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Disposable;
+import com.badlogic.gdx.utils.Pool;
 
-/** Test WebGPUModelBatch with single Renderables.
- * */
-public class ModelBatchTest extends GdxTest {
+/** Demonstrate compatibility with a RenderableProvider */
+
+
+public class ModelBatchRPTest extends GdxTest {
 
 	WebGPUModelBatch modelBatch;
 	PerspectiveCamera cam;
 	PerspectiveCamController controller;
 	WebGPUSpriteBatch batch;
 	WebGPUBitmapFont font;
-	WebGPUMesh mesh;
-	Renderable renderable;
-	Renderable renderable2;
+	MyRenderableProvider renderableProvider;
 
 
 	// launcher
@@ -58,9 +61,10 @@ public class ModelBatchTest extends GdxTest {
 		config.setWindowedMode(640, 480);
 		config.setTitle("WebGPUTest");
 
-		new WebGPUApplication(new ModelBatchTest(), config);
+		new WebGPUApplication(new ModelBatchRPTest(), config);
 	}
 
+	// application
 	public void create () {
 		modelBatch = new WebGPUModelBatch();
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -73,44 +77,23 @@ public class ModelBatchTest extends GdxTest {
 		batch = new WebGPUSpriteBatch();
 		font = new WebGPUBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
 
-		//
-		// Create some renderables
-		//
-
-		WebGPUTexture texture1 = new WebGPUTexture(Gdx.files.internal("data/planet_earth.png"), true);
-		texture1.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
-		Material mat1 = new Material(TextureAttribute.createDiffuse(texture1));
-		WebGPUTexture texture2 = new WebGPUTexture(Gdx.files.internal("data/badlogic.jpg"), true);
-		texture2.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
-		Material mat2 = new Material(TextureAttribute.createDiffuse(texture2));
-
-
-		final WebGPUMeshPart meshPart = createMeshPart();
-		renderable = new Renderable();
-		renderable.meshPart.set(meshPart);
-		renderable.worldTransform.idt().trn(0,-2,-3);
-		renderable.material = mat1;
-
-		renderable2 = new Renderable();
-		renderable2.meshPart.set(meshPart);
-		renderable2.worldTransform.idt().trn(0,0,-1);
-		renderable2.material = mat2;
+		renderableProvider = new MyRenderableProvider();
 
 	}
 
 	public void render () {
 		float delta = Gdx.graphics.getDeltaTime();
-		renderable.worldTransform.rotate(Vector3.Y, delta*15f);
-		renderable2.worldTransform.rotate(Vector3.Y, -delta*15f);
+		renderableProvider.update(delta);
+
 
 		WebGPUScreenUtils.clear(Color.TEAL);
 
 		cam.update();
 		modelBatch.begin(cam);
 
-		modelBatch.render(renderable2);
+		modelBatch.render(renderableProvider);
 
-		modelBatch.render(renderable);
+		//modelBatch.render(renderable);
 
 		modelBatch.end();
 
@@ -133,47 +116,73 @@ public class ModelBatchTest extends GdxTest {
 		batch.dispose();
 		font.dispose();
 		modelBatch.dispose();
-		mesh.dispose();
-
+		renderableProvider.dispose();
 	}
 
-	public WebGPUMeshPart createMeshPart() {
-		WebGPUMeshBuilder mb = new WebGPUMeshBuilder();
 
-		VertexAttributes attr = WebGPUMeshBuilder.createAttributes(VertexAttributes.Usage.Position | VertexAttributes.Usage.TextureCoordinates| VertexAttributes.Usage.ColorUnpacked);
 
-		mb.begin(attr);
+	/** artificial implementation of a renderable provider just for testing */
+	public static class MyRenderableProvider implements RenderableProvider, Disposable {
+		WebGPUMesh mesh;
+		final WebGPUMeshPart meshPart;
+		final Material mat1, mat2;
+		float angle;
 
-		WebGPUMeshPart part = mb.part("block", GL20.GL_TRIANGLES);
-		// rotate unit cube by 90 degrees to get the textures the right way up.
-		Matrix4 transform = new Matrix4().rotate(Vector3.Z, 90);
-		BoxShapeBuilder.build(mb, transform);	// create unit cube
-		mesh = mb.end();	// keep this for disposal
 
-		return part;
-	}
+		public MyRenderableProvider() {
+			//
+			// Create some renderables
+			//
 
-	public WebGPUMeshPart createMeshPartOri() {
-		VertexAttributes vattr = new VertexAttributes(VertexAttribute.Position(),  VertexAttribute.TexCoords(0), VertexAttribute.ColorUnpacked());
+			WebGPUTexture texture1 = new WebGPUTexture(Gdx.files.internal("data/planet_earth.png"), true);
+			texture1.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
+			mat1 = new Material(TextureAttribute.createDiffuse(texture1));
+			WebGPUTexture texture2 = new WebGPUTexture(Gdx.files.internal("data/badlogic.jpg"), true);
+			texture2.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
+			mat2 = new Material(TextureAttribute.createDiffuse(texture2));
 
-		mesh = new WebGPUMesh(true, 8, 12, vattr);
-		mesh.setVertices(new float[]{
-				-0.5f, -0.5f, 0.5f, 	0, 1, 	1,0,1,1,
-				0.5f, -0.5f, 0.5f, 	1,1,	0,1,1,1,
-				0.5f, 0.5f, 0.5f, 		1,0,	1,1,0,1,
-				-0.5f, 0.5f, 0.5f, 	0,0,	0,1,0,1,
 
-				-0.5f, -0.5f, -0.5f, 	0, 1, 	1,0,1,1,
-				0.5f, -0.5f, -0.5f, 	1,1,	0,1,1,1,
-				0.5f, 0.5f, -0.5f, 		1,0,	1,1,0,1,
-				-0.5f, 0.5f, -0.5f, 	0,0,	0,1,0,1,
-		});
+			meshPart = createMeshPart();
+		}
 
-		mesh.setIndices(new short[] {0, 1, 2, 	2, 3, 0, 	4, 5, 6,  6, 7, 4});
+		public void update(float deltaTime){
+			angle += 15f*deltaTime;
+		}
 
-		int offset = 0;	// offset in the indices array, since the mesh is indexed
-		int size = 12;	// nr of indices, since the mesh is indexed
-		int type = GL20.GL_TRIANGLES;	// primitive type using GL constant
-		return new WebGPUMeshPart("part", mesh, offset, size, type);
+		@Override
+		public void getRenderables(Array<Renderable> renderables, Pool<Renderable> pool) {
+			Renderable renderable = pool.obtain();
+			renderable.meshPart.set(meshPart);
+			renderable.worldTransform.idt().trn(0,-2,-3).rotate(Vector3.Y, angle);
+			renderable.material = mat1;
+			renderables.add(renderable);
+
+			renderable = pool.obtain();
+			renderable.meshPart.set(meshPart);
+			renderable.worldTransform.idt().trn(0,0,-1).rotate(Vector3.Y, -angle);
+			renderable.material = mat2;
+			renderables.add(renderable);
+		}
+
+		private WebGPUMeshPart createMeshPart() {
+			WebGPUMeshBuilder mb = new WebGPUMeshBuilder();
+
+			VertexAttributes attr = WebGPUMeshBuilder.createAttributes(VertexAttributes.Usage.Position | VertexAttributes.Usage.TextureCoordinates| VertexAttributes.Usage.ColorUnpacked);
+
+			mb.begin(attr);
+
+			WebGPUMeshPart part = mb.part("block", GL20.GL_TRIANGLES);
+			// rotate unit cube by 90 degrees to get the textures the right way up.
+			Matrix4 transform = new Matrix4().rotate(Vector3.Z, 90);
+			BoxShapeBuilder.build(mb, transform);	// create unit cube
+			mesh = mb.end();	// keep this for disposal
+
+			return part;
+		}
+
+		@Override
+		public void dispose() {
+			mesh.dispose();
+		}
 	}
 }
