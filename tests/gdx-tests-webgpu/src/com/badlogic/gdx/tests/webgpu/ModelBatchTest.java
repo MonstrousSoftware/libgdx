@@ -62,7 +62,7 @@ public class ModelBatchTest extends GdxTest {
 	}
 
 	public void create () {
-		modelBatch = new WebGPUModelBatch();
+		modelBatch = new WebGPUModelBatch(100);
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		cam.position.set(0, 0, 2);
 		cam.near = 0.1f;

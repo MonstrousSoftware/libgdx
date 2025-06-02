@@ -5,20 +5,19 @@ import com.badlogic.gdx.backends.webgpu.gdx.graphics.Binder;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.WebGPUMesh;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;
 import com.badlogic.gdx.backends.webgpu.wrappers.*;
-import com.badlogic.gdx.graphics.Camera;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.Renderable;
+import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
+import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.utils.Disposable;
 
 import static com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888;
 
-public class WebGPUDefaultShader implements Disposable {
+public class WebGPUDefaultShader implements Shader {
 
-    private final int maxInstances;
+    private Config config;
     private final WebGPUTexture defaultTexture;
     public Binder binder;
     private final WebGPUUniformBuffer uniformBuffer;
@@ -29,16 +28,29 @@ public class WebGPUDefaultShader implements Disposable {
     public int numRenderables;
     private WebGPUTexture lastTexture;
     private WebGPURenderPass renderPass;
+    private VertexAttributes vertexAttributes;
 
-    public WebGPUDefaultShader(int maxInstances) {
-        this.maxInstances = maxInstances;
+
+    public static class Config {
+        public int maxInstances;
+
+        public Config() {
+            this.maxInstances = 1024;
+        }
+    }
+
+    public WebGPUDefaultShader(final Renderable renderable) {
+        this(renderable, new Config());
+    }
+
+    public WebGPUDefaultShader(final Renderable renderable, Config config) {
+        this.config = config;
 
         // fallback texture
         Pixmap pixmap = new Pixmap(1,1,RGBA8888);
         pixmap.setColor(Color.PINK);
         pixmap.fill();
         defaultTexture = new WebGPUTexture(pixmap);
-
 
         binder = new Binder();
         // define groups
@@ -65,9 +77,9 @@ public class WebGPUDefaultShader implements Disposable {
 
         // for now we use a uniform buffer, but we organize data as an array of modelMatrix
         // and write with an dynamic offset (numRenderables * sizeof matrix4)
-        instanceBuffer = new WebGPUUniformBuffer(instanceSize*maxInstances, WGPUBufferUsage.CopyDst | WGPUBufferUsage.Storage);
+        instanceBuffer = new WebGPUUniformBuffer(instanceSize*config.maxInstances, WGPUBufferUsage.CopyDst | WGPUBufferUsage.Storage);
 
-        binder.setBuffer("instanceUniforms", instanceBuffer, 0, instanceSize*maxInstances);
+        binder.setBuffer("instanceUniforms", instanceBuffer, 0, (long) instanceSize *config.maxInstances);
 
 
         // get pipeline layout which aggregates all the bind group layouts
@@ -75,7 +87,8 @@ public class WebGPUDefaultShader implements Disposable {
 
         pipelines = new PipelineCache();
         // vertexAttributes will be set from the renderable
-        pipelineSpec = new PipelineSpecification(null, getDefaultShaderSource());
+        vertexAttributes = renderable.meshPart.mesh.getVertexAttributes();
+        pipelineSpec = new PipelineSpecification(vertexAttributes, getDefaultShaderSource());
         pipelineSpec.name = "ModelBatch pipeline";
 
         // default blending values
@@ -84,8 +97,17 @@ public class WebGPUDefaultShader implements Disposable {
 
     }
 
-    // todo some constructor stuff to init()?
+    @Override
+    public void init() {
+        // todo some constructor stuff to init()?
 
+    }
+
+
+    @Override
+    public void begin(Camera camera, RenderContext context) {
+        throw new IllegalArgumentException("Use begin(Camera, WebGPURenderPass)");
+    }
 
     public void begin(Camera camera, WebGPURenderPass renderPass){
         this.renderPass = renderPass;
@@ -105,9 +127,26 @@ public class WebGPUDefaultShader implements Disposable {
         lastTexture = null;     // force a texture bind on the first texture we encounter
     }
 
+
+
+    @Override
+    public int compareTo(Shader other) {
+        if (other == null) return -1;
+        if (other == this) return 0;
+        return 0; // FIXME compare shaders on their impact on performance
+    }
+
+    @Override
+    public boolean canRender(Renderable instance) {
+        Gdx.app.log("canRender","can render? "+ (instance.meshPart.mesh.getVertexAttributes() == vertexAttributes));
+        return instance.meshPart.mesh.getVertexAttributes() == vertexAttributes;
+    }
+
+
+
     public void render (Renderable renderable) {
-        if(numRenderables > maxInstances) {
-            Gdx.app.error("WebGPUModelBatch", "Too many instances, max is " + maxInstances);
+        if(numRenderables > config.maxInstances) {
+            Gdx.app.error("WebGPUModelBatch", "Too many instances, max is " + config.maxInstances);
             return;
         }
         // renderable-specific data
@@ -176,7 +215,7 @@ public class WebGPUDefaultShader implements Disposable {
     private WebGPUBindGroupLayout createInstancingBindGroupLayout(){
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch Binding Group Layout (instance)");
         layout.begin();
-        layout.addBuffer(0, WGPUShaderStage.Vertex , WGPUBufferBindingType.ReadOnlyStorage, 16L *Float.BYTES*maxInstances, false);
+        layout.addBuffer(0, WGPUShaderStage.Vertex , WGPUBufferBindingType.ReadOnlyStorage, 16L *Float.BYTES*config.maxInstances, false);
         layout.end();
         return layout;
     }
