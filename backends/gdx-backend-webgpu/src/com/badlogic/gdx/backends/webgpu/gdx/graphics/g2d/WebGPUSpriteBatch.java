@@ -96,7 +96,7 @@ public class WebGPUSpriteBatch implements Batch {
         vertexAttributes = new VertexAttributes(new VertexAttribute(VertexAttributes.Usage.Position, 2, ShaderProgram.POSITION_ATTRIBUTE),
                 VertexAttribute.ColorPacked(), VertexAttribute.TexCoords(0) );
 
-        // vertex: x, y, u, v, rgba
+        // vertex: x, y, rgba, u, v
         vertexSize = vertexAttributes.vertexSize; // bytes
 
         initBlendMap(); // fill constants mapping table
@@ -948,16 +948,6 @@ public class WebGPUSpriteBatch implements Batch {
         boolean hasUV = (vertexAttributes.getMask() & VertexAttributes.Usage.TextureCoordinates) != 0;
         float col = tint.toFloatBits();
 
-//        vertices[idx++] = x;
-//        vertices[idx++] = y;
-//        if (hasColor) {
-//            vertices[idx++] = col;
-//        }
-//        if (hasUV) {
-//            vertices[idx++] = u;
-//            vertices[idx++] = v;
-//        }
-
 
         vertexData.put(x);
         vertexData.put(y);
@@ -968,6 +958,8 @@ public class WebGPUSpriteBatch implements Batch {
             vertexData.put(u);
             vertexData.put(v);
         }
+
+
     }
 
 

@@ -24,6 +24,7 @@ import com.badlogic.gdx.backends.webgpu.gdx.graphics.g2d.WebGPUBitmapFont;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.g2d.WebGPUSpriteBatch;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.WebGPUModelBatch;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.model.WebGPUMeshPart;
+import com.badlogic.gdx.backends.webgpu.gdx.graphics.utils.WebGPUMeshBuilder;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.utils.WebGPUScreenUtils;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.viewport.WebGPUScreenViewport;
 import com.badlogic.gdx.backends.webgpu.wrappers.WebGPUTexture;
@@ -31,6 +32,8 @@ import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
+import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
+import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BoxShapeBuilder;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.tests.utils.GdxTest;
 import com.badlogic.gdx.tests.utils.PerspectiveCamController;
@@ -78,20 +81,20 @@ public class ModelBatchTest extends GdxTest {
 		final WebGPUMeshPart meshPart = createMeshPart();
 		renderable = new Renderable();
 		renderable.meshPart.set(meshPart);
-		renderable.worldTransform.idt();
+		renderable.worldTransform.idt().rotate(Vector3.Z, 90).trn(0,-2,-3);
 		renderable.material = mat1;
 
 		renderable2 = new Renderable();
 		renderable2.meshPart.set(meshPart);
-		renderable2.worldTransform.idt().trn(0,1,-3);
+		renderable2.worldTransform.idt().trn(0,0,-1);
 		renderable2.material = mat2;
 
 	}
 
 	public void render () {
 		float delta = Gdx.graphics.getDeltaTime();
-		renderable.worldTransform.rotate(Vector3.Y, delta*45f);
-		renderable2.worldTransform.rotate(Vector3.Y, -delta*45f);
+		renderable.worldTransform.rotate(Vector3.Y, delta*15f);
+		renderable2.worldTransform.rotate(Vector3.Y, -delta*15f);
 
 		WebGPUScreenUtils.clear(Color.TEAL);
 
@@ -128,6 +131,21 @@ public class ModelBatchTest extends GdxTest {
 	}
 
 	public WebGPUMeshPart createMeshPart() {
+		WebGPUMeshBuilder mb = new WebGPUMeshBuilder();
+
+		VertexAttributes vattr = WebGPUMeshBuilder.createAttributes(VertexAttributes.Usage.Position | VertexAttributes.Usage.TextureCoordinates| VertexAttributes.Usage.ColorUnpacked);
+
+		mb.begin(vattr);
+
+		WebGPUMeshPart part = mb.part("block", GL20.GL_TRIANGLES);
+
+		BoxShapeBuilder.build(mb, 1, 1, 1);
+		mb.end();
+
+		return part;
+	}
+
+	public WebGPUMeshPart createMeshPartOri() {
 		VertexAttributes vattr = new VertexAttributes(VertexAttribute.Position(),  VertexAttribute.TexCoords(0), VertexAttribute.ColorUnpacked());
 
 		mesh = new WebGPUMesh(true, 8, 12, vattr);

@@ -51,7 +51,6 @@ public class WebGPUModelBatch implements Disposable {
     private final WebGPUPipelineLayout pipelineLayout;
     private final PipelineCache pipelines;
     private final PipelineSpecification pipelineSpec;
-    private final VertexAttributes vertexAttributes;
     private WebGPUTexture lastTexture;
     private final WebGPUTexture defaultTexture;
 
@@ -110,11 +109,9 @@ public class WebGPUModelBatch implements Disposable {
         // get pipeline layout which aggregates all the bind group layouts
         pipelineLayout = binder.getPipelineLayout("ModelBatch pipeline layout");
 
-        vertexAttributes = new VertexAttributes(VertexAttribute.Position(), VertexAttribute.TexCoords(0), VertexAttribute.ColorUnpacked());
-
-
         pipelines = new PipelineCache();
-        pipelineSpec = new PipelineSpecification(vertexAttributes, getDefaultShaderSource());
+        // vertexAttributes will be set from the renderable
+        pipelineSpec = new PipelineSpecification(null, getDefaultShaderSource());
         pipelineSpec.name = "ModelBatch pipeline";
 
         // default blending values
@@ -187,7 +184,7 @@ public class WebGPUModelBatch implements Disposable {
                 lastTexture = texture;
             }
 
-
+            pipelineSpec.vertexAttributes = renderable.meshPart.mesh.getVertexAttributes();
             WebGPUPipeline pipeline = pipelines.findPipeline(pipelineLayout.getHandle(), pipelineSpec);
             renderPass.setPipeline(pipeline.getHandle());
 
@@ -275,8 +272,9 @@ public class WebGPUModelBatch implements Disposable {
                 "\n" +
                 "struct VertexInput {\n" +
                 "    @location(0) position: vec3f,\n" +
-                "    @location(1) uv: vec2f,\n" +
-                "    @location(5) color: vec4f\n" +
+                "    @location(5) color: vec4f,\n" +
+                "    @location(1) uv: vec2f\n" +
+
                 "};\n" +
                 "\n" +
                 "struct VertexOutput {\n" +
