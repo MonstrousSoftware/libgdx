@@ -254,6 +254,8 @@ public class WebGPUModelBatch implements Disposable {
     }
 
 
+    // todo vertex attributes are hardcoded, should use conditional compilation.
+
     private String getDefaultShaderSource() {
         return "// basic model batch shader\n" +
                 "\n" +
@@ -272,8 +274,8 @@ public class WebGPUModelBatch implements Disposable {
                 "\n" +
                 "struct VertexInput {\n" +
                 "    @location(0) position: vec3f,\n" +
-                "    @location(5) color: vec4f,\n" +
-                "    @location(1) uv: vec2f\n" +
+                "    @location(1) uv: vec2f,\n" +
+                "    @location(5) color: vec4f\n" +
 
                 "};\n" +
                 "\n" +

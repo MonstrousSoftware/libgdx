@@ -39,6 +39,8 @@ public class WebGPUTexture extends Texture {
     protected WGPUTextureFormat format;
     protected String label;
     private int numSamples;
+//    private TextureFilter minFilter;
+//    private TextureFilter magFilter;
     protected TextureData data; // cannot access data of Texture which is package private
 
     public WebGPUTexture(String label,int width, int height, boolean mipMapping, boolean renderAttachment, WGPUTextureFormat format, int numSamples ) {
@@ -170,7 +172,11 @@ public class WebGPUTexture extends Texture {
         return textureView;
     }
 
-    public Pointer getSampler() { return sampler; }
+    public Pointer getSampler() {
+        if(sampler == null)
+            buildSampler();
+        return sampler;
+    }
 
     public WGPUTextureFormat getFormat(){
         return format;
@@ -210,7 +216,7 @@ public class WebGPUTexture extends Texture {
         WGPUTextureDescriptor textureDesc = WGPUTextureDescriptor.createDirect();
         textureDesc.setNextInChain();
         textureDesc.setLabel(label);
-        textureDesc.setDimension( WGPUTextureDimension._2D);
+        textureDesc.setDimension(WGPUTextureDimension._2D);
         this.format = format; //
         textureDesc.setFormat(format);
         textureDesc.setMipLevelCount(mipLevelCount);
@@ -227,7 +233,7 @@ public class WebGPUTexture extends Texture {
             formats[0] = viewFormat.ordinal();
             Pointer formatPtr = JavaWebGPU.createLongArrayPointer(formats);
             textureDesc.setViewFormatCount(1);
-            textureDesc.setViewFormats( formatPtr );
+            textureDesc.setViewFormats(formatPtr);
         }
 
         texture = webGPU.wgpuDeviceCreateTexture(gfx.getDevice().getHandle(), textureDesc);
@@ -235,11 +241,11 @@ public class WebGPUTexture extends Texture {
         //System.out.println("dimensions: "+textureDesc.getSize().getDepthOrArrayLayers());
 
         // Create the view of the  texture manipulated by the rasterizer
-        WGPUTextureViewDimension dimension = (numLayers == 1 ? WGPUTextureViewDimension._2D : (numLayers == 6 ? WGPUTextureViewDimension.Cube: WGPUTextureViewDimension._2DArray));
+        WGPUTextureViewDimension dimension = (numLayers == 1 ? WGPUTextureViewDimension._2D : (numLayers == 6 ? WGPUTextureViewDimension.Cube : WGPUTextureViewDimension._2DArray));
 
         // if this is a depth format, use only the depth aspect for the texture view
         WGPUTextureAspect aspect;
-        switch(format){
+        switch (format) {
             case Depth24Plus:
             case Depth32Float:
             case Depth24PlusStencil8:
@@ -251,19 +257,22 @@ public class WebGPUTexture extends Texture {
                 aspect = WGPUTextureAspect.All;
                 break;
         }
-        textureView =  new WebGPUTextureView(this, aspect, dimension, format, 0,
-                mipLevelCount, 0, numLayers );
+        textureView = new WebGPUTextureView(this, aspect, dimension, format, 0,
+                mipLevelCount, 0, numLayers);
+    }
+
+    private void buildSampler(){
 
         // Create a sampler
         //
         WGPUSamplerDescriptor samplerDesc = WGPUSamplerDescriptor.createDirect();
         samplerDesc.setLabel("Standard texture sampler");
-        samplerDesc.setAddressModeU(WGPUAddressMode.Repeat);
-        samplerDesc.setAddressModeV(WGPUAddressMode.Repeat);
+        samplerDesc.setAddressModeU(convertWrap(uWrap));
+        samplerDesc.setAddressModeV(convertWrap(vWrap));
         samplerDesc.setAddressModeW(WGPUAddressMode.Repeat);
-        samplerDesc.setMagFilter(WGPUFilterMode.Nearest);       // default filter in LibGDX is nearest for min and mag filter
-        samplerDesc.setMinFilter(WGPUFilterMode.Nearest);
-        samplerDesc.setMipmapFilter(WGPUMipmapFilterMode.Linear);
+        samplerDesc.setMagFilter(convertFilter(magFilter));       // default filter in LibGDX is nearest for min and mag filter
+        samplerDesc.setMinFilter(convertFilter(minFilter));
+        samplerDesc.setMipmapFilter(WGPUMipmapFilterMode.Linear);       // todo
 
         samplerDesc.setLodMinClamp(0);
         samplerDesc.setLodMaxClamp(mipLevelCount);
@@ -273,7 +282,57 @@ public class WebGPUTexture extends Texture {
 
     }
 
+    /** convert from LibGDX enum value to WebGPU enum value */
+    private WGPUFilterMode convertFilter( TextureFilter filter ){
+        WGPUFilterMode mode;
+        switch(filter){
+            case Nearest:mode = WGPUFilterMode.Nearest; break;
+            case Linear:mode = WGPUFilterMode.Linear; break;
+            // todo fix others and test all combinations
+            case MipMap:mode = WGPUFilterMode.Nearest; break;
+            case MipMapNearestNearest:mode = WGPUFilterMode.Nearest; break;
+            case MipMapNearestLinear:mode = WGPUFilterMode.Nearest; break;
+            case MipMapLinearNearest:mode = WGPUFilterMode.Nearest; break;
+            case MipMapLinearLinear:mode = WGPUFilterMode.Linear; break;
+            default:
+                throw new IllegalArgumentException("Unknown TextureFilter value.");
 
+        }
+        return mode;
+    }
+
+    // override this methods to avoid drop to GL functions
+    @Override
+    public void setFilter(TextureFilter minFilter, TextureFilter magFilter){
+        if(minFilter == this.minFilter && magFilter == this.magFilter) return;
+        // note: this may invalidate the sampler if it was built already and had other values
+        sampler = null; // invalidate sampler todo release?
+        this.minFilter = minFilter;
+        this.magFilter = magFilter;
+    }
+
+    /** convert from LibGDX enum value to WebGPU enum value */
+    private WGPUAddressMode convertWrap( TextureWrap wrap ){
+        WGPUAddressMode mode;
+        switch(wrap){
+            case MirroredRepeat:        mode = WGPUAddressMode.MirrorRepeat; break;
+            case Repeat:                mode = WGPUAddressMode.Repeat; break;
+            case ClampToEdge:
+            default:                    mode = WGPUAddressMode.ClampToEdge; break;
+        }
+        return mode;
+    }
+
+    // override this method to avoid drop to GL functions
+    @Override
+    public void setWrap (TextureWrap u, TextureWrap v){
+        if(u == this.uWrap && v == this.vWrap) return;
+        sampler = null; // invalidate sampler todo release?
+
+        // ignored
+        this.uWrap = u;
+        this.vWrap = v;
+    }
 
     /** Load pixel data into texture.
      *
@@ -440,15 +499,5 @@ public class WebGPUTexture extends Texture {
         super.dispose();
     }
 
-    // override these methods to avoid drop to GL functions
 
-    @Override
-    public void setFilter(TextureFilter minFilter, TextureFilter magFilter){
-        // ignored
-    }
-
-    @Override
-    public void setWrap (TextureWrap u, TextureWrap v){
-        // ignored
-    }
 }
