@@ -85,7 +85,8 @@ public class WebGPUDefaultShader implements Shader {
         // get pipeline layout which aggregates all the bind group layouts
         pipelineLayout = binder.getPipelineLayout("ModelBatch pipeline layout");
 
-        pipelines = new PipelineCache();
+        pipelines = new PipelineCache();    // use static cache?
+
         // vertexAttributes will be set from the renderable
         vertexAttributes = renderable.meshPart.mesh.getVertexAttributes();
         pipelineSpec = new PipelineSpecification(vertexAttributes, getDefaultShaderSource());
@@ -184,7 +185,7 @@ public class WebGPUDefaultShader implements Shader {
         // use an instance offset to find the right modelMatrix in the instanceBuffer
         mesh.render(renderPass, meshPart.primitiveType, meshPart.offset, meshPart.size, 1, numRenderables);
 
-        // we can't use this, because meshPart was unmodified and doesn't know about WebGPUMesh
+        // we can't use the following statement, because meshPart was unmodified and doesn't know about WebGPUMesh
         // and we're not using WebGPUMeshPart because then we need to modify Renderable.
         //renderable.meshPart.render(renderPass);
 
@@ -241,8 +242,12 @@ public class WebGPUDefaultShader implements Shader {
                 "\n" +
                 "struct VertexInput {\n" +
                 "    @location(0) position: vec3f,\n" +
+                "#ifdef TEXTURE_COORDINATE\n" +
                 "    @location(1) uv: vec2f,\n" +
+                "#endif\n" +
+                "#ifdef COLOR\n" +
                 "    @location(5) color: vec4f\n" +
+                "#endif\n" +
 
                 "};\n" +
                 "\n" +
@@ -257,8 +262,16 @@ public class WebGPUDefaultShader implements Shader {
                 "   var out: VertexOutput;\n" +
                 "\n" +
                 "   out.position =  uFrame.projectionViewTransform * instances[instance].modelMatrix * vec4f(in.position, 1.0);\n" +
+                "#ifdef TEXTURE_COORDINATE\n" +
                 "   out.uv = in.uv;\n" +
+                "#else\n" +
+                "   out.uv = vec2f(0);\n" +
+                "#endif\n" +
+                "#ifdef COLOR\n" +
                 "   out.color = in.color;\n" +
+                "#else\n" +
+                "   out.color = vec4f(1);\n" +
+                "#endif\n" +
                 "\n" +
                 "   return out;\n" +
                 "}\n" +
@@ -266,7 +279,11 @@ public class WebGPUDefaultShader implements Shader {
                 "\n" +
                 "@fragment\n" +
                 "fn fs_main(in : VertexOutput) -> @location(0) vec4f {\n" +
+                "#ifdef TEXTURE_COORDINATE\n" +
                 "    let color = in.color * textureSample(diffuseTexture, diffuseSampler, in.uv);\n" +
+                "#else\n" +
+                "   let color = in.color;\n" +
+                "#endif\n" +
                 "    return color;\n" +
                 "}";
     }

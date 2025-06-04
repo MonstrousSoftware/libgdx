@@ -50,7 +50,8 @@ public class WebGPUPipeline implements Disposable {
             ownsShader = false;     // we don't have to dispose it
         } else {
             String prefix = ShaderPrefix.buildPrefix(spec.vertexAttributes, spec.environment);
-            //System.out.println("Shader Source ["+spec.shaderSourceFile+"] Prefix: ["+prefix+"]");
+            //System.out.println("Shader Source ["+spec.shaderSource+"] Prefix: ["+prefix+"]");
+            System.out.println("Compiling shader Source [] Prefix: ["+prefix+"]");
             shader = new WebGPUShaderProgram(spec.name, spec.shaderSource, prefix);
             spec.shader = shader;
             spec.recalcHash();
