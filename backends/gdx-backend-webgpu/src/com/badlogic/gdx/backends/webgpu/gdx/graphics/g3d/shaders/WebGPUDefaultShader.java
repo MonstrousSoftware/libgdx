@@ -5,30 +5,30 @@ import com.badlogic.gdx.backends.webgpu.gdx.graphics.Binder;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.WebGPUMesh;
 import com.badlogic.gdx.backends.webgpu.webgpu.*;
 import com.badlogic.gdx.backends.webgpu.wrappers.*;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
-import com.badlogic.gdx.utils.Disposable;
+
 
 import static com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888;
 
 public class WebGPUDefaultShader implements Shader {
 
-    private Config config;
+    private final Config config;
+    private static String defaultShader;
     private final WebGPUTexture defaultTexture;
-    public Binder binder;
+    public final Binder binder;
     private final WebGPUUniformBuffer uniformBuffer;
     private final WebGPUUniformBuffer instanceBuffer;
-    private final WebGPUPipelineLayout pipelineLayout;
-    private final PipelineCache pipelines;
-    private final PipelineSpecification pipelineSpec;
+    private final WebGPUPipeline pipeline;            // a shader has one pipeline
     public int numRenderables;
     private WebGPUTexture lastTexture;
     private WebGPURenderPass renderPass;
-    private VertexAttributes vertexAttributes;
+    private final VertexAttributes vertexAttributes;
 
 
     public static class Config {
@@ -83,18 +83,19 @@ public class WebGPUDefaultShader implements Shader {
 
 
         // get pipeline layout which aggregates all the bind group layouts
-        pipelineLayout = binder.getPipelineLayout("ModelBatch pipeline layout");
+        WebGPUPipelineLayout pipelineLayout = binder.getPipelineLayout("ModelBatch pipeline layout");
 
-        pipelines = new PipelineCache();    // use static cache?
+        //pipelines = new PipelineCache();    // use static cache?
 
         // vertexAttributes will be set from the renderable
         vertexAttributes = renderable.meshPart.mesh.getVertexAttributes();
-        pipelineSpec = new PipelineSpecification(vertexAttributes, getDefaultShaderSource());
+        PipelineSpecification pipelineSpec = new PipelineSpecification(vertexAttributes, getDefaultShaderSource());
         pipelineSpec.name = "ModelBatch pipeline";
 
         // default blending values
         pipelineSpec.enableBlending();
         pipelineSpec.setBlendFactor(WGPUBlendFactor.SrcAlpha, WGPUBlendFactor.OneMinusSrcAlpha);
+        pipeline = new WebGPUPipeline(pipelineLayout, pipelineSpec);
 
     }
 
@@ -126,6 +127,8 @@ public class WebGPUDefaultShader implements Shader {
 
         numRenderables = 0;
         lastTexture = null;     // force a texture bind on the first texture we encounter
+
+        renderPass.setPipeline(pipeline.getHandle());
     }
 
 
@@ -139,8 +142,7 @@ public class WebGPUDefaultShader implements Shader {
 
     @Override
     public boolean canRender(Renderable instance) {
-        Gdx.app.log("canRender","can render? "+ (instance.meshPart.mesh.getVertexAttributes() == vertexAttributes));
-        return instance.meshPart.mesh.getVertexAttributes() == vertexAttributes;
+        return instance.meshPart.mesh.getVertexAttributes().getMask() == vertexAttributes.getMask();
     }
 
 
@@ -173,9 +175,7 @@ public class WebGPUDefaultShader implements Shader {
             lastTexture = texture;
         }
 
-        pipelineSpec.vertexAttributes = renderable.meshPart.mesh.getVertexAttributes();
-        WebGPUPipeline pipeline = pipelines.findPipeline(pipelineLayout.getHandle(), pipelineSpec);
-        renderPass.setPipeline(pipeline.getHandle());
+
 
         final MeshPart meshPart = renderable.meshPart;
         if (!(meshPart.mesh instanceof WebGPUMesh))
@@ -224,68 +224,14 @@ public class WebGPUDefaultShader implements Shader {
 
     // todo vertex attributes are hardcoded, should use conditional compilation.
 
-    private String getDefaultShaderSource() {
-        return "// basic model batch shader\n" +
-                "\n" +
-                "struct FrameUniforms {\n" +
-                "    projectionViewTransform: mat4x4f,\n" +
-                "};\n" +
-                "struct ModelUniforms {\n" +
-                "    modelMatrix: mat4x4f,\n" +
-                "};\n" +
-                "\n" +
-                "@group(0) @binding(0) var<uniform> uFrame: FrameUniforms;\n" +
-                "@group(1) @binding(1) var diffuseTexture:        texture_2d<f32>;\n" +
-                "@group(1) @binding(2) var diffuseSampler:       sampler;\n" +
-                "@group(2) @binding(0) var<storage, read> instances: array<ModelUniforms>;\n"+
-                "\n" +
-                "\n" +
-                "struct VertexInput {\n" +
-                "    @location(0) position: vec3f,\n" +
-                "#ifdef TEXTURE_COORDINATE\n" +
-                "    @location(1) uv: vec2f,\n" +
-                "#endif\n" +
-                "#ifdef COLOR\n" +
-                "    @location(5) color: vec4f\n" +
-                "#endif\n" +
 
-                "};\n" +
-                "\n" +
-                "struct VertexOutput {\n" +
-                "    @builtin(position) position: vec4f,\n" +
-                "    @location(1) uv: vec2f,\n" +
-                "    @location(2) color: vec4f\n" +
-                "};\n" +
-                "\n" +
-                "@vertex\n" +
-                "fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOutput {\n" +
-                "   var out: VertexOutput;\n" +
-                "\n" +
-                "   out.position =  uFrame.projectionViewTransform * instances[instance].modelMatrix * vec4f(in.position, 1.0);\n" +
-                "#ifdef TEXTURE_COORDINATE\n" +
-                "   out.uv = in.uv;\n" +
-                "#else\n" +
-                "   out.uv = vec2f(0);\n" +
-                "#endif\n" +
-                "#ifdef COLOR\n" +
-                "   out.color = in.color;\n" +
-                "#else\n" +
-                "   out.color = vec4f(1);\n" +
-                "#endif\n" +
-                "\n" +
-                "   return out;\n" +
-                "}\n" +
-                "\n" +
-                "\n" +
-                "@fragment\n" +
-                "fn fs_main(in : VertexOutput) -> @location(0) vec4f {\n" +
-                "#ifdef TEXTURE_COORDINATE\n" +
-                "    let color = in.color * textureSample(diffuseTexture, diffuseSampler, in.uv);\n" +
-                "#else\n" +
-                "   let color = in.color;\n" +
-                "#endif\n" +
-                "    return color;\n" +
-                "}";
+
+    private String getDefaultShaderSource() {
+        if(defaultShader == null){
+            defaultShader = Gdx.files.classpath("shaders/modelbatch.wgsl").readString();
+        }
+        return defaultShader;
+
     }
 
     @Override
