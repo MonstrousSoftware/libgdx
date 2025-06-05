@@ -19,11 +19,21 @@ package com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d;
 
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.WebGPUMesh;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.model.WebGPUMeshPart;
+import com.badlogic.gdx.backends.webgpu.wrappers.WebGPUTexture;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.VertexAttributes;
+import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.model.*;
 import com.badlogic.gdx.graphics.g3d.model.data.*;
+import com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor;
+import com.badlogic.gdx.graphics.g3d.utils.TextureProvider;
 import com.badlogic.gdx.utils.*;
 
 import java.nio.Buffer;
@@ -31,6 +41,11 @@ import java.nio.ShortBuffer;
 
 
 public class WebGPUModel extends Model {
+
+
+	public WebGPUModel(ModelData data, TextureProvider textureProvider) {
+		super(data, textureProvider);
+	}
 
 	@Override
 	protected void convertMesh (ModelMesh modelMesh) {
@@ -66,5 +81,74 @@ public class WebGPUModel extends Model {
 		((Buffer)indicesBuffer).position(0);
 		for (MeshPart part : meshParts)
 			part.update();
+	}
+
+	// unchanged?
+	@Override
+	protected Material convertMaterial (ModelMaterial mtl, TextureProvider textureProvider) {
+		Material result = new Material();
+		result.id = mtl.id;
+		if (mtl.ambient != null) result.set(new ColorAttribute(ColorAttribute.Ambient, mtl.ambient));
+		if (mtl.diffuse != null) result.set(new ColorAttribute(ColorAttribute.Diffuse, mtl.diffuse));
+		if (mtl.specular != null) result.set(new ColorAttribute(ColorAttribute.Specular, mtl.specular));
+		if (mtl.emissive != null) result.set(new ColorAttribute(ColorAttribute.Emissive, mtl.emissive));
+		if (mtl.reflection != null) result.set(new ColorAttribute(ColorAttribute.Reflection, mtl.reflection));
+		if (mtl.shininess > 0f) result.set(new FloatAttribute(FloatAttribute.Shininess, mtl.shininess));
+		if (mtl.opacity != 1.f) result.set(new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA, mtl.opacity));
+
+		// Note: the Textures below need to be WebGPUTextures,
+		// but we keep the more generic type to play nicely with existing code.
+		ObjectMap<String, Texture> textures = new ObjectMap<String, Texture>();
+
+		// FIXME uvScaling/uvTranslation totally ignored
+		if (mtl.textures != null) {
+			for (ModelTexture tex : mtl.textures) {
+				Texture texture;
+				if (textures.containsKey(tex.fileName)) {
+					texture = textures.get(tex.fileName);
+				} else {
+					texture = textureProvider.load(tex.fileName);
+					textures.put(tex.fileName, texture);
+					disposables.add(texture);
+				}
+
+				TextureDescriptor<Texture> descriptor = new TextureDescriptor<>(texture);
+				descriptor.minFilter = texture.getMinFilter();
+				descriptor.magFilter = texture.getMagFilter();
+				descriptor.uWrap = texture.getUWrap();
+				descriptor.vWrap = texture.getVWrap();
+
+				float offsetU = tex.uvTranslation == null ? 0f : tex.uvTranslation.x;
+				float offsetV = tex.uvTranslation == null ? 0f : tex.uvTranslation.y;
+				float scaleU = tex.uvScaling == null ? 1f : tex.uvScaling.x;
+				float scaleV = tex.uvScaling == null ? 1f : tex.uvScaling.y;
+
+				switch (tex.usage) {
+					case ModelTexture.USAGE_DIFFUSE:
+						result.set(new TextureAttribute(TextureAttribute.Diffuse, descriptor, offsetU, offsetV, scaleU, scaleV));
+						break;
+					case ModelTexture.USAGE_SPECULAR:
+						result.set(new TextureAttribute(TextureAttribute.Specular, descriptor, offsetU, offsetV, scaleU, scaleV));
+						break;
+					case ModelTexture.USAGE_BUMP:
+						result.set(new TextureAttribute(TextureAttribute.Bump, descriptor, offsetU, offsetV, scaleU, scaleV));
+						break;
+					case ModelTexture.USAGE_NORMAL:
+						result.set(new TextureAttribute(TextureAttribute.Normal, descriptor, offsetU, offsetV, scaleU, scaleV));
+						break;
+					case ModelTexture.USAGE_AMBIENT:
+						result.set(new TextureAttribute(TextureAttribute.Ambient, descriptor, offsetU, offsetV, scaleU, scaleV));
+						break;
+					case ModelTexture.USAGE_EMISSIVE:
+						result.set(new TextureAttribute(TextureAttribute.Emissive, descriptor, offsetU, offsetV, scaleU, scaleV));
+						break;
+					case ModelTexture.USAGE_REFLECTION:
+						result.set(new TextureAttribute(TextureAttribute.Reflection, descriptor, offsetU, offsetV, scaleU, scaleV));
+						break;
+				}
+			}
+		}
+
+		return result;
 	}
 }

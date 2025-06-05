@@ -86,6 +86,9 @@ public class WebGPUMesh extends Mesh {
         // use an offset to set the vertex buffer for this batch
     }
 
+    /** New method for WebGPU rendering (uses a renderPass).
+     * note: primitiveType is ignored. Should be set in the pipeline.
+     */
     public void render (WebGPURenderPass renderPass, int primitiveType, int offset, int size, int numInstances, int firstInstance){
         //....
         //Gdx.app.log("WebGPUMesh", "render(renderPass)");

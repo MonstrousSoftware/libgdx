@@ -135,6 +135,9 @@ public class WebGPUVertexLayout  {
         }
     }
 
+
+    /** use standard locations for vertex attributes. Shader code needs to follow this too.
+     */
     public static int getLocation(int usage){
         int loc = -1;
         switch(usage){

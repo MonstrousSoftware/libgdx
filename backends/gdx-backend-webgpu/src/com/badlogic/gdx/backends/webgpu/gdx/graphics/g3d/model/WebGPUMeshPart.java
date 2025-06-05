@@ -50,7 +50,7 @@ public class WebGPUMeshPart extends MeshPart {
 		throw new IllegalArgumentException("WebGPUMeshPart: call render with a render pass");
 	}
 
-	// this is new w.r.t. MeshPart
+	/** this is a new method w.r.t. MeshPart */
 	public void render (WebGPURenderPass renderPass) {
 		if (!(mesh instanceof WebGPUMesh))
 			throw new RuntimeException("WebGPUMeshPart supports only WebGPUMesh");

@@ -97,7 +97,7 @@ public class WebGPUIndexBuffer extends WebGPUBuffer {
     }
 
     public void setIndices(ByteBuffer byteData) {
-        int sizeInBytes = byteData.limit();
+        int sizeInBytes = byteData.capacity();
         indexCount = sizeInBytes/2;
         sizeInBytes = (sizeInBytes + 3) & ~3; // round up to multiple of 4 for writeBuffer
         if(sizeInBytes > getSize()) throw new IllegalArgumentException("IndexBuffer.setIndices: data too large.");
