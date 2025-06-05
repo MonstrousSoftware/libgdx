@@ -334,3 +334,17 @@ Not all options are supported (e.g. debugUnderMouse...)
 => Had to set near/far values in Viewport and Stage
 
 
+
+
+
+05/06/2025:
+- Now able to load .OBJ files and render via ModelInstance.
+Note that the default OBJ asset (ship.obj) is not a good example as it is malformed, e.g. also in Blender or Windows 3d viewer.
+I've used my ducky model for testing (added temporarily to assets folder, to add to a webgpu test assets folder).
+Note that OBJ files need to be loaded with flipV set to true ot the texture will appear upside down.
+Also note with Blender exporting that file names in the .mtl file are hard coded absolute paths and need to be made relative.
+From the libgdx code comments it appears .OBJ support is limited and incomplete, with preference given to the own G3D formats.
+
+
+
+

@@ -81,13 +81,11 @@ public class WebGPUTests {
 		ShapeRendererTest.class,
 		NinePatchTest.class,
 		ModelBatchTest.class,
-		WrapAndFilterTest.class
-		//TextureAtlasTest.class
+		WrapAndFilterTest.class,
+		LoadObjTest.class
 
 		// @on
 
-	// SoundTouchTest.class, Mpg123Test.class, WavTest.class, FreeTypeTest.class,
-	// VorbisTest.class
 	));
 
 	static final ObjectMap<String, String> obfuscatedToOriginal = new ObjectMap();
