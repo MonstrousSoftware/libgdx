@@ -23,23 +23,21 @@ import com.badlogic.gdx.backends.webgpu.gdx.graphics.g2d.WebGPUBitmapFont;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.g2d.WebGPUSpriteBatch;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.WebGPUModelBatch;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.loaders.WebGPUG3dModelLoader;
-import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.loaders.WebGPUObjLoader;
 import com.badlogic.gdx.backends.webgpu.gdx.graphics.utils.WebGPUScreenUtils;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
-import com.badlogic.gdx.graphics.g3d.loader.G3dModelLoader;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.tests.utils.GdxTest;
 import com.badlogic.gdx.tests.utils.PerspectiveCamController;
 import com.badlogic.gdx.utils.JsonReader;
 
-/** Test OBJ loading and ModelInstance rendering */
+/** Test G3DJ loading and ModelInstance rendering */
 
 
-public class LoadG3DTest extends GdxTest {
+public class LoadG3DJTest extends GdxTest {
 
 	WebGPUModelBatch modelBatch;
 	PerspectiveCamera cam;
@@ -57,7 +55,7 @@ public class LoadG3DTest extends GdxTest {
 		config.setWindowedMode(640, 480);
 		config.setTitle("WebGPUTest");
 
-		new WebGPUApplication(new LoadG3DTest(), config);
+		new WebGPUApplication(new LoadG3DJTest(), config);
 	}
 
 	// application
@@ -67,23 +65,18 @@ public class LoadG3DTest extends GdxTest {
 		cam.position.set(0, 2, 4);
 		cam.lookAt(0,0,0);
 		cam.near = 0.1f;
-		cam.far = 1000f;
+		cam.far = 1000f;		// extend far distance to avoid clipping the skybox
 
 		String modelFileName = "data/g3d/invaders.g3dj";
 		FileHandle file = Gdx.files.internal(modelFileName);
 		model = new WebGPUG3dModelLoader(new JsonReader()).loadModel(file);
 		instance = new ModelInstance(model);
 
-//		// these assets need to be put in the class path...
-//		model = loader.loadModel(Gdx.files.internal("data/g3d/monkey.g3db"), true);
-//		instance = new ModelInstance(model);
-
 
 		controller = new PerspectiveCamController(cam);
 		Gdx.input.setInputProcessor(controller);
 		batch = new WebGPUSpriteBatch();
 		font = new WebGPUBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
-
 
 	}
 

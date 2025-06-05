@@ -115,7 +115,7 @@ public abstract class WebGPUModelLoader<P extends WebGPUModelLoader.ModelParamet
 			}
 		}
 		if (data == null) return null;
-		final Model result = new Model(data, new TextureProvider.AssetTextureProvider(manager));
+		final Model result = new WebGPUModel(data, new WebGPUTextureProvider.AssetTextureProvider(manager));
 		// need to remove the textures from the managed disposables, or else ref counting
 		// doesn't work!
 		Iterator<Disposable> disposables = result.getManagedDisposables().iterator();

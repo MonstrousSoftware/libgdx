@@ -22,6 +22,7 @@ import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.AssetLoader;
 import com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader;
 import com.badlogic.gdx.assets.loaders.FileHandleResolver;
+import com.badlogic.gdx.assets.loaders.TextureLoader;
 import com.badlogic.gdx.backends.webgpu.wrappers.WebGPUTexture;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Pixmap.Format;
@@ -33,11 +34,12 @@ import com.badlogic.gdx.utils.Array;
 
 // untested....
 
-public class WebGPUTextureLoader extends AsynchronousAssetLoader<WebGPUTexture, WebGPUTextureLoader.TextureParameter> {
+public class WebGPUTextureLoader extends AsynchronousAssetLoader<Texture, TextureLoader.TextureParameter> {
+	// subclass copied from TextureLoader because members are package private
 	static public class TextureLoaderInfo {
 		String filename;
 		TextureData data;
-		WebGPUTexture texture;
+		Texture texture;
 	};
 
 	TextureLoaderInfo info = new TextureLoaderInfo();
@@ -47,10 +49,10 @@ public class WebGPUTextureLoader extends AsynchronousAssetLoader<WebGPUTexture, 
 	}
 
 	@Override
-	public void loadAsync (AssetManager manager, String fileName, FileHandle file, TextureParameter parameter) {
+	public void loadAsync (AssetManager manager, String fileName, FileHandle file, TextureLoader.TextureParameter parameter) {
 		info.filename = fileName;
 		if (parameter == null || parameter.textureData == null) {
-			Format format = null;
+			Format format = Format.RGBA8888; // force 4 byte format
 			boolean genMipMaps = false;
 			info.texture = null;
 
@@ -69,9 +71,9 @@ public class WebGPUTextureLoader extends AsynchronousAssetLoader<WebGPUTexture, 
 	}
 
 	@Override
-	public WebGPUTexture loadSync (AssetManager manager, String fileName, FileHandle file, TextureParameter parameter) {
+	public Texture loadSync (AssetManager manager, String fileName, FileHandle file, TextureLoader.TextureParameter parameter) {
 		if (info == null) return null;
-		WebGPUTexture texture = info.texture;
+		Texture texture = info.texture;
 		if (texture != null) {
 			texture.load(info.data);
 		} else {
@@ -85,22 +87,22 @@ public class WebGPUTextureLoader extends AsynchronousAssetLoader<WebGPUTexture, 
 	}
 
 	@Override
-	public Array<AssetDescriptor> getDependencies (String fileName, FileHandle file, TextureParameter parameter) {
+	public Array<AssetDescriptor> getDependencies (String fileName, FileHandle file, TextureLoader.TextureParameter parameter) {
 		return null;
 	}
 
-	static public class TextureParameter extends AssetLoaderParameters<WebGPUTexture> {
-		/** the format of the final Texture. Uses the source images format if null **/
-		public Format format = null;
-		/** whether to generate mipmaps **/
-		public boolean genMipMaps = false;
-		/** The texture to put the {@link TextureData} in, optional. **/
-		public WebGPUTexture texture = null;
-		/** TextureData for textures created on the fly, optional. When set, all format and genMipMaps are ignored */
-		public TextureData textureData = null;
-		public TextureFilter minFilter = TextureFilter.Nearest;
-		public TextureFilter magFilter = TextureFilter.Nearest;
-		public TextureWrap wrapU = TextureWrap.ClampToEdge;
-		public TextureWrap wrapV = TextureWrap.ClampToEdge;
-	}
+//	static public class TextureParameter extends AssetLoaderParameters<WebGPUTexture> {
+//		/** the format of the final Texture. Uses the source images format if null **/
+//		public Format format = null;
+//		/** whether to generate mipmaps **/
+//		public boolean genMipMaps = false;
+//		/** The texture to put the {@link TextureData} in, optional. **/
+//		public WebGPUTexture texture = null;
+//		/** TextureData for textures created on the fly, optional. When set, all format and genMipMaps are ignored */
+//		public TextureData textureData = null;
+//		public TextureFilter minFilter = TextureFilter.Nearest;
+//		public TextureFilter magFilter = TextureFilter.Nearest;
+//		public TextureWrap wrapU = TextureWrap.ClampToEdge;
+//		public TextureWrap wrapV = TextureWrap.ClampToEdge;
+//	}
 }

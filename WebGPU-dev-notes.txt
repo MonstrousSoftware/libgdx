@@ -345,6 +345,35 @@ Note that OBJ files need to be loaded with flipV set to true ot the texture will
 Also note with Blender exporting that file names in the .mtl file are hard coded absolute paths and need to be made relative.
 From the libgdx code comments it appears .OBJ support is limited and incomplete, with preference given to the own G3D formats.
 
+- Added loader for G3DJ
+
+There is a loader for G3DJ format, but it seems for the G3DB format you can only load via the AssetManager?
+No, the same loader supports both the g3dj and g3db format, you just need to provide a different reader:
+		model = new WebGPUG3dModelLoader(new JsonReader()).loadModel(file);   // g3dj
+		model = new WebGPUG3dModelLoader(new UBJsonReader()).loadModel(file);   // g3db
+
+knight.g3db (contains animations) causes crash.
+
+To also test loading via AssetManager.
+You can disable default loaders of Asset Manager via its constructor and provide alternative loaders.
+
+		assets = new AssetManager( new InternalFileHandleResolver(), false);
+		assets.setLoader(Model.class, ".g3dj", new G3dModelLoader(new JsonReader(), assets.getFileHandleResolver()));
+		assets.setLoader(Model.class, ".g3db", new G3dModelLoader(new UBJsonReader(), assets.getFileHandleResolver()));
+
+
+
+To fix: WebGPUTextures are pretty much assumed to be RBGA8888 regardless of image file format. We should support, e.g RGB888.
+For now texture format is forced to RGBA.
+
+To fix: select box drop down appears at 0,0 instead of just below the select box.
+
+To fix: loading OBJ files via AssetManager gives no chance to flip the V coordinate.
+Now will default to flip.
+
+There is a lot of code duplication of ModelLoader and its derived classes ObjLoader and G3DLoader
+
+
 
 
 

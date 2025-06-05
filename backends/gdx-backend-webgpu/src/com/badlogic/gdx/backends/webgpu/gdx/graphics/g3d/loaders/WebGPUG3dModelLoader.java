@@ -29,6 +29,12 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.*;
 
+/** Loader for gd3dj and g3db model formats.
+ *
+ */
+// can we reduce the code duplication?
+// Only difference is this derives from WebGPUModelLoader, not ModelLoader
+
 public class WebGPUG3dModelLoader extends WebGPUModelLoader<WebGPUModelLoader.ModelParameters> {
 	public static final short VERSION_HI = 0;
 	public static final short VERSION_LO = 1;

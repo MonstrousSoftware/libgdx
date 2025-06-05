@@ -151,4 +151,9 @@ public class WebGPUModel extends Model {
 
 		return result;
 	}
+
+	@Override
+	public void dispose(){
+		super.dispose();
+	}
 }

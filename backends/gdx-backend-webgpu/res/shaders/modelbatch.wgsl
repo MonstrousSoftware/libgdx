@@ -70,6 +70,6 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
 #else
    let color = in.color;
 #endif
-
+    //return in.normal;
     return color;
 };

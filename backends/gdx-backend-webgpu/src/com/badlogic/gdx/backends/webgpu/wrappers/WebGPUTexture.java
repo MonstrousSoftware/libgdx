@@ -119,6 +119,8 @@ public class WebGPUTexture extends Texture {
     public void load (TextureData data, String label) {
         this.data = data;
         this.label = label;
+        this.format = WGPUTextureFormat.RGBA8Unorm; // force format
+
 
         if (!data.isPrepared()) data.prepare();
 
@@ -134,9 +136,16 @@ public class WebGPUTexture extends Texture {
         create( label, mipLevelCount, textureUsage, format, 1, numSamples, null);
         Pixmap pixmap = data.consumePixmap();
 
+        Pixmap.Format dataFormat = data.getFormat();
+        Pixmap.Format pixmapFormat = pixmap.getFormat();
 
-        if (data.getFormat() != pixmap.getFormat()) {
-            Pixmap tmp = new Pixmap(pixmap.getWidth(), pixmap.getHeight(), data.getFormat());
+        // data format is desired format, pixmap format is format from file
+        // force 4 byte format!
+
+        dataFormat = Pixmap.Format.RGBA8888;
+        //if (data.getFormat() != pixmap.getFormat()) {
+        if ( dataFormat != pixmap.getFormat()) {
+            Pixmap tmp = new Pixmap(pixmap.getWidth(), pixmap.getHeight(), dataFormat);
             tmp.setBlending(Pixmap.Blending.None);
             tmp.drawPixmap(pixmap, 0, 0, 0, 0, pixmap.getWidth(), pixmap.getHeight());
             if (data.disposePixmap()) {
