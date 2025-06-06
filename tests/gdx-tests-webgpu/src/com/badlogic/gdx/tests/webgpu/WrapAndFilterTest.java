@@ -126,7 +126,7 @@ public class WrapAndFilterTest extends GdxTest {
 			controls.add(filterBox).row();
 			controls.add(new Label("Mag Filter: ", skin));
 			controls.add(filterMagBox).row();
-			table.add(controls).align(Align.topRight).expand();
+			table.add(controls).align(Align.topLeft).expand();
 			table.debug();
 
 			stage.addActor(table);
@@ -171,7 +171,7 @@ public class WrapAndFilterTest extends GdxTest {
 			batch.draw(texture, 400, 0, 512, 512);
 			batch.draw(texture, 500, 0, 1024, 1024);
 
-			font.draw(batch, "Use the controls to test texture wrap and filter modes", 20, 400);
+			font.draw(batch, "Use the controls to test texture wrap and filter modes", 20, 330);
 
 			batch.end();
 

@@ -83,7 +83,8 @@ public class WebGPUTests {
 		ModelBatchTest.class,
 		WrapAndFilterTest.class,
 		LoadObjTest.class,
-		LoadG3DJTest.class
+		LoadG3DJTest.class,
+		LoadModelTest.class
 
 		// @on
 

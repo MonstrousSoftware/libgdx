@@ -7,8 +7,7 @@ import com.badlogic.gdx.backends.webgpu.gdx.graphics.g2d.WebGPUSpriteBatch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.tests.utils.GdxTest;
 
-// demonstrates the use of WebGPUSpriteBatch
-// shows texture from file, texture from pixmap, texture region, sprite
+// demonstrates use of WebPUBitmapFont
 //
 public class FontTest extends GdxTest {
 		private WebGPUSpriteBatch batch;

@@ -51,7 +51,7 @@ public class WebGPUTestStarter {
 		//options = new CommandLineOptions(argv);
 
 		WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
-		config.setWindowedMode(640, 480);
+		config.setWindowedMode(320, 480);
 		//config.backend = WGPUBackendType.Vulkan;
 
 //		if (options.startupTestName != null) {
