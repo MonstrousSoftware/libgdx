@@ -16,11 +16,8 @@
 
 package com.badlogic.gdx.tests.webgpu;
 
-import com.badlogic.gdx.backends.webgpu.webgpu.WGPUBackendType;
-import com.badlogic.gdx.backends.webgpu.webgpu.WGPUTextureFormat;
-import com.badlogic.gdx.backends.webgpu.webgpu.WebGPU_JNI;
-import com.badlogic.gdx.backends.webgpu.webgpu.*;
-import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
+import com.badlogic.gdx.webgpu.webgpu.*;
+import com.badlogic.gdx.webgpu.utils.JavaWebGPU;
 import jnr.ffi.Pointer;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFWErrorCallback;

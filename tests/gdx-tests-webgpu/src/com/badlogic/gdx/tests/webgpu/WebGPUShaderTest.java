@@ -5,14 +5,11 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUApplication;
 import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUApplicationConfiguration;
-import com.badlogic.gdx.backends.webgpu.gdx.graphics.WebGPUShaderProgram;
-import com.badlogic.gdx.backends.webgpu.gdx.graphics.g2d.WebGPUBitmapFont;
-import com.badlogic.gdx.backends.webgpu.gdx.graphics.g2d.WebGPUSpriteBatch;
-import com.badlogic.gdx.backends.webgpu.wrappers.WebGPUTexture;
+import com.badlogic.gdx.webgpu.graphics.WebGPUShaderProgram;
+import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUBitmapFont;
+import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
+import com.badlogic.gdx.webgpu.wrappers.WebGPUTexture;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 // demonstrates the use of ShaderProgram in combination with SpriteBatch
 //

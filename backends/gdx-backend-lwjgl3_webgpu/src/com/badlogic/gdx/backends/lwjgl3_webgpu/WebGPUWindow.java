@@ -17,11 +17,12 @@
 package com.badlogic.gdx.backends.lwjgl3_webgpu;
 
 import com.badlogic.gdx.*;
-import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
-import com.badlogic.gdx.backends.webgpu.webgpu.*;
-import com.badlogic.gdx.backends.webgpu.wrappers.*;
+import com.badlogic.gdx.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.utils.*;
+import com.badlogic.gdx.webgpu.webgpu.*;
+import com.badlogic.gdx.webgpu.wrappers.WebGPUCommandBuffer;
+import com.badlogic.gdx.webgpu.wrappers.WebGPUCommandEncoder;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.*;
 import jnr.ffi.Pointer;

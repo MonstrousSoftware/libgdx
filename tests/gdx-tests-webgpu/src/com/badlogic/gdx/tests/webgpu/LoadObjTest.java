@@ -17,31 +17,18 @@
 package com.badlogic.gdx.tests.webgpu;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.assets.loaders.ModelLoader;
 import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUApplication;
 import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUApplicationConfiguration;
-import com.badlogic.gdx.backends.webgpu.gdx.graphics.WebGPUMesh;
-import com.badlogic.gdx.backends.webgpu.gdx.graphics.g2d.WebGPUBitmapFont;
-import com.badlogic.gdx.backends.webgpu.gdx.graphics.g2d.WebGPUSpriteBatch;
-import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.WebGPUModelBatch;
-import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.loaders.WebGPUObjLoader;
-import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.model.WebGPUMeshPart;
-import com.badlogic.gdx.backends.webgpu.gdx.graphics.utils.WebGPUMeshBuilder;
-import com.badlogic.gdx.backends.webgpu.gdx.graphics.utils.WebGPUScreenUtils;
-import com.badlogic.gdx.backends.webgpu.wrappers.WebGPUTexture;
+import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUBitmapFont;
+import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
+import com.badlogic.gdx.webgpu.graphics.g3d.WebGPUModelBatch;
+import com.badlogic.gdx.webgpu.graphics.g3d.loaders.WebGPUObjLoader;
+import com.badlogic.gdx.webgpu.graphics.utils.WebGPUScreenUtils;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.*;
-import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
-import com.badlogic.gdx.graphics.g3d.loader.ObjLoader;
-import com.badlogic.gdx.graphics.g3d.model.MeshPart;
-import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BoxShapeBuilder;
-import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.tests.utils.GdxTest;
 import com.badlogic.gdx.tests.utils.PerspectiveCamController;
-import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.Disposable;
-import com.badlogic.gdx.utils.Pool;
 
 /** Test OBJ loading and ModelInstance rendering */
 

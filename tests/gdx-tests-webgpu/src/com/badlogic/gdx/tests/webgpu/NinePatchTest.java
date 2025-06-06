@@ -17,21 +17,18 @@
 package com.badlogic.gdx.tests.webgpu;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.backends.webgpu.gdx.graphics.g2d.WebGPUSpriteBatch;
-import com.badlogic.gdx.backends.webgpu.gdx.graphics.utils.WebGPUScreenUtils;
-import com.badlogic.gdx.backends.webgpu.wrappers.WebGPUTexture;
+import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
+import com.badlogic.gdx.webgpu.graphics.utils.WebGPUScreenUtils;
+import com.badlogic.gdx.webgpu.wrappers.WebGPUTexture;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.NinePatch;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.tests.utils.GdxTest;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.ScreenUtils;
 
 public class NinePatchTest extends GdxTest {
 	/** A string name for the type of test, and the NinePatch being tested. */

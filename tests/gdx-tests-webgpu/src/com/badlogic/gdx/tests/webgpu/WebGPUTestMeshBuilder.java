@@ -5,15 +5,15 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUApplication;
 import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUApplicationConfiguration;
-import com.badlogic.gdx.backends.webgpu.gdx.graphics.WebGPUMesh;
-import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.model.WebGPUMeshPart;
-import com.badlogic.gdx.backends.webgpu.gdx.graphics.utils.WebGPUMeshBuilder;
-import com.badlogic.gdx.backends.webgpu.wrappers.*;
+import com.badlogic.gdx.webgpu.graphics.WebGPUMesh;
+import com.badlogic.gdx.webgpu.graphics.g3d.model.WebGPUMeshPart;
+import com.badlogic.gdx.webgpu.graphics.utils.WebGPUMeshBuilder;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.webgpu.wrappers.*;
 
 // Basic test of Mesh and MeshPart
 // Renders a rectangle (or part of it).

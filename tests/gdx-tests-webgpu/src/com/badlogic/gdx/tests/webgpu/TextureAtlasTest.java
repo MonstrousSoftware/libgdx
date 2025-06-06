@@ -19,15 +19,12 @@ package com.badlogic.gdx.tests.webgpu;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.InputAdapter;
-import com.badlogic.gdx.backends.webgpu.gdx.graphics.g2d.WebGPUBitmapFont;
-import com.badlogic.gdx.backends.webgpu.gdx.graphics.g2d.WebGPUSpriteBatch;
-import com.badlogic.gdx.backends.webgpu.gdx.graphics.utils.WebGPUScreenUtils;
-import com.badlogic.gdx.backends.webgpu.gdx.graphics.utils.WebGPUShapeRenderer;
+import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUBitmapFont;
+import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
+import com.badlogic.gdx.webgpu.graphics.utils.WebGPUScreenUtils;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.tests.utils.GdxTest;
 
 public class TextureAtlasTest extends GdxTest {

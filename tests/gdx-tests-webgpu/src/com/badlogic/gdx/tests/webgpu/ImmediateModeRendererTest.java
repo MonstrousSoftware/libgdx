@@ -17,8 +17,8 @@
 package com.badlogic.gdx.tests.webgpu;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.backends.webgpu.gdx.graphics.utils.WebGPUImmediateModeRenderer;
-import com.badlogic.gdx.backends.webgpu.wrappers.WebGPUTexture;
+import com.badlogic.gdx.webgpu.graphics.utils.WebGPUImmediateModeRenderer;
+import com.badlogic.gdx.webgpu.wrappers.WebGPUTexture;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.tests.utils.GdxTest;

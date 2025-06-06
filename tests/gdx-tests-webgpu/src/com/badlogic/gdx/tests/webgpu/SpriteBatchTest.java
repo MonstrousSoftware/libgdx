@@ -4,8 +4,8 @@ import com.badlogic.gdx.Gdx;
 
 import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUApplication;
 import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUApplicationConfiguration;
-import com.badlogic.gdx.backends.webgpu.gdx.graphics.g2d.WebGPUSpriteBatch;
-import com.badlogic.gdx.backends.webgpu.wrappers.WebGPUTexture;
+import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
+import com.badlogic.gdx.webgpu.wrappers.WebGPUTexture;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.tests.utils.GdxTest;

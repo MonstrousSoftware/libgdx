@@ -17,18 +17,15 @@
 package com.badlogic.gdx.tests.webgpu;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.backends.webgpu.gdx.scene2d.WebGPUSkin;
-import com.badlogic.gdx.backends.webgpu.gdx.scene2d.WebGPUStage;
-import com.badlogic.gdx.backends.webgpu.wrappers.WebGPUTexture;
+import com.badlogic.gdx.webgpu.scene2d.WebGPUSkin;
+import com.badlogic.gdx.webgpu.scene2d.WebGPUStage;
+import com.badlogic.gdx.webgpu.wrappers.WebGPUTexture;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
-import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.actions.FloatAction;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton.ImageTextButtonStyle;

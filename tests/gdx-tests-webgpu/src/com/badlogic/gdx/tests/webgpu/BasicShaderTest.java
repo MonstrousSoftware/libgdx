@@ -2,24 +2,18 @@ package com.badlogic.gdx.tests.webgpu;
 
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.assets.loaders.ModelLoader;
 import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUApplication;
 import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUApplicationConfiguration;
-import com.badlogic.gdx.backends.webgpu.gdx.graphics.WebGPUMesh;
-import com.badlogic.gdx.backends.webgpu.gdx.graphics.g3d.model.WebGPUMeshPart;
-import com.badlogic.gdx.backends.webgpu.gdx.graphics.utils.WebGPUMeshBuilder;
+import com.badlogic.gdx.webgpu.graphics.WebGPUMesh;
+import com.badlogic.gdx.webgpu.graphics.g3d.model.WebGPUMeshPart;
+import com.badlogic.gdx.webgpu.graphics.utils.WebGPUMeshBuilder;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
-import com.badlogic.gdx.graphics.g3d.loader.G3dModelLoader;
-import com.badlogic.gdx.graphics.g3d.model.NodePart;
 import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
-import com.badlogic.gdx.graphics.g3d.utils.DefaultTextureBinder;
-import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
-import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.ScreenUtils;
 
 /* Shader test based on Xoppa tutorial

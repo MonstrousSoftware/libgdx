@@ -4,12 +4,14 @@ package com.badlogic.gdx.tests.webgpu;
 import com.badlogic.gdx.*;
 import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUApplication;
 import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUApplicationConfiguration;
-import com.badlogic.gdx.backends.webgpu.gdx.WebGPUGraphicsBase;
-import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
-import com.badlogic.gdx.backends.webgpu.webgpu.*;
+import com.badlogic.gdx.webgpu.WebGPUGraphicsBase;
+import com.badlogic.gdx.webgpu.utils.JavaWebGPU;
 
-import com.badlogic.gdx.backends.webgpu.wrappers.*;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.webgpu.webgpu.*;
+import com.badlogic.gdx.webgpu.wrappers.RenderPassBuilder;
+import com.badlogic.gdx.webgpu.wrappers.RenderPassType;
+import com.badlogic.gdx.webgpu.wrappers.WebGPURenderPass;
 import jnr.ffi.Pointer;
 
 public class WebGPUTest {

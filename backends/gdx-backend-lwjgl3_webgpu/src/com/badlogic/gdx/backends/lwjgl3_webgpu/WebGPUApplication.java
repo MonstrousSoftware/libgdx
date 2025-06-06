@@ -20,18 +20,14 @@ import com.badlogic.gdx.*;
 import com.badlogic.gdx.backends.lwjgl3.audio.Lwjgl3Audio;
 import com.badlogic.gdx.backends.lwjgl3.audio.OpenALLwjgl3Audio;
 import com.badlogic.gdx.backends.lwjgl3.audio.mock.MockAudio;
-import com.badlogic.gdx.backends.webgpu.utils.JavaWebGPU;
-import com.badlogic.gdx.backends.webgpu.webgpu.WGPUSupportedLimits;
-import com.badlogic.gdx.backends.webgpu.webgpu.WGPUTextureFormat;
-import com.badlogic.gdx.backends.webgpu.webgpu.WebGPU_JNI;
-import com.badlogic.gdx.backends.webgpu.wrappers.*;
+import com.badlogic.gdx.webgpu.utils.JavaWebGPU;
+import com.badlogic.gdx.webgpu.webgpu.WebGPU_JNI;
 import com.badlogic.gdx.graphics.glutils.GLVersion;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.utils.*;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.system.Callback;
-import jnr.ffi.Pointer;
 
 import java.io.File;
 
