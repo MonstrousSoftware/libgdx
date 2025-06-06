@@ -23,7 +23,6 @@ import com.badlogic.gdx.Graphics.DisplayMode;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.LifecycleListener;
-import com.badlogic.gdx.backends.lwjgl3_webgpu.*;
 import com.badlogic.gdx.graphics.FPSLogger;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -33,6 +32,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.tests.utils.GdxTest;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.*;
 
 public class WebGPUDebugStarter {
 	public static void main (String[] argv) throws NoSuchFieldException, SecurityException, ClassNotFoundException {

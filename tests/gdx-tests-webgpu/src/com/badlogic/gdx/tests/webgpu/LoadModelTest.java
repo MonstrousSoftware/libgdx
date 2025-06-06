@@ -19,9 +19,11 @@ package com.badlogic.gdx.tests.webgpu;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.assets.AssetManager;
-import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUApplication;
-import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUApplicationConfiguration;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
 import com.badlogic.gdx.webgpu.assets.WebGPUAssetManager;
+import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUBitmapFont;
+import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
 import com.badlogic.gdx.webgpu.graphics.g3d.WebGPUModelBatch;
 import com.badlogic.gdx.webgpu.graphics.utils.WebGPUScreenUtils;
 import com.badlogic.gdx.webgpu.graphics.viewport.WebGPUScreenViewport;
@@ -60,6 +62,8 @@ public class LoadModelTest extends GdxTest {
 	WebGPUStage stage;
 	WebGPUSkin skin;
 	boolean loaded;
+	WebGPUSpriteBatch batch;
+	WebGPUBitmapFont font;
 
 
 
@@ -75,6 +79,9 @@ public class LoadModelTest extends GdxTest {
 
 	// application
 	public void create () {
+		batch = new WebGPUSpriteBatch();
+		font = new WebGPUBitmapFont();
+
 		modelBatch = new WebGPUModelBatch();
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		cam.position.set(0, 2, 4);
@@ -146,6 +153,7 @@ public class LoadModelTest extends GdxTest {
 			instance = new ModelInstance(model);
 		}
 
+
 		if(loaded)
 			instance.transform.rotate(Vector3.Y, 15f*delta);
 
@@ -162,6 +170,13 @@ public class LoadModelTest extends GdxTest {
 
 		stage.act();
 		stage.draw();
+
+		if(!loaded) {
+			batch.begin();
+			font.draw(batch, "Loading models from file...", 100, 100);
+			batch.end();
+		}
+
 	}
 
 	@Override
@@ -179,6 +194,8 @@ public class LoadModelTest extends GdxTest {
 		skin.dispose();
 		stage.dispose();
 		assets.dispose();
+		batch.dispose();
+		font.dispose();
 	}
 
 

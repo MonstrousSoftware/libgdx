@@ -1,5 +1,5 @@
 
-package com.badlogic.gdx.backends.lwjgl3_webgpu;
+package com.badlogic.gdx.webgpu.backends.lwjgl3;
 
 
 /** Convenience implementation of {@link WebGPUWindowListener}. Derive from this class and only overwrite the methods you are

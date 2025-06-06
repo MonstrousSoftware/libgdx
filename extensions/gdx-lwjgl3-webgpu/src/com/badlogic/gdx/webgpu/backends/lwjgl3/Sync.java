@@ -30,7 +30,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.badlogic.gdx.backends.lwjgl3_webgpu;
+package com.badlogic.gdx.webgpu.backends.lwjgl3;
 
 import static org.lwjgl.glfw.GLFW.glfwGetTime;
 

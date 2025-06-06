@@ -25,25 +25,15 @@ if (JavaVersion.current().isJava9Compatible()) {
 		options.release = versions.java
 	}
 }
-sourceCompatibility = 17 // versions.java
-targetCompatibility = 17 //versions.java
-
-//repositories {
-//	mavenCentral()
-//	maven { url 'https://jitpack.io' }
-//}
-
 
 dependencies {
 	implementation project(":tests:gdx-tests")
 	implementation project(":extensions:gdx-webgpu")
 	implementation project(":backends:gdx-backend-lwjgl3")
-	implementation project(":backends:gdx-backend-lwjgl3_webgpu")
-	implementation project(":extensions:gdx-lwjgl3-angle")
+	implementation project(":extensions:gdx-lwjgl3-webgpu")
+	//implementation project(":extensions:gdx-lwjgl3-angle")
 	implementation testnatives.desktop
-	//	implementation 'com.github.MonstrousSoftware:Java-to-WebGPU:-SNAPSHOT'
 	implementation 'com.github.jnr:jnr-ffi:2.2.17'
-	//	implementation "com.github.MonstrousSoftware:java-to-webgpu:${j2w_version}"
 }
 
 tasks.register('launchTestsWebGPU', JavaExec) {

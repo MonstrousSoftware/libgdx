@@ -17,8 +17,8 @@
 package com.badlogic.gdx.tests.webgpu;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUApplication;
-import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUApplicationConfiguration;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
 import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUBitmapFont;
 import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
 import com.badlogic.gdx.webgpu.graphics.g3d.WebGPUModelBatch;

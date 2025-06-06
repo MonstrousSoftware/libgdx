@@ -373,6 +373,9 @@ Now will default to flip.
 
 There is a lot of code duplication of ModelLoader and its derived classes ObjLoader and G3DLoader
 
+6/6/2025:
+Refactored as extension gdx-webgpu instead of as backend.
+
 
 
 

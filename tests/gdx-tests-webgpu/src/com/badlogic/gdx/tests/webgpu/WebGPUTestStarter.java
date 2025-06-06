@@ -17,10 +17,10 @@
 package com.badlogic.gdx.tests.webgpu;
 
 import com.badlogic.gdx.*;
-import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUApplication;
-import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUApplicationConfiguration;
-import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUGraphics;
-import com.badlogic.gdx.backends.lwjgl3_webgpu.WebGPUWindowConfiguration;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUGraphics;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUWindowConfiguration;
 import com.badlogic.gdx.webgpu.graphics.viewport.WebGPUScreenViewport;
 import com.badlogic.gdx.webgpu.scene2d.WebGPUSkin;
 import com.badlogic.gdx.webgpu.scene2d.WebGPUStage;

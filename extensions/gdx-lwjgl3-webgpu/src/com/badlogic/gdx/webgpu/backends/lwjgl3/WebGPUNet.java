@@ -14,7 +14,7 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.badlogic.gdx.backends.lwjgl3_webgpu;
+package com.badlogic.gdx.webgpu.backends.lwjgl3;
 
 import com.badlogic.gdx.Net;
 import com.badlogic.gdx.net.*;
