@@ -18,11 +18,12 @@ package com.badlogic.gdx.webgpu.graphics;
 
 
 import com.badlogic.gdx.graphics.VertexAttributes;
+import com.badlogic.gdx.graphics.g3d.Environment;
 
 public class ShaderPrefix {
     private static StringBuffer sb = new StringBuffer();
 
-    public static String buildPrefix(VertexAttributes vertexAttributes, WebGPUEnvironment environment ){
+    public static String buildPrefix(VertexAttributes vertexAttributes, Environment environment ){
         sb.setLength(0);
 
         if(vertexAttributes != null) {
@@ -44,6 +45,10 @@ public class ShaderPrefix {
             }
             if ((mask & VertexAttributes.Usage.BoneWeight) != 0) {
                 sb.append("#define SKIN\n");
+            }
+            if ((mask & VertexAttributes.Usage.Normal) != 0 && environment != null) {
+                // only perform lighting calculations if we have vertex normals and an environment
+                sb.append("#define LIGHTING\n");
             }
         }
 //        if (environment != null && !environment.depthPass && environment.renderShadows) {

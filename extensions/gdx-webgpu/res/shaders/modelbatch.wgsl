@@ -5,18 +5,28 @@ struct DirectionalLight {
     direction: vec4f
 }
 
+struct PointLight {
+    color: vec4f,
+    position: vec4f,
+    intensity: f32
+}
+
 struct FrameUniforms {
     projectionViewTransform: mat4x4f,
     directionalLights : array<DirectionalLight, 3>,     // todo don't use hard coded constant for array size
+    pointLights : array<PointLight, 3>,     // todo don't use hard coded constant for array size
     ambientLight: vec4f,
+    cameraPosition: vec4f,
     numDirectionalLights: f32,
-
+    numPointLights: f32,
+    shininess: f32,                 // frame level for now
 };
+
 struct ModelUniforms {
     modelMatrix: mat4x4f,
 };
 //struct MaterialUniforms {
-//    diffuseColor: vec4f,
+//    shininess: f32
 //};
 
 @group(0) @binding(0) var<uniform> uFrame: FrameUniforms;
@@ -45,14 +55,16 @@ struct VertexOutput {
     @location(1) uv: vec2f,
     @location(2) color: vec4f,
     @location(3) normal: vec3f,
-    @location(4) radiance: vec3f,
+    @location(4) worldPos : vec3f,
 };
 
 @vertex
 fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOutput {
    var out: VertexOutput;
 
-   out.position =  uFrame.projectionViewTransform * instances[instance].modelMatrix * vec4f(in.position, 1.0);
+   let worldPosition =  instances[instance].modelMatrix * vec4f(in.position, 1.0);
+   out.position =   uFrame.projectionViewTransform * worldPosition;
+   out.worldPos = worldPosition.xyz;
 #ifdef TEXTURE_COORDINATE
    out.uv = in.uv;
 #else
@@ -65,25 +77,11 @@ fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOut
 #endif
 #ifdef NORMAL
    // transform model normal to world space
-   out.normal = (instances[instance].modelMatrix * vec4f(in.normal, 0.0)).xyz;
+   let normal = normalize((instances[instance].modelMatrix * vec4f(in.normal, 0.0)).xyz);
 #else
-   out.normal = vec3f(0,1,0);
+    let normal = vec3f(0,1,0);
 #endif
-
-    let N:vec3f = normalize(in.normal);
-
-    // for each directional light
-    var radiance : vec3f = uFrame.ambientLight.rgb;
-    for (var i: u32 = 0; i < u32(uFrame.numDirectionalLights); i++) {
-        let light = uFrame.directionalLights[i];
-
-        let L = -normalize(light.direction.xyz);       // L is vector towards light
-        let irradiance = max(dot(L, N), 0.0);
-        if(irradiance > 0.0) {
-            radiance += irradiance *  light.color.rgb;
-        }
-    }
-    out.radiance = radiance;
+    out.normal = normal;
 
    return out;
 }
@@ -92,14 +90,55 @@ fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOut
 @fragment
 fn fs_main(in : VertexOutput) -> @location(0) vec4f {
 #ifdef TEXTURE_COORDINATE
-    let color = in.color * textureSample(diffuseTexture, diffuseSampler, in.uv);
+   var color = in.color * textureSample(diffuseTexture, diffuseSampler, in.uv);
 #else
-   let color = in.color;
+   var color = in.color;
 #endif
 
+//#ifdef LIGHTING
+    let normal = normalize(in.normal.xyz);
+    let shininess : f32 = uFrame.shininess;
 
-    let litColor = vec4f(color.rgb * in.radiance, 1.0);
+
+    var radiance : vec3f = uFrame.ambientLight.rgb;
+    var specular : vec3f = vec3f(0);
+    let viewVec : vec3f = normalize(uFrame.cameraPosition.xyz - in.worldPos.xyz);
+
+    // for each directional light
+    // could go to vertex shader but esp. specular lighting will be lower quality
+    for (var i: u32 = 0; i < u32(uFrame.numDirectionalLights); i++) {
+        let light = uFrame.directionalLights[i];
+
+        let L = -normalize(light.direction.xyz);       // L is vector towards light
+        let irradiance = max(dot(L, normal), 0.0);
+        radiance += irradiance *  light.color.rgb;
+
+        let halfDotView = max(0.0, dot(normal, normalize(L + viewVec)));
+        specular += irradiance *  light.color.rgb * pow(halfDotView, shininess);
+    }
+    // for each point light
+    // note: default libgdx seems to ignore intensity of point lights
+    for (var i: u32 = 0; i < u32(uFrame.numPointLights); i++) {
+        let light = uFrame.pointLights[i];
+
+        var L = light.position.xyz - in.worldPos.xyz;       // L is vector towards light
+        let dist2 : f32 = dot(L,L);
+        L *= inverseSqrt(dist2); // attenuation
+        let NdotL : f32 = max(dot(L, normal), 0.0);
+        let irradiance : f32 = light.intensity * NdotL/(1.0 + dist2);
+
+        radiance += irradiance *  light.color.rgb;
+
+        let halfDotView = max(0.0, dot(normal, normalize(L + viewVec)));
+        specular += irradiance *  light.color.rgb * pow(halfDotView, shininess);
+    }
+
+    let litColor = vec4f(color.rgb * radiance + specular, 1.0);
+
+    color = litColor;
+//#endif
 
     //return vec4f(in.normal, 1.0);
-    return litColor;
+    //return vec4f(uFrame.ambientLight.rgb, 1.0);
+    return color;
 };

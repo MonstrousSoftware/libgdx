@@ -3,16 +3,15 @@ package com.badlogic.gdx.webgpu.graphics.g3d.shaders;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g3d.Attributes;
 import com.badlogic.gdx.graphics.g3d.Environment;
-import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
-import com.badlogic.gdx.graphics.g3d.attributes.DirectionalLightsAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.*;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
+import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.webgpu.graphics.Binder;
 import com.badlogic.gdx.webgpu.graphics.WebGPUMesh;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.Shader;
-import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.webgpu.webgpu.*;
@@ -37,17 +36,20 @@ public class WebGPUDefaultShader implements Shader {
     private final VertexAttributes vertexAttributes;
 
     protected int numDirectionalLights;
-    //protected int maxDirectionalLights;
     protected DirectionalLight[] directionalLights;
+    protected int numPointLights;
+    protected PointLight[] pointLights;
 
 
     public static class Config {
         public int maxInstances;
         public int maxDirectionalLights;
+        public int maxPointLights;
 
         public Config() {
             this.maxInstances = 1024;
             this.maxDirectionalLights = 3;  // todo hard coded in shader, don't change
+            this.maxPointLights = 3;  // todo hard coded in shader, don't change
         }
     }
 
@@ -65,7 +67,9 @@ public class WebGPUDefaultShader implements Shader {
         defaultTexture = new WebGPUTexture(pixmap);
 
         // Create uniform buffer for the projection matrix
-        uniformBufferSize = (16 + 4 + 4 + 8*config.maxDirectionalLights)* Float.BYTES;
+        uniformBufferSize = (16 + 4 + 4 +4 +4
+                +8*config.maxDirectionalLights
+                +12*config.maxPointLights)* Float.BYTES;
         uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst | WGPUBufferUsage.Uniform);
 
 
@@ -83,14 +87,26 @@ public class WebGPUDefaultShader implements Shader {
         // frame uniforms
         int offset = 0;
         binder.defineUniform("projectionViewTransform", 0, 0, offset); offset += 16*4;
+
         for(int i = 0; i < config.maxDirectionalLights; i++) {
             binder.defineUniform("dirLight["+i+"].color", 0, 0, offset);
             offset += 4 * 4;
             binder.defineUniform("dirLight["+i+"].direction", 0, 0, offset);
             offset += 4 * 4;
         }
+        for(int i = 0; i < config.maxPointLights; i++) {
+            binder.defineUniform("pointLight["+i+"].color", 0, 0, offset);
+            offset += 4 * 4;
+            binder.defineUniform("pointLight["+i+"].position", 0, 0, offset);
+            offset += 4 * 4;
+            binder.defineUniform("pointLight["+i+"].intensity", 0, 0, offset);
+            offset += 4*4;    // added padding
+        }
         binder.defineUniform("ambientLight", 0, 0, offset); offset += 4*4;
+        binder.defineUniform("cameraPosition", 0, 0, offset); offset += 4*4;
         binder.defineUniform("numDirectionalLights", 0, 0, offset); offset += 4;
+        binder.defineUniform("numPointLights", 0, 0, offset); offset += 4;
+        binder.defineUniform("shininess", 0, 0, offset); offset += 4;
 
         // note: put shorter uniforms last for padding reasons
 
@@ -124,11 +140,15 @@ public class WebGPUDefaultShader implements Shader {
         // default blending values
         pipelineSpec.enableBlending();
         pipelineSpec.setBlendFactor(WGPUBlendFactor.SrcAlpha, WGPUBlendFactor.OneMinusSrcAlpha);
+        pipelineSpec.environment = renderable.environment;
         pipeline = new WebGPUPipeline(pipelineLayout, pipelineSpec);
 
         directionalLights = new DirectionalLight[config.maxDirectionalLights];
         for(int i = 0; i <config.maxDirectionalLights; i++)
             directionalLights[i] = new DirectionalLight();
+        pointLights = new PointLight[config.maxPointLights];
+        for(int i = 0; i <config.maxPointLights; i++)
+            pointLights[i] = new PointLight();
     }
 
     @Override
@@ -150,6 +170,7 @@ public class WebGPUDefaultShader implements Shader {
         // e.g. camera, lighting, environment uniforms
         //
         binder.setUniform("projectionViewTransform", camera.combined);
+        binder.setUniform("cameraPosition", camera.position);
 
         // bind group 0 (frame) once per frame
         binder.bindGroup(renderPass, 0);
@@ -177,7 +198,7 @@ public class WebGPUDefaultShader implements Shader {
         return instance.meshPart.mesh.getVertexAttributes().getMask() == vertexAttributes.getMask();
     }
 
-    private Attributes combinedAttributes = new Attributes();
+    private final Attributes combinedAttributes = new Attributes();
 
 
     public void render (Renderable renderable) {
@@ -194,6 +215,8 @@ public class WebGPUDefaultShader implements Shader {
             return;
         }
 
+        // todo: is done per renderable, but lighting could be done once for each frame
+        // in fact frame uniforms will now be overwritten per renderable
         bindLights(renderable, attributes);
 
 
@@ -292,7 +315,8 @@ public class WebGPUDefaultShader implements Shader {
         final Environment lights = renderable.environment;
         final DirectionalLightsAttribute dla = attributes.get(DirectionalLightsAttribute.class, DirectionalLightsAttribute.Type);
         final Array<DirectionalLight> dirs = dla == null ? null : dla.lights;
-
+        final PointLightsAttribute pla = attributes.get(PointLightsAttribute.class, PointLightsAttribute.Type);
+        final Array<PointLight> points = pla == null ? null : pla.lights;
 
         if(dirs != null){
             if( dirs.size > config.maxDirectionalLights)
@@ -306,19 +330,38 @@ public class WebGPUDefaultShader implements Shader {
 
         numDirectionalLights = dirs == null ? 0 : dirs.size;
         for(int i = 0; i < numDirectionalLights; i++) {
-            // todo probably not so great concatenating strings like this
+            // todo probably not so great for memory use to concatenate strings like this
             binder.setUniform("dirLight["+i+"].color", directionalLights[i].color);
             binder.setUniform("dirLight["+i+"].direction", directionalLights[i].direction);
         }
-//        binder.setUniform("dirLight[0].color", directionalLights[0].color);
-//        binder.setUniform("dirLight[0].direction", directionalLights[0].direction);
-//        binder.setUniform("dirLight[1].color", directionalLights[1].color);
-//        binder.setUniform("dirLight[1].direction", directionalLights[1].direction);
         binder.setUniform("numDirectionalLights", numDirectionalLights);
+
+        if(points != null){
+            if( points.size > config.maxPointLights)
+                throw new RuntimeException("Too many point lights");
+            // is it useful to copy from attributes to a local array?
+            for(int i = 0; i < points.size; i++) {
+                pointLights[i].color.set(points.get(i).color);
+                pointLights[i].position.set(points.get(i).position);
+                pointLights[i].intensity = points.get(i).intensity;
+            }
+        }
+
+        numPointLights = points == null ? 0 : points.size;
+        for(int i = 0; i < numPointLights; i++) {
+            binder.setUniform("pointLight["+i+"].color", pointLights[i].color);
+            binder.setUniform("pointLight["+i+"].position", pointLights[i].position);
+            binder.setUniform("pointLight["+i+"].intensity", pointLights[i].intensity);
+        }
+        binder.setUniform("numPointLights", numPointLights);
 
         final ColorAttribute ambient = attributes.get(ColorAttribute.class,ColorAttribute.AmbientLight);
         if(ambient != null)
             binder.setUniform("ambientLight", ambient.color);
+
+        final FloatAttribute shiny = attributes.get(FloatAttribute.class,FloatAttribute.Shininess);
+        if(shiny != null)
+            binder.setUniform("shininess", shiny.value);
 
     }
 }

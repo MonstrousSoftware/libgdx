@@ -19,8 +19,8 @@ package com.badlogic.gdx.webgpu.wrappers;
 
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.webgpu.WebGPUGraphicsBase;
-import com.badlogic.gdx.webgpu.graphics.WebGPUEnvironment;
 import com.badlogic.gdx.webgpu.graphics.WebGPUShaderProgram;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.webgpu.webgpu.*;
@@ -34,7 +34,7 @@ public class PipelineSpecification {
     public VertexAttributes vertexAttributes;
     public WGPUIndexFormat indexFormat;
     public WGPUPrimitiveTopology topology;
-    public WebGPUEnvironment environment;
+    public Environment environment;
     public String shaderSource;
     public WebGPUShaderProgram shader;
     public boolean useDepthTest;

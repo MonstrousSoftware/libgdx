@@ -27,7 +27,9 @@ import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
+import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -89,9 +91,10 @@ public class LightingTest extends GdxTest {
 		// Create an environment with directional lights
 		environment = new Environment();
 
-		ColorAttribute ambient = new ColorAttribute(ColorAttribute.AmbientLight, 0.2f, 0.2f, 0.2f, 1f);
-		ColorAttribute ambientOff = new ColorAttribute(ColorAttribute.AmbientLight, 0f, 0f, 0f, 1f);
+		ColorAttribute ambient =  ColorAttribute.createAmbientLight(0.0f, 0f, 0f, 1f);
 		environment.set(ambient);
+		FloatAttribute shininess =  FloatAttribute.createShininess(1.0f);
+		environment.set(shininess);		// should be on material really
 
 		DirectionalLight dirLight1 = new DirectionalLight();
 		dirLight1.setDirection(1f, -.2f, .2f);
@@ -104,6 +107,16 @@ public class LightingTest extends GdxTest {
 		DirectionalLight dirLight3 = new DirectionalLight();
 		dirLight3.setDirection(-.2f, -.6f, -.2f);
 		dirLight3.setColor(Color.GREEN);
+
+		PointLight pointLight1 = new PointLight();
+		pointLight1.setPosition(-1f, 2f, -1f);
+		pointLight1.setColor(Color.PURPLE);
+		pointLight1.setIntensity(1f);
+
+		PointLight pointLight2 = new PointLight();
+		pointLight2.setPosition(1f, 2f, 1f);
+		pointLight2.setColor(Color.YELLOW);
+		pointLight2.setIntensity(1f);
 
 
 		WebGPUG3dModelLoader loader = new WebGPUG3dModelLoader(new UBJsonReader());
@@ -171,6 +184,47 @@ public class LightingTest extends GdxTest {
 			}
 		});
 
+		Slider shinySlider = new Slider(0.1f, 256.0f, 1f, false, skin);
+		shinySlider.addListener(new ChangeListener() {
+			public void changed (ChangeEvent event, Actor actor) {
+				System.out.println("Shininess: " + shinySlider.getValue());
+				shininess.value = shinySlider.getValue();
+			}
+		});
+
+		CheckBox checkBox4 = new CheckBox("purple point light", skin);
+		checkBox4.addListener(new ChangeListener() {
+			public void changed (ChangeEvent event, Actor actor) {
+				System.out.println("Point light 1: " + checkBox4.isChecked());
+				if(checkBox4.isChecked())
+					environment.add(pointLight1);
+				else
+					environment.remove(pointLight1);
+			}
+		});
+
+		CheckBox checkBox5 = new CheckBox("yellow point light", skin);
+		checkBox5.addListener(new ChangeListener() {
+			public void changed (ChangeEvent event, Actor actor) {
+				System.out.println("Point light 2: " + checkBox5.isChecked());
+				if(checkBox5.isChecked())
+					environment.add(pointLight2);
+				else
+					environment.remove(pointLight2);
+			}
+		});
+
+		Slider intensitySlider = new Slider(0.0f, 10.0f, 0.01f, false, skin);
+		intensitySlider.setValue(1f);
+		intensitySlider.addListener(new ChangeListener() {
+			public void changed (ChangeEvent event, Actor actor) {
+				System.out.println("Intensity level: " + intensitySlider.getValue());
+				float v = intensitySlider.getValue();
+				pointLight1.intensity = v;
+				pointLight2.intensity = v;
+			}
+		});
+
 		Table screenTable = new Table();
 		screenTable.setFillParent(true);
 		Table controls = new Table();
@@ -179,6 +233,12 @@ public class LightingTest extends GdxTest {
 		controls.add(checkBox3).align(Align.left).row();
 		controls.add(new Label("ambient:", skin)).align(Align.left).row();
 		controls.add(ambientSlider).align(Align.left).row();
+		controls.add(new Label("shininess:", skin)).align(Align.left).row();
+		controls.add(shinySlider).align(Align.left).row();
+		controls.add(checkBox4).align(Align.left).row();
+		controls.add(checkBox5).align(Align.left).row();
+		controls.add(new Label("point lights intensity:", skin)).align(Align.left).row();
+		controls.add(intensitySlider).align(Align.left).row();
 		screenTable.add(controls).left().top().expand();
 
 
