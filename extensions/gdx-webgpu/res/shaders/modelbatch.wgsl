@@ -95,7 +95,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
    var color = in.color;
 #endif
 
-//#ifdef LIGHTING
+#ifdef LIGHTING
     let normal = normalize(in.normal.xyz);
     let shininess : f32 = uFrame.shininess;
 
@@ -109,11 +109,11 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
     for (var i: u32 = 0; i < u32(uFrame.numDirectionalLights); i++) {
         let light = uFrame.directionalLights[i];
 
-        let L = -normalize(light.direction.xyz);       // L is vector towards light
-        let irradiance = max(dot(L, normal), 0.0);
+        let lightVec = -normalize(light.direction.xyz);       // L is vector towards light
+        let irradiance = max(dot(lightVec, normal), 0.0);
         radiance += irradiance *  light.color.rgb;
 
-        let halfDotView = max(0.0, dot(normal, normalize(L + viewVec)));
+        let halfDotView = max(0.0, dot(normal, normalize(lightVec + viewVec)));
         specular += irradiance *  light.color.rgb * pow(halfDotView, shininess);
     }
     // for each point light
@@ -121,22 +121,23 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
     for (var i: u32 = 0; i < u32(uFrame.numPointLights); i++) {
         let light = uFrame.pointLights[i];
 
-        var L = light.position.xyz - in.worldPos.xyz;       // L is vector towards light
-        let dist2 : f32 = dot(L,L);
-        L *= inverseSqrt(dist2); // attenuation
-        let NdotL : f32 = max(dot(L, normal), 0.0);
-        let irradiance : f32 = light.intensity * NdotL/(1.0 + dist2);
+        var lightVec = light.position.xyz - in.worldPos.xyz;       // L is vector towards light
+        let dist2 : f32 = dot(lightVec,lightVec);
+        lightVec  = normalize(lightVec);
+        let attenuation : f32 = light.intensity/(1.0 + dist2);// attenuation (note this makes an assumption on the world scale)
+        let NdotL : f32 = max(dot(lightVec, normal), 0.0);
+        let irradiance : f32 =  attenuation * NdotL;
 
         radiance += irradiance *  light.color.rgb;
 
-        let halfDotView = max(0.0, dot(normal, normalize(L + viewVec)));
+        let halfDotView = max(0.0, dot(normal, normalize(lightVec + viewVec)));
         specular += irradiance *  light.color.rgb * pow(halfDotView, shininess);
     }
 
     let litColor = vec4f(color.rgb * radiance + specular, 1.0);
 
     color = litColor;
-//#endif
+#endif
 
     //return vec4f(in.normal, 1.0);
     //return vec4f(uFrame.ambientLight.rgb, 1.0);
