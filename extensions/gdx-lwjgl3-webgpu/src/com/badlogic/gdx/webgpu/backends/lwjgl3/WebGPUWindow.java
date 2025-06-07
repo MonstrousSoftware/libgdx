@@ -17,6 +17,7 @@
 package com.badlogic.gdx.webgpu.backends.lwjgl3;
 
 import com.badlogic.gdx.*;
+import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Input;
 import com.badlogic.gdx.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.utils.*;
@@ -38,7 +39,7 @@ public class WebGPUWindow implements Disposable {
 	private boolean listenerInitialized = false;
 	WebGPUWindowListener windowListener;
 	private WebGPUGraphics graphics;
-	private WebGPUInput input;
+	private Lwjgl3Input input;
 	private final WebGPUApplicationConfiguration config;
 	private final Array<Runnable> runnables = new Array<Runnable>();
 	private final Array<Runnable> executedRunnables = new Array<Runnable>();
@@ -49,17 +50,7 @@ public class WebGPUWindow implements Disposable {
 	boolean asyncResized = false;
 	private boolean requestRendering = false;
 	private WebGPU_JNI webGPU;
-//	public Pointer surface;
-//	public WGPUTextureFormat surfaceFormat;
-//	public WebGPUDevice device;
-//	public WebGPUQueue queue;
-//	public Pointer targetView;
-//	public WebGPUCommandEncoder commandEncoder;
-//	public WGPUTextureFormat depthTextureFormat;
-//	public WebGPUTexture depthTexture;
-//	public WebGPUTextureView depthTextureView;
 
-	//private final WGPUBackendType backend = WGPUBackendType.Undefined;// .D3D12; // or Vulkan, etc.
 	private final boolean vsyncEnabled = true;	// per window?? todo read from config
 
 	private final GLFWWindowFocusCallback focusCallback = new GLFWWindowFocusCallback() {
@@ -228,172 +219,6 @@ public class WebGPUWindow implements Disposable {
 		}
 	}
 
-//	private void initWebGPU (long windowHandle, int width, int height) {
-//		webGPU = application.getWebGPU();
-//
-//		Pointer instance = webGPU.wgpuCreateInstance(null);
-//
-//		surface = JavaWebGPU.getUtils().glfwGetWGPUSurface(instance, windowHandle);
-//		WebGPUAdapter adapter = new WebGPUAdapter(instance, surface);
-//
-//		device = new WebGPUDevice(adapter);
-//
-//		// Find out the preferred surface format of the window
-//		WGPUSurfaceCapabilities caps = WGPUSurfaceCapabilities.createDirect();
-//		webGPU.wgpuSurfaceGetCapabilities(surface, adapter.getHandle(), caps);
-//		Pointer formats = caps.getFormats();
-//		int format = formats.getInt(0);
-//		surfaceFormat = WGPUTextureFormat.values()[format];
-//
-//		adapter.dispose();  // finished with adapter now that we have a device
-//
-//
-//		//device = initDevice(instance, surface);
-//
-//		webGPU.wgpuInstanceRelease(instance); // we can release the instance now that we have the device
-//
-//		queue = new WebGPUQueue(device);
-//
-//		initSwapChain(width, height);
-//		initDepthBuffer(width, height);
-//	}
-//
-//	// todo handle resize
-//	// or call this from resize event rather than constructor
-//	private void initDepthBuffer(int width, int height){
-//
-//		depthTextureFormat = WGPUTextureFormat.Depth24Plus;
-//
-//		depthTexture = new WebGPUTexture("depth texture", width, height, 1, WGPUTextureUsage.RenderAttachment,
-//				depthTextureFormat, config.samples, depthTextureFormat );
-//
-//		// Create the view of the depth texture manipulated by the rasterizer
-//		depthTextureView = new WebGPUTextureView(depthTexture, WGPUTextureAspect.DepthOnly, WGPUTextureViewDimension._2D,depthTextureFormat, 0, 1, 0, 1 );
-//	}
-//
-//	private void terminateDepthBuffer(){
-//		// Destroy the depth texture and its view
-//		if(depthTextureView != null)
-//			depthTextureView.dispose();
-//
-//		if(depthTexture != null) {
-//			depthTexture.dispose();
-//		}
-//		depthTextureView = null;
-//		depthTexture = null;
-//	}
-
-//	private Pointer getAdapterSync (Pointer instance, WGPURequestAdapterOptions options) {
-//
-//		Pointer userBuf = JavaWebGPU.createLongArrayPointer(new long[1]);
-//		WGPURequestAdapterCallback callback = (WGPURequestAdapterStatus status, Pointer adapter, String message,
-//											   Pointer userdata) -> {
-//			if (status == WGPURequestAdapterStatus.Success)
-//				userdata.putPointer(0, adapter);
-//			else
-//				System.out.println("Could not get adapter: " + message);
-//		};
-//		webGPU.wgpuInstanceRequestAdapter(instance, options, callback, userBuf);
-//		// on native implementations, we don't have to wait for asynchronous operation. It returns result immediately.
-//		return userBuf.getPointer(0);
-//	}
-
-//	private Pointer getDeviceSync (Pointer adapter, WGPUDeviceDescriptor deviceDescriptor) {
-//
-//		Pointer userBuf = JavaWebGPU.createLongArrayPointer(new long[1]);
-//		WGPURequestDeviceCallback callback = (WGPURequestDeviceStatus status, Pointer device, String message, Pointer userdata) -> {
-//			if (status == WGPURequestDeviceStatus.Success)
-//				userdata.putPointer(0, device);
-//			else
-//				System.out.println("Could not get device: " + message);
-//		};
-//		webGPU.wgpuAdapterRequestDevice(adapter, deviceDescriptor, callback, userBuf);
-//		// on native implementations, we don't have to wait for asynchronous operation. It returns result immediately.
-//		return userBuf.getPointer(0);
-//	}
-
-//	private Pointer initDevice (Pointer instance, Pointer surface) {
-//
-//		// Select an Adapter
-//		//
-//
-//		WGPURequestAdapterOptions options = WGPURequestAdapterOptions.createDirect();
-//		options.setNextInChain();
-//		options.setCompatibleSurface(surface);
-//		options.setBackendType(backend);
-//		options.setPowerPreference(WGPUPowerPreference.HighPerformance);
-//
-//		// Get Adapter
-//
-//		Pointer adapter = getAdapterSync(instance, options);
-//
-//		// Get Adapter properties out of interest
-//		WGPUAdapterProperties adapterProperties = WGPUAdapterProperties.createDirect();
-//		adapterProperties.setNextInChain();
-//
-//		webGPU.wgpuAdapterGetProperties(adapter, adapterProperties);
-//
-//		System.out.println("VendorID: " + adapterProperties.getVendorID());
-//		System.out.println("Vendor name: " + adapterProperties.getVendorName());
-//		System.out.println("Device ID: " + adapterProperties.getDeviceID());
-//		System.out.println("Back end: " + adapterProperties.getBackendType());
-//		System.out.println("Description: " + adapterProperties.getDriverDescription());
-//
-//		WGPURequiredLimits requiredLimits = WGPURequiredLimits.createDirect();
-//		setDefaultLimits(requiredLimits.getLimits());
-//
-//		// Get a Device
-//		//
-//		WebGPUDevice device = new WebGPUDevice(adapter);
-////		WGPUDeviceDescriptor deviceDescriptor = WGPUDeviceDescriptor.createDirect();
-////		deviceDescriptor.setNextInChain();
-////		deviceDescriptor.setLabel("My Device");
-////		deviceDescriptor.setRequiredLimits(requiredLimits);
-////		deviceDescriptor.setRequiredFeatureCount(0);
-////		deviceDescriptor.setRequiredFeatures(JavaWebGPU.createNullPointer());
-////
-////		Pointer device = getDeviceSync(adapter, deviceDescriptor);
-//
-//		// use a lambda expression to define a callback function
-//		WGPUErrorCallback deviceCallback = (WGPUErrorType type, String message, Pointer userdata) -> {
-//			System.out.println("*** Device error: " + type + " : " + message);
-//			System.exit(-1);
-//		};
-//		webGPU.wgpuDeviceSetUncapturedErrorCallback(device, deviceCallback, null);
-//
-//		// Find out the preferred surface format of the window
-//		WGPUSurfaceCapabilities caps = WGPUSurfaceCapabilities.createDirect();
-//		webGPU.wgpuSurfaceGetCapabilities(surface, adapter, caps);
-//		Pointer formats = caps.getFormats();
-//		int format = formats.getInt(0);
-//		surfaceFormat = WGPUTextureFormat.values()[format];
-//
-//		webGPU.wgpuAdapterRelease(adapter); // we can release our adapter as soon as we have a device
-//		return device;
-//	}
-//	private void initSwapChain (int width, int height) {
-//		// configure the surface
-//		WGPUSurfaceConfiguration config = WGPUSurfaceConfiguration.createDirect();
-//		config.setNextInChain().setWidth(width).setHeight(height).setFormat(surfaceFormat).setViewFormatCount(0)
-//				.setViewFormats(JavaWebGPU.createNullPointer()).setUsage(WGPUTextureUsage.RenderAttachment).setDevice(device.getHandle())
-//				.setPresentMode(vsyncEnabled ? WGPUPresentMode.Fifo : WGPUPresentMode.Immediate)
-//				.setAlphaMode(WGPUCompositeAlphaMode.Auto);
-//
-//		webGPU.wgpuSurfaceConfigure(surface, config);
-//	}
-//
-//	private void exitWebGPU () {
-//		webGPU.wgpuSurfaceUnconfigure(surface);
-//		queue.dispose();
-//		device.dispose();
-////
-////		webGPU.wgpuQueueRelease(queue);
-////		webGPU.wgpuDeviceRelease(device);
-//		webGPU.wgpuSurfaceRelease(surface);
-//
-//		terminateDepthBuffer();
-//	}
-
 	/** @return the {@link ApplicationListener} associated with this window **/
 	public ApplicationListener getListener () {
 		return listener;
@@ -561,7 +386,7 @@ public class WebGPUWindow implements Disposable {
 		return graphics;
 	}
 
-	WebGPUInput getInput () {
+	Lwjgl3Input getInput () {
 		return input;
 	}
 

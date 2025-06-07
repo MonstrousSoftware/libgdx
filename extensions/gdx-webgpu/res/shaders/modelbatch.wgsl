@@ -1,7 +1,16 @@
-// basic model batch shader
-                
+// basic ModelBatch shader
+
+struct DirectionalLight {
+    color: vec4f,
+    direction: vec4f
+}
+
 struct FrameUniforms {
     projectionViewTransform: mat4x4f,
+    directionalLights : array<DirectionalLight, 3>,     // todo don't use hard coded constant for array size
+    ambientLight: vec4f,
+    numDirectionalLights: f32,
+
 };
 struct ModelUniforms {
     modelMatrix: mat4x4f,
@@ -35,7 +44,7 @@ struct VertexOutput {
     @builtin(position) position: vec4f,
     @location(1) uv: vec2f,
     @location(2) color: vec4f,
-    @location(3) normal: vec4f
+    @location(3) normal: vec3f
 };
 
 @vertex
@@ -54,9 +63,10 @@ fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOut
    out.color = vec4f(1);
 #endif
 #ifdef NORMAL
-   out.normal = vec4f(in.normal, 1.0);  // to do transform
+   // transform model normal to world space
+   out.normal = (instances[instance].modelMatrix * vec4f(in.normal, 0.0)).xyz;
 #else
-   out.normal = vec4f(0,1,0,1); // hmm...
+   out.normal = vec3f(0,1,0);
 #endif
 
    return out;
@@ -70,6 +80,22 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
 #else
    let color = in.color;
 #endif
-    //return in.normal;
-    return color;
+
+    let N:vec3f = normalize(in.normal);
+
+    // for each directional light
+    var radiance = uFrame.ambientLight.rgb;
+    for (var i: u32 = 0; i < u32(uFrame.numDirectionalLights); i++) {
+        let light = uFrame.directionalLights[i];
+
+        let L = -normalize(light.direction.xyz);       // L is vector towards light
+        let irradiance = max(dot(L, N), 0.0);
+        if(irradiance > 0.0) {
+            radiance += irradiance *  light.color.rgb;
+        }
+    }
+    let litColor = vec4f(color.rgb * radiance, 1.0);
+
+    //return vec4f(in.normal, 1.0);
+    return litColor;
 };

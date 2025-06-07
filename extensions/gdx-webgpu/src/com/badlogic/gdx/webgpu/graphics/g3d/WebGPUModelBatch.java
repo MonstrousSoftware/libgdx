@@ -2,6 +2,7 @@ package com.badlogic.gdx.webgpu.graphics.g3d;
 
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.RenderableProvider;
 import com.badlogic.gdx.webgpu.WebGPUGraphicsBase;
@@ -19,15 +20,14 @@ import com.badlogic.gdx.webgpu.wrappers.WebGPURenderPass;
  */
 public class WebGPUModelBatch implements Disposable {
 
+    private WebGPUDefaultShader.Config config;
     private boolean drawing;
     private WebGPURenderPass renderPass;
     private WebGPUDefaultShaderProvider shaderProvider;
-    //private WebGPUDefaultShader defaultShader;
-    //private WebGPUDefaultShader.Config config;
     private final Array<Renderable> renderables;
     protected final RenderablePool renderablesPool = new RenderablePool();
-    private final int maxInstances;
     private Camera camera;
+
 
     protected static class RenderablePool extends FlushablePool<Renderable> {
         @Override
@@ -51,17 +51,14 @@ public class WebGPUModelBatch implements Disposable {
      *
      */
     public WebGPUModelBatch() {
-        this(1000);
+        this(new WebGPUDefaultShader.Config());
     }
 
-    public WebGPUModelBatch(int maxInstances) {
+    public WebGPUModelBatch(WebGPUDefaultShader.Config config) {
+        this.config = config;
         drawing = false;
-        WebGPUDefaultShader.Config config = new WebGPUDefaultShader.Config();
-        this.maxInstances = maxInstances;
-        config.maxInstances = maxInstances;
 
         shaderProvider = new WebGPUDefaultShaderProvider(config);
-        //shader = new WebGPUDefaultShader(null, config);
         renderables = new Array<>();
     }
 
@@ -79,13 +76,11 @@ public class WebGPUModelBatch implements Disposable {
         WebGPUGraphicsBase gfx = (WebGPUGraphicsBase) Gdx.graphics;
         renderPass = RenderPassBuilder.create(null, gfx.getSamples());
 
-        //shader.begin(camera, renderPass);
-
         renderables.clear();
     }
 
 
-    public void render(Renderable renderable){
+    public void render(final Renderable renderable){
         renderable.shader = shaderProvider.getShader(renderable);
         renderables.add(renderable);
     }
@@ -100,8 +95,20 @@ public class WebGPUModelBatch implements Disposable {
         }
     }
 
+    public void render (final RenderableProvider renderableProvider, final Environment environment) {
+        final int offset = renderables.size;
+        renderableProvider.getRenderables(renderables, renderablesPool);
+        for (int i = offset; i < renderables.size; i++) {
+            Renderable renderable = renderables.get(i);
+            renderable.environment = environment;
+            renderable.shader = shaderProvider.getShader(renderable);
+        }
+    }
+
+    // todo add other render() combinations
+
     public void flush() {
-        if(renderables.size > maxInstances)
+        if(renderables.size > config.maxInstances)
             throw new ArrayIndexOutOfBoundsException("Too many renderables");
 
         // todo sort renderables

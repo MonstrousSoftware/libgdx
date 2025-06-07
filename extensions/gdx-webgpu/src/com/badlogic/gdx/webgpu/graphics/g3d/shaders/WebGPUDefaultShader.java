@@ -1,6 +1,12 @@
 package com.badlogic.gdx.webgpu.graphics.g3d.shaders;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.g3d.Attributes;
+import com.badlogic.gdx.graphics.g3d.Environment;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.DirectionalLightsAttribute;
+import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.webgpu.graphics.Binder;
 import com.badlogic.gdx.webgpu.graphics.WebGPUMesh;
 import com.badlogic.gdx.graphics.*;
@@ -22,6 +28,7 @@ public class WebGPUDefaultShader implements Shader {
     private final WebGPUTexture defaultTexture;
     public final Binder binder;
     private final WebGPUUniformBuffer uniformBuffer;
+    private final int uniformBufferSize;
     private final WebGPUUniformBuffer instanceBuffer;
     private final WebGPUPipeline pipeline;            // a shader has one pipeline
     public int numRenderables;
@@ -29,12 +36,18 @@ public class WebGPUDefaultShader implements Shader {
     private WebGPURenderPass renderPass;
     private final VertexAttributes vertexAttributes;
 
+    protected int numDirectionalLights;
+    //protected int maxDirectionalLights;
+    protected DirectionalLight[] directionalLights;
+
 
     public static class Config {
         public int maxInstances;
+        public int maxDirectionalLights;
 
         public Config() {
             this.maxInstances = 1024;
+            this.maxDirectionalLights = 3;  // todo hard coded in shader, don't change
         }
     }
 
@@ -51,9 +64,14 @@ public class WebGPUDefaultShader implements Shader {
         pixmap.fill();
         defaultTexture = new WebGPUTexture(pixmap);
 
+        // Create uniform buffer for the projection matrix
+        uniformBufferSize = (16 + 4 + 4 + 8*config.maxDirectionalLights)* Float.BYTES;
+        uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst | WGPUBufferUsage.Uniform);
+
+
         binder = new Binder();
         // define groups
-        binder.defineGroup(0, createFrameBindGroupLayout());
+        binder.defineGroup(0, createFrameBindGroupLayout(uniformBufferSize));
         binder.defineGroup(1, createMaterialBindGroupLayout());
         binder.defineGroup(2, createInstancingBindGroupLayout());
         // define bindings in the groups
@@ -62,12 +80,24 @@ public class WebGPUDefaultShader implements Shader {
         binder.defineUniform("diffuseSampler", 1, 2);
         binder.defineUniform("instanceUniforms", 2, 0);
         // define uniforms in uniform buffers with their offset
-        binder.defineUniform("projectionViewTransform", 0, 0, 0);
+        // frame uniforms
+        int offset = 0;
+        binder.defineUniform("projectionViewTransform", 0, 0, offset); offset += 16*4;
+        for(int i = 0; i < config.maxDirectionalLights; i++) {
+            binder.defineUniform("dirLight["+i+"].color", 0, 0, offset);
+            offset += 4 * 4;
+            binder.defineUniform("dirLight["+i+"].direction", 0, 0, offset);
+            offset += 4 * 4;
+        }
+        binder.defineUniform("ambientLight", 0, 0, offset); offset += 4*4;
+        binder.defineUniform("numDirectionalLights", 0, 0, offset); offset += 4;
+
+        // note: put shorter uniforms last for padding reasons
+
+        System.out.println("offset:"+offset+" "+uniformBufferSize);
+        if(offset > uniformBufferSize) throw new RuntimeException("Mismatch in frame uniform buffer size");
         //binder.defineUniform("modelMatrix", 2, 0, 0);
 
-        // Create uniform buffer for the projection matrix
-        int uniformBufferSize = 16 * Float.BYTES;
-        uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst | WGPUBufferUsage.Uniform);
 
         // set binding 0 to uniform buffer
         binder.setBuffer("uniforms", uniformBuffer, 0, uniformBufferSize);
@@ -96,6 +126,9 @@ public class WebGPUDefaultShader implements Shader {
         pipelineSpec.setBlendFactor(WGPUBlendFactor.SrcAlpha, WGPUBlendFactor.OneMinusSrcAlpha);
         pipeline = new WebGPUPipeline(pipelineLayout, pipelineSpec);
 
+        directionalLights = new DirectionalLight[config.maxDirectionalLights];
+        for(int i = 0; i <config.maxDirectionalLights; i++)
+            directionalLights[i] = new DirectionalLight();
     }
 
     @Override
@@ -144,13 +177,26 @@ public class WebGPUDefaultShader implements Shader {
         return instance.meshPart.mesh.getVertexAttributes().getMask() == vertexAttributes.getMask();
     }
 
+    private Attributes combinedAttributes = new Attributes();
 
 
     public void render (Renderable renderable) {
+        if (renderable.worldTransform.det3x3() == 0) return;
+        combinedAttributes.clear();
+        if (renderable.environment != null) combinedAttributes.set(renderable.environment);
+        if (renderable.material != null) combinedAttributes.set(renderable.material);
+        render(renderable, combinedAttributes);
+    }
+
+    public void render (Renderable renderable, Attributes attributes) {
         if(numRenderables > config.maxInstances) {
             Gdx.app.error("WebGPUModelBatch", "Too many instances, max is " + config.maxInstances);
             return;
         }
+
+        bindLights(renderable, attributes);
+
+
         // renderable-specific data
 
         // add instance data to instance buffer (instance transform)
@@ -195,10 +241,10 @@ public class WebGPUDefaultShader implements Shader {
         instanceBuffer.flush();
     }
 
-    private WebGPUBindGroupLayout createFrameBindGroupLayout() {
+    private WebGPUBindGroupLayout createFrameBindGroupLayout(int uniformBufferSize) {
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch bind group layout (frame)");
         layout.begin();
-        layout.addBuffer(0, WGPUShaderStage.Vertex, WGPUBufferBindingType.Uniform, 16*Float.BYTES, false);
+        layout.addBuffer(0, WGPUShaderStage.Vertex|WGPUShaderStage.Fragment, WGPUBufferBindingType.Uniform, uniformBufferSize, false);
         layout.end();
         return layout;
     }
@@ -239,5 +285,40 @@ public class WebGPUDefaultShader implements Shader {
         defaultTexture.dispose();
         instanceBuffer.dispose();
         uniformBuffer.dispose();
+    }
+
+
+    private void bindLights(final Renderable renderable, Attributes attributes){
+        final Environment lights = renderable.environment;
+        final DirectionalLightsAttribute dla = attributes.get(DirectionalLightsAttribute.class, DirectionalLightsAttribute.Type);
+        final Array<DirectionalLight> dirs = dla == null ? null : dla.lights;
+
+
+        if(dirs != null){
+            if( dirs.size > config.maxDirectionalLights)
+                throw new RuntimeException("Too many directional lights");
+
+            for(int i = 0; i < dirs.size; i++) {
+                directionalLights[i].color.set(dirs.get(i).color);
+                directionalLights[i].direction.set(dirs.get(i).direction);
+            }
+        }
+
+        numDirectionalLights = dirs == null ? 0 : dirs.size;
+        for(int i = 0; i < numDirectionalLights; i++) {
+            // todo probably not so great concatenating strings like this
+            binder.setUniform("dirLight["+i+"].color", directionalLights[i].color);
+            binder.setUniform("dirLight["+i+"].direction", directionalLights[i].direction);
+        }
+//        binder.setUniform("dirLight[0].color", directionalLights[0].color);
+//        binder.setUniform("dirLight[0].direction", directionalLights[0].direction);
+//        binder.setUniform("dirLight[1].color", directionalLights[1].color);
+//        binder.setUniform("dirLight[1].direction", directionalLights[1].direction);
+        binder.setUniform("numDirectionalLights", numDirectionalLights);
+
+        final ColorAttribute ambient = attributes.get(ColorAttribute.class,ColorAttribute.AmbientLight);
+        if(ambient != null)
+            binder.setUniform("ambientLight", ambient.color);
+
     }
 }

@@ -19,11 +19,12 @@ package com.badlogic.gdx.webgpu.backends.lwjgl3;
 import com.badlogic.gdx.AbstractInput;
 import com.badlogic.gdx.InputEventQueue;
 import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Input;
 import com.badlogic.gdx.graphics.glutils.HdpiMode;
 import com.badlogic.gdx.input.NativeInputConfiguration;
 import org.lwjgl.glfw.*;
 
-public class DefaultWebGPUInput extends AbstractInput implements WebGPUInput {
+public class DefaultWebGPUInput extends AbstractInput implements Lwjgl3Input {
 	final WebGPUWindow window;
 	private InputProcessor inputProcessor;
 	final InputEventQueue eventQueue = new InputEventQueue();

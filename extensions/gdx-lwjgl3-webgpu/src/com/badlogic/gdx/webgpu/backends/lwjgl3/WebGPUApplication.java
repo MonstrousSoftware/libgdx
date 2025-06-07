@@ -17,6 +17,7 @@
 package com.badlogic.gdx.webgpu.backends.lwjgl3;
 
 import com.badlogic.gdx.*;
+import com.badlogic.gdx.backends.lwjgl3.*;
 import com.badlogic.gdx.backends.lwjgl3.audio.Lwjgl3Audio;
 import com.badlogic.gdx.backends.lwjgl3.audio.OpenALLwjgl3Audio;
 import com.badlogic.gdx.backends.lwjgl3.audio.mock.MockAudio;
@@ -42,7 +43,7 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 	private final Files files;
 	private final Net net;
 	private final ObjectMap<String, Preferences> preferences = new ObjectMap<String, Preferences>();
-	private final WebGPUClipboard clipboard;
+	private final Lwjgl3Clipboard clipboard;
 	private int logLevel = LOG_INFO;
 	private ApplicationLogger applicationLogger;
 	private volatile boolean running = true;
@@ -61,7 +62,7 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 
 	static void initializeGlfw () {
 		if (errorCallback == null) {
-			WebGPUNativesLoader.load();
+			Lwjgl3NativesLoader.load();
 			errorCallback = GLFWErrorCallback.createPrint(WebGPUApplicationConfiguration.errorStream);
 			GLFW.glfwSetErrorCallback(errorCallback);
 			if (SharedLibraryLoader.os == Os.MacOsX)
@@ -80,7 +81,7 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 	public WebGPUApplication (ApplicationListener listener, WebGPUApplicationConfiguration config) {
 
 		initializeGlfw();
-		setApplicationLogger(new WebGPUApplicationLogger());
+		setApplicationLogger(new Lwjgl3ApplicationLogger());
 		webGPU = JavaWebGPU.init();
 
 		this.config = config = WebGPUApplicationConfiguration.copy(config);
@@ -100,7 +101,7 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 		Gdx.audio = audio;
 		this.files = Gdx.files = createFiles();
 		this.net = Gdx.net = new WebGPUNet(config);
-		this.clipboard = new WebGPUClipboard();
+		this.clipboard = new Lwjgl3Clipboard();
 
 		this.sync = new Sync();
 
@@ -327,8 +328,8 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 		if (preferences.containsKey(name)) {
 			return preferences.get(name);
 		} else {
-			Preferences prefs = new WebGPUPreferences(
-				new WebGPUFileHandle(new File(config.preferencesDirectory, name), config.preferencesFileType));
+			Preferences prefs = new Lwjgl3Preferences(
+				new Lwjgl3FileHandle(new File(config.preferencesDirectory, name), config.preferencesFileType));
 			preferences.put(name, prefs);
 			return prefs;
 		}
@@ -372,12 +373,12 @@ public class WebGPUApplication implements WebGPUApplicationBase {
 	}
 
 	@Override
-	public WebGPUInput createInput (WebGPUWindow window) {
+	public Lwjgl3Input createInput (WebGPUWindow window) {
 		return new DefaultWebGPUInput(window);
 	}
 
 	protected Files createFiles () {
-		return new WebGPUFiles();
+		return new Lwjgl3Files();
 	}
 
 	public WebGPUApplicationConfiguration getConfiguration(){
