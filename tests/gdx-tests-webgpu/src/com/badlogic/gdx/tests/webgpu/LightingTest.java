@@ -20,17 +20,18 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
+import com.badlogic.gdx.graphics.VertexAttribute;
+import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.Environment;
+import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
+import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.ui.CheckBox;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.SelectBox;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.tests.utils.GdxTest;
 import com.badlogic.gdx.tests.utils.PerspectiveCamController;
@@ -90,6 +91,7 @@ public class LightingTest extends GdxTest {
 
 		ColorAttribute ambient = new ColorAttribute(ColorAttribute.AmbientLight, 0.2f, 0.2f, 0.2f, 1f);
 		ColorAttribute ambientOff = new ColorAttribute(ColorAttribute.AmbientLight, 0f, 0f, 0f, 1f);
+		environment.set(ambient);
 
 		DirectionalLight dirLight1 = new DirectionalLight();
 		dirLight1.setDirection(1f, -.2f, .2f);
@@ -108,7 +110,6 @@ public class LightingTest extends GdxTest {
 		// these assets need to be put in the class path...
 		model = loader.loadModel(Gdx.files.internal("data/g3d/teapot.g3db"));
 		instance = new ModelInstance(model, 0, -1, 0);
-
 
 		controller = new PerspectiveCamController(cam);
 		Gdx.input.setInputProcessor(controller);
@@ -160,14 +161,13 @@ public class LightingTest extends GdxTest {
 			}
 		});
 
-		CheckBox checkBox4 = new CheckBox("ambient light", skin);
-		checkBox4.addListener(new ChangeListener() {
+
+		Slider ambientSlider = new Slider(0.0f, 1.0f, 0.01f, false, skin);
+		ambientSlider.addListener(new ChangeListener() {
 			public void changed (ChangeEvent event, Actor actor) {
-				System.out.println("Clicked! Is checked: " + checkBox4.isChecked());
-				if(checkBox4.isChecked())
-					environment.set(ambient);
-				else
-					environment.set(ambientOff);
+				System.out.println("Ambient level: " + ambientSlider.getValue());
+				float v = ambientSlider.getValue();
+				ambient.color.set(v, v, v, 1.0f);
 			}
 		});
 
@@ -177,7 +177,8 @@ public class LightingTest extends GdxTest {
 		controls.add(checkBox1).align(Align.left).row();
 		controls.add(checkBox2).align(Align.left).row();
 		controls.add(checkBox3).align(Align.left).row();
-		controls.add(checkBox4).align(Align.left).row();
+		controls.add(new Label("ambient:", skin)).align(Align.left).row();
+		controls.add(ambientSlider).align(Align.left).row();
 		screenTable.add(controls).left().top().expand();
 
 

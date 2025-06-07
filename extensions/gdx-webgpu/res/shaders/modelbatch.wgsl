@@ -44,7 +44,8 @@ struct VertexOutput {
     @builtin(position) position: vec4f,
     @location(1) uv: vec2f,
     @location(2) color: vec4f,
-    @location(3) normal: vec3f
+    @location(3) normal: vec3f,
+    @location(4) radiance: vec3f,
 };
 
 @vertex
@@ -69,6 +70,21 @@ fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOut
    out.normal = vec3f(0,1,0);
 #endif
 
+    let N:vec3f = normalize(in.normal);
+
+    // for each directional light
+    var radiance : vec3f = uFrame.ambientLight.rgb;
+    for (var i: u32 = 0; i < u32(uFrame.numDirectionalLights); i++) {
+        let light = uFrame.directionalLights[i];
+
+        let L = -normalize(light.direction.xyz);       // L is vector towards light
+        let irradiance = max(dot(L, N), 0.0);
+        if(irradiance > 0.0) {
+            radiance += irradiance *  light.color.rgb;
+        }
+    }
+    out.radiance = radiance;
+
    return out;
 }
 
@@ -81,20 +97,8 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
    let color = in.color;
 #endif
 
-    let N:vec3f = normalize(in.normal);
 
-    // for each directional light
-    var radiance = uFrame.ambientLight.rgb;
-    for (var i: u32 = 0; i < u32(uFrame.numDirectionalLights); i++) {
-        let light = uFrame.directionalLights[i];
-
-        let L = -normalize(light.direction.xyz);       // L is vector towards light
-        let irradiance = max(dot(L, N), 0.0);
-        if(irradiance > 0.0) {
-            radiance += irradiance *  light.color.rgb;
-        }
-    }
-    let litColor = vec4f(color.rgb * radiance, 1.0);
+    let litColor = vec4f(color.rgb * in.radiance, 1.0);
 
     //return vec4f(in.normal, 1.0);
     return litColor;
