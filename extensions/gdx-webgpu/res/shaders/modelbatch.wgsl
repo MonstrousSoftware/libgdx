@@ -19,7 +19,6 @@ struct FrameUniforms {
     cameraPosition: vec4f,
     numDirectionalLights: f32,
     numPointLights: f32,
-    shininess: f32,                 // frame level for now
 };
 
 struct ModelUniforms {
@@ -27,12 +26,12 @@ struct ModelUniforms {
 };
 
 struct MaterialUniforms {
-    diffuseColor: vec4f
-    //shininess: f32
+    diffuseColor: vec4f,
+    shininess: f32
 };
 
 @group(0) @binding(0) var<uniform> uFrame: FrameUniforms;
-@group(1) @binding(0) var<storage, read> material: MaterialUniforms;
+@group(1) @binding(0) var<uniform> material: MaterialUniforms;
 @group(1) @binding(1) var diffuseTexture: texture_2d<f32>;
 @group(1) @binding(2) var diffuseSampler: sampler;
 @group(2) @binding(0) var<storage, read> instances: array<ModelUniforms>;
@@ -101,7 +100,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
 
 #ifdef LIGHTING
     let normal = normalize(in.normal.xyz);
-    let shininess : f32 = uFrame.shininess;
+    let shininess : f32 = material.shininess;
 
 
     var radiance : vec3f = uFrame.ambientLight.rgb;

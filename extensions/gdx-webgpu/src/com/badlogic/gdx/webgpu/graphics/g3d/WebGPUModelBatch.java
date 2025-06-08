@@ -5,6 +5,8 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.RenderableProvider;
+import com.badlogic.gdx.graphics.g3d.utils.DefaultRenderableSorter;
+import com.badlogic.gdx.graphics.g3d.utils.RenderableSorter;
 import com.badlogic.gdx.webgpu.WebGPUGraphicsBase;
 import com.badlogic.gdx.webgpu.graphics.g3d.shaders.WebGPUDefaultShader;
 import com.badlogic.gdx.webgpu.graphics.g3d.shaders.WebGPUDefaultShaderProvider;
@@ -27,6 +29,7 @@ public class WebGPUModelBatch implements Disposable {
     private final Array<Renderable> renderables;
     protected final RenderablePool renderablesPool = new RenderablePool();
     private Camera camera;
+    private RenderableSorter sorter;
 
 
     protected static class RenderablePool extends FlushablePool<Renderable> {
@@ -60,6 +63,7 @@ public class WebGPUModelBatch implements Disposable {
 
         shaderProvider = new WebGPUDefaultShaderProvider(config);
         renderables = new Array<>();
+        this.sorter = new DefaultRenderableSorter();
     }
 
     public boolean isDrawing () {
@@ -110,6 +114,7 @@ public class WebGPUModelBatch implements Disposable {
     public void flush() {
         if(renderables.size > config.maxInstances)
             throw new ArrayIndexOutOfBoundsException("Too many renderables");
+        sorter.sort(camera, renderables);
 
         // todo sort renderables to reduce shader switches and to render front to back for opaque and back to front for transparent
 

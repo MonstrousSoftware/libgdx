@@ -123,8 +123,8 @@ public class ModelBatchShadersTest extends GdxTest {
 
 	/** artificial implementation of a renderable provider just for testing */
 	public static class MyRenderableProvider implements RenderableProvider, Disposable {
-		final WebGPUMeshPart meshPart1, meshPart2;
-		final Material mat1, mat2;
+		final WebGPUMeshPart meshPart1, meshPart2, meshPart3;
+		final Material mat1, mat2, mat3;
 		float angle;
 
 
@@ -142,12 +142,16 @@ public class ModelBatchShadersTest extends GdxTest {
 			mat2 = new Material(TextureAttribute.createDiffuse(texture1));
 			mat2.set(ColorAttribute.createDiffuse(Color.GREEN));
 
+			mat3 = new Material(ColorAttribute.createDiffuse(Color.ORANGE),TextureAttribute.createDiffuse(texture1));
 
 			VertexAttributes attr1 = WebGPUMeshBuilder.createAttributes(VertexAttributes.Usage.Position | VertexAttributes.Usage.TextureCoordinates);
 			meshPart1 = createMeshPart(attr1);
 
 			VertexAttributes attr2 = WebGPUMeshBuilder.createAttributes(VertexAttributes.Usage.Position | VertexAttributes.Usage.ColorPacked);
 			meshPart2 = createMeshPart(attr2);
+
+			VertexAttributes attr3 = WebGPUMeshBuilder.createAttributes(VertexAttributes.Usage.Position | VertexAttributes.Usage.TextureCoordinates);
+			meshPart3 = createMeshPart(attr3);
 		}
 
 		public void update(float deltaTime){
@@ -166,6 +170,12 @@ public class ModelBatchShadersTest extends GdxTest {
 			renderable.meshPart.set(meshPart2);
 			renderable.worldTransform.idt().trn(0,0,-1).rotate(Vector3.Y, -angle);
 			renderable.material = mat2;
+			renderables.add(renderable);
+
+			renderable = pool.obtain();
+			renderable.meshPart.set(meshPart3);
+			renderable.worldTransform.idt().scl(0.5f).trn(0,1.5f,-1).rotate(Vector3.Y, angle);
+			renderable.material = mat3;
 			renderables.add(renderable);
 		}
 

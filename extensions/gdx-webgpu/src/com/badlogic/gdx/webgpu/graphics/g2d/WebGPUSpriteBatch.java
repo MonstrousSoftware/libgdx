@@ -127,9 +127,9 @@ public class WebGPUSpriteBatch implements Batch {
         // define group
         binder.defineGroup(0, bindGroupLayout);
         // define bindings in the group
-        binder.defineUniform("uniforms", 0, 0);
-        binder.defineUniform("texture", 0, 1);
-        binder.defineUniform("textureSampler", 0, 2);
+        binder.defineBinding("uniforms", 0, 0);
+        binder.defineBinding("texture", 0, 1);
+        binder.defineBinding("textureSampler", 0, 2);
         // define uniforms in uniform buffer (binding 0) with their offset
         binder.defineUniform("projectionMatrix", 0, 0, 0);
 

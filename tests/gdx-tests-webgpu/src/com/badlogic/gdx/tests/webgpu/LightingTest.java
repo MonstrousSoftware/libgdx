@@ -88,13 +88,23 @@ public class LightingTest extends GdxTest {
 		cam.lookAt(0,0,0);
 		cam.near = 0.1f;
 
+		// create a model instance
+		WebGPUG3dModelLoader loader = new WebGPUG3dModelLoader(new UBJsonReader());
+		model = loader.loadModel(Gdx.files.internal("data/g3d/head.g3db"));
+		instance = new ModelInstance(model, 0, -1, 0);
+
+		FloatAttribute matShininess =  FloatAttribute.createShininess(1.0f);
+		for(Material mat : instance.materials)
+			mat.set(matShininess);
+
+
 		// Create an environment with directional lights
 		environment = new Environment();
 
 		ColorAttribute ambient =  ColorAttribute.createAmbientLight(0.0f, 0f, 0f, 1f);
 		environment.set(ambient);
-		FloatAttribute shininess =  FloatAttribute.createShininess(1.0f);
-		environment.set(shininess);		// should be on material really
+//		FloatAttribute shininess =  FloatAttribute.createShininess(1.0f);
+//		environment.set(shininess);		// should be on material really
 
 		DirectionalLight dirLight1 = new DirectionalLight();
 		dirLight1.setDirection(1f, -.2f, .2f);
@@ -119,11 +129,7 @@ public class LightingTest extends GdxTest {
 		pointLight2.setIntensity(1f);
 
 
-		WebGPUG3dModelLoader loader = new WebGPUG3dModelLoader(new UBJsonReader());
-		// these assets need to be put in the class path...
-		model = loader.loadModel(Gdx.files.internal("data/g3d/head.g3db"));
 
-		instance = new ModelInstance(model, 0, -1, 0);
 
 		controller = new PerspectiveCamController(cam);
 		Gdx.input.setInputProcessor(controller);
@@ -189,7 +195,7 @@ public class LightingTest extends GdxTest {
 		shinySlider.addListener(new ChangeListener() {
 			public void changed (ChangeEvent event, Actor actor) {
 				System.out.println("Shininess: " + shinySlider.getValue());
-				shininess.value = shinySlider.getValue();
+				matShininess.value = shinySlider.getValue();
 			}
 		});
 

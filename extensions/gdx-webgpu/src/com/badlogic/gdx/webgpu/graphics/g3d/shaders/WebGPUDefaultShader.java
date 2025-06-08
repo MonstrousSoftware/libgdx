@@ -27,6 +27,7 @@ public class WebGPUDefaultShader implements Shader {
     private final int uniformBufferSize;
     private final WebGPUUniformBuffer instanceBuffer;
     private final WebGPUUniformBuffer materialBuffer;
+    private final int materialSize;
     private final int materialBufferSize;
     public int numMaterials;
     private final WebGPUPipeline pipeline;            // a shader has one pipeline
@@ -49,7 +50,7 @@ public class WebGPUDefaultShader implements Shader {
 
         public Config() {
             this.maxInstances = 1024;
-            this.maxMaterials = 1024;
+            this.maxMaterials = 128;
             this.maxDirectionalLights = 3;  // todo hard coded in shader, don't change
             this.maxPointLights = 3;  // todo hard coded in shader, don't change
         }
@@ -69,23 +70,30 @@ public class WebGPUDefaultShader implements Shader {
         defaultTexture = new WebGPUTexture(pixmap);
 
         // Create uniform buffer for the projection matrix
-        uniformBufferSize = (16 + 4 + 4 +4 +4
+        uniformBufferSize = (16 + 4 + 4 +4
                 +8*config.maxDirectionalLights
                 +12*config.maxPointLights)* Float.BYTES;
         uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst | WGPUBufferUsage.Uniform);
 
 
+        materialSize = 256; //4*Float.BYTES;      // data size per material
+        // buffer for uniforms per material, e.g. color
+        // this does not include textures
+
+        materialBufferSize = materialSize * config.maxMaterials;
+        materialBuffer = new WebGPUUniformBuffer(materialBufferSize, WGPUBufferUsage.CopyDst | WGPUBufferUsage.Uniform);
+
         binder = new Binder();
         // define groups
         binder.defineGroup(0, createFrameBindGroupLayout(uniformBufferSize));
-        binder.defineGroup(1, createMaterialBindGroupLayout());
+        binder.defineGroup(1, createMaterialBindGroupLayout(materialSize));
         binder.defineGroup(2, createInstancingBindGroupLayout());
         // define bindings in the groups
-        binder.defineUniform("uniforms", 0, 0);
-        binder.defineUniform("materialUniforms", 1, 0);
-        binder.defineUniform("diffuseTexture", 1, 1);
-        binder.defineUniform("diffuseSampler", 1, 2);
-        binder.defineUniform("instanceUniforms", 2, 0);
+        binder.defineBinding("uniforms", 0, 0);
+        binder.defineBinding("materialUniforms", 1, 0);
+        binder.defineBinding("diffuseTexture", 1, 1);
+        binder.defineBinding("diffuseSampler", 1, 2);
+        binder.defineBinding("instanceUniforms", 2, 0);
         // define uniforms in uniform buffers with their offset
         // frame uniforms
         int offset = 0;
@@ -109,7 +117,7 @@ public class WebGPUDefaultShader implements Shader {
         binder.defineUniform("cameraPosition", 0, 0, offset); offset += 4*4;
         binder.defineUniform("numDirectionalLights", 0, 0, offset); offset += 4;
         binder.defineUniform("numPointLights", 0, 0, offset); offset += 4;
-        binder.defineUniform("shininess", 0, 0, offset); offset += 4;
+
 
 
 
@@ -122,6 +130,7 @@ public class WebGPUDefaultShader implements Shader {
         // material uniforms
         offset = 0;
         binder.defineUniform("diffuseColor", 1, 0, offset); offset += 4*4;
+        binder.defineUniform("shininess", 1, 0, offset); offset += 4;
 
         // set binding 0 to uniform buffer
         binder.setBuffer("uniforms", uniformBuffer, 0, uniformBufferSize);
@@ -134,13 +143,9 @@ public class WebGPUDefaultShader implements Shader {
 
         binder.setBuffer("instanceUniforms", instanceBuffer, 0, (long) instanceSize *config.maxInstances);
 
-        // buffer for uniforms per material, e.g. color
-        // this does not include textures
-        int materialSize = 4*Float.BYTES;      // data size per material
-        materialBufferSize = materialSize * config.maxMaterials;
-        materialBuffer = new WebGPUUniformBuffer(materialBufferSize, WGPUBufferUsage.CopyDst | WGPUBufferUsage.Storage);
 
-        binder.setBuffer("materialUniforms", materialBuffer, 0, (long) materialBufferSize);
+
+        binder.setBuffer("materialUniforms", materialBuffer, 0,  materialSize);
 
 
 
@@ -201,6 +206,7 @@ public class WebGPUDefaultShader implements Shader {
 
         numRenderables = 0;
         lastDiffuseTexture = null;     // force a texture bind on the first texture we encounter
+        numMaterials = 0;
 
         renderPass.setPipeline(pipeline.getHandle());
     }
@@ -259,24 +265,26 @@ public class WebGPUDefaultShader implements Shader {
         //renderable.meshPart.render(renderPass);
 
         numRenderables++;
+
     }
 
     public void end(){
         instanceBuffer.flush();
     }
 
-    private void applyMaterial(Material material){
-        boolean needToBind = false;
+    private ColorAttribute prevDiffuseColor;
 
-        if(material.has(ColorAttribute.Diffuse)) {
-            ColorAttribute diffuse = (ColorAttribute) material.get(ColorAttribute.Diffuse);
-            assert diffuse != null;
-            binder.setUniform("diffuseColor", diffuse.color);
-            needToBind = true;
-        } else {
-            binder.setUniform("diffuseColor", Color.WHITE);
-            needToBind = true;
-        }
+    private void applyMaterial(Material material){
+
+        // diffuse color
+        ColorAttribute diffuse = (ColorAttribute) material.get(ColorAttribute.Diffuse);
+        binder.setUniform("diffuseColor", diffuse == null ? Color.WHITE : diffuse.color, numMaterials*materialSize);
+
+        final FloatAttribute shiny = material.get(FloatAttribute.class,FloatAttribute.Shininess);
+        binder.setUniform("shininess",  shiny == null ? 20 : shiny.value,numMaterials*materialSize );
+
+
+        // diffuse texture
         WebGPUTexture diffuseTexture;
         if(material.has(TextureAttribute.Diffuse)) {
             TextureAttribute ta = (TextureAttribute) material.get(TextureAttribute.Diffuse);
@@ -286,15 +294,15 @@ public class WebGPUDefaultShader implements Shader {
         } else {
             diffuseTexture = defaultTexture;
         }
-        if(diffuseTexture != lastDiffuseTexture) { // avoid unnecessary binds
+
             binder.setTexture("diffuseTexture", diffuseTexture.getTextureView());
             binder.setSampler("diffuseSampler", diffuseTexture.getSampler());
             lastDiffuseTexture = diffuseTexture;
-            needToBind = true;
-        }
 
-        if(needToBind)
-            binder.bindGroup(renderPass, 1);    // material bind group
+
+
+        binder.bindGroup(renderPass, 1, numMaterials*materialSize);
+        numMaterials++;
     }
 
     private WebGPUBindGroupLayout createFrameBindGroupLayout(int uniformBufferSize) {
@@ -305,10 +313,10 @@ public class WebGPUDefaultShader implements Shader {
         return layout;
     }
 
-    private WebGPUBindGroupLayout createMaterialBindGroupLayout() {
+    private WebGPUBindGroupLayout createMaterialBindGroupLayout(int materialStride) {
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch bind group layout (material)");
         layout.begin();
-        layout.addBuffer(0, WGPUShaderStage.Vertex|WGPUShaderStage.Fragment, WGPUBufferBindingType.ReadOnlyStorage, materialBufferSize, false);
+        layout.addBuffer(0, WGPUShaderStage.Vertex|WGPUShaderStage.Fragment, WGPUBufferBindingType.Uniform, materialStride, true);
         layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D, false);
         layout.addSampler(2, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering );
         layout.end();
@@ -395,11 +403,5 @@ public class WebGPUDefaultShader implements Shader {
         final ColorAttribute ambient = lights.get(ColorAttribute.class,ColorAttribute.AmbientLight);
         if(ambient != null)
             binder.setUniform("ambientLight", ambient.color);
-
-        // todo should be at material level
-        final FloatAttribute shiny = lights.get(FloatAttribute.class,FloatAttribute.Shininess);
-        if(shiny != null)
-            binder.setUniform("shininess", shiny.value);
-
     }
 }
