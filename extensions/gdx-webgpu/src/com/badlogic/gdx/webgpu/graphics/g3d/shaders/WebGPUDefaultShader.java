@@ -1,8 +1,7 @@
 package com.badlogic.gdx.webgpu.graphics.g3d.shaders;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.g3d.Attributes;
-import com.badlogic.gdx.graphics.g3d.Environment;
+import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.*;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
@@ -10,8 +9,6 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.webgpu.graphics.Binder;
 import com.badlogic.gdx.webgpu.graphics.WebGPUMesh;
 import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.g3d.Renderable;
-import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.webgpu.webgpu.*;
@@ -29,9 +26,12 @@ public class WebGPUDefaultShader implements Shader {
     private final WebGPUUniformBuffer uniformBuffer;
     private final int uniformBufferSize;
     private final WebGPUUniformBuffer instanceBuffer;
+    private final WebGPUUniformBuffer materialBuffer;
+    private final int materialBufferSize;
+    public int numMaterials;
     private final WebGPUPipeline pipeline;            // a shader has one pipeline
     public int numRenderables;
-    private WebGPUTexture lastTexture;
+    private WebGPUTexture lastDiffuseTexture;
     private WebGPURenderPass renderPass;
     private final VertexAttributes vertexAttributes;
 
@@ -43,11 +43,13 @@ public class WebGPUDefaultShader implements Shader {
 
     public static class Config {
         public int maxInstances;
+        public int maxMaterials;
         public int maxDirectionalLights;
         public int maxPointLights;
 
         public Config() {
             this.maxInstances = 1024;
+            this.maxMaterials = 1024;
             this.maxDirectionalLights = 3;  // todo hard coded in shader, don't change
             this.maxPointLights = 3;  // todo hard coded in shader, don't change
         }
@@ -80,6 +82,7 @@ public class WebGPUDefaultShader implements Shader {
         binder.defineGroup(2, createInstancingBindGroupLayout());
         // define bindings in the groups
         binder.defineUniform("uniforms", 0, 0);
+        binder.defineUniform("materialUniforms", 1, 0);
         binder.defineUniform("diffuseTexture", 1, 1);
         binder.defineUniform("diffuseSampler", 1, 2);
         binder.defineUniform("instanceUniforms", 2, 0);
@@ -108,12 +111,17 @@ public class WebGPUDefaultShader implements Shader {
         binder.defineUniform("numPointLights", 0, 0, offset); offset += 4;
         binder.defineUniform("shininess", 0, 0, offset); offset += 4;
 
+
+
         // note: put shorter uniforms last for padding reasons
 
         System.out.println("offset:"+offset+" "+uniformBufferSize);
         if(offset > uniformBufferSize) throw new RuntimeException("Mismatch in frame uniform buffer size");
         //binder.defineUniform("modelMatrix", 2, 0, 0);
 
+        // material uniforms
+        offset = 0;
+        binder.defineUniform("diffuseColor", 1, 0, offset); offset += 4*4;
 
         // set binding 0 to uniform buffer
         binder.setBuffer("uniforms", uniformBuffer, 0, uniformBufferSize);
@@ -125,6 +133,16 @@ public class WebGPUDefaultShader implements Shader {
         instanceBuffer = new WebGPUUniformBuffer(instanceSize*config.maxInstances, WGPUBufferUsage.CopyDst | WGPUBufferUsage.Storage);
 
         binder.setBuffer("instanceUniforms", instanceBuffer, 0, (long) instanceSize *config.maxInstances);
+
+        // buffer for uniforms per material, e.g. color
+        // this does not include textures
+        int materialSize = 4*Float.BYTES;      // data size per material
+        materialBufferSize = materialSize * config.maxMaterials;
+        materialBuffer = new WebGPUUniformBuffer(materialBufferSize, WGPUBufferUsage.CopyDst | WGPUBufferUsage.Storage);
+
+        binder.setBuffer("materialUniforms", materialBuffer, 0, (long) materialBufferSize);
+
+
 
 
         // get pipeline layout which aggregates all the bind group layouts
@@ -163,7 +181,7 @@ public class WebGPUDefaultShader implements Shader {
         throw new IllegalArgumentException("Use begin(Camera, WebGPURenderPass)");
     }
 
-    public void begin(Camera camera, WebGPURenderPass renderPass){
+    public void begin(Camera camera, Renderable renderable, WebGPURenderPass renderPass){
         this.renderPass = renderPass;
 
         // set global uniforms, that do not depend on renderables
@@ -178,8 +196,11 @@ public class WebGPUDefaultShader implements Shader {
         // idem for group 2 (instances), we will fill in the buffer as we go
         binder.bindGroup(renderPass, 2);
 
+        // todo: different shaders may overwrite lighting uniforms if renderables have other environments ...
+        bindLights(renderable.environment);
+
         numRenderables = 0;
-        lastTexture = null;     // force a texture bind on the first texture we encounter
+        lastDiffuseTexture = null;     // force a texture bind on the first texture we encounter
 
         renderPass.setPipeline(pipeline.getHandle());
     }
@@ -215,11 +236,6 @@ public class WebGPUDefaultShader implements Shader {
             return;
         }
 
-        // todo: is done per renderable, but lighting could be done once for each frame
-        // in fact frame uniforms will now be overwritten per renderable
-        bindLights(renderable, attributes);
-
-
         // renderable-specific data
 
         // add instance data to instance buffer (instance transform)
@@ -227,22 +243,7 @@ public class WebGPUDefaultShader implements Shader {
         instanceBuffer.set(offset,  renderable.worldTransform);
 
         // apply renderable's material
-        WebGPUTexture texture;
-        if(renderable.material.has(TextureAttribute.Diffuse)) {
-            TextureAttribute ta = (TextureAttribute) renderable.material.get(TextureAttribute.Diffuse);
-            assert ta != null;
-            Texture tex = ta.textureDescription.texture;
-            texture = (WebGPUTexture)tex;
-        } else {
-            texture = defaultTexture;
-        }
-        if(texture != lastTexture) { // avoid unnecessary binds
-            binder.setTexture("diffuseTexture", texture.getTextureView());
-            binder.setSampler("diffuseSampler", texture.getSampler());
-            binder.bindGroup(renderPass, 1);    // material bind group
-            lastTexture = texture;
-        }
-
+        applyMaterial(renderable.material);
 
 
         final MeshPart meshPart = renderable.meshPart;
@@ -264,6 +265,38 @@ public class WebGPUDefaultShader implements Shader {
         instanceBuffer.flush();
     }
 
+    private void applyMaterial(Material material){
+        boolean needToBind = false;
+
+        if(material.has(ColorAttribute.Diffuse)) {
+            ColorAttribute diffuse = (ColorAttribute) material.get(ColorAttribute.Diffuse);
+            assert diffuse != null;
+            binder.setUniform("diffuseColor", diffuse.color);
+            needToBind = true;
+        } else {
+            binder.setUniform("diffuseColor", Color.WHITE);
+            needToBind = true;
+        }
+        WebGPUTexture diffuseTexture;
+        if(material.has(TextureAttribute.Diffuse)) {
+            TextureAttribute ta = (TextureAttribute) material.get(TextureAttribute.Diffuse);
+            assert ta != null;
+            Texture tex = ta.textureDescription.texture;
+            diffuseTexture = (WebGPUTexture)tex;
+        } else {
+            diffuseTexture = defaultTexture;
+        }
+        if(diffuseTexture != lastDiffuseTexture) { // avoid unnecessary binds
+            binder.setTexture("diffuseTexture", diffuseTexture.getTextureView());
+            binder.setSampler("diffuseSampler", diffuseTexture.getSampler());
+            lastDiffuseTexture = diffuseTexture;
+            needToBind = true;
+        }
+
+        if(needToBind)
+            binder.bindGroup(renderPass, 1);    // material bind group
+    }
+
     private WebGPUBindGroupLayout createFrameBindGroupLayout(int uniformBufferSize) {
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch bind group layout (frame)");
         layout.begin();
@@ -275,6 +308,7 @@ public class WebGPUDefaultShader implements Shader {
     private WebGPUBindGroupLayout createMaterialBindGroupLayout() {
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch bind group layout (material)");
         layout.begin();
+        layout.addBuffer(0, WGPUShaderStage.Vertex|WGPUShaderStage.Fragment, WGPUBufferBindingType.ReadOnlyStorage, materialBufferSize, false);
         layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D, false);
         layout.addSampler(2, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering );
         layout.end();
@@ -310,12 +344,15 @@ public class WebGPUDefaultShader implements Shader {
         uniformBuffer.dispose();
     }
 
-
-    private void bindLights(final Renderable renderable, Attributes attributes){
-        final Environment lights = renderable.environment;
-        final DirectionalLightsAttribute dla = attributes.get(DirectionalLightsAttribute.class, DirectionalLightsAttribute.Type);
+    /** place lighting information in frame uniform buffer:
+     * ambient light, directional lights, point lights.
+     */
+    private void bindLights( Environment lights){
+        if(lights == null)
+            return;
+        final DirectionalLightsAttribute dla = lights.get(DirectionalLightsAttribute.class, DirectionalLightsAttribute.Type);
         final Array<DirectionalLight> dirs = dla == null ? null : dla.lights;
-        final PointLightsAttribute pla = attributes.get(PointLightsAttribute.class, PointLightsAttribute.Type);
+        final PointLightsAttribute pla = lights.get(PointLightsAttribute.class, PointLightsAttribute.Type);
         final Array<PointLight> points = pla == null ? null : pla.lights;
 
         if(dirs != null){
@@ -355,11 +392,12 @@ public class WebGPUDefaultShader implements Shader {
         }
         binder.setUniform("numPointLights", numPointLights);
 
-        final ColorAttribute ambient = attributes.get(ColorAttribute.class,ColorAttribute.AmbientLight);
+        final ColorAttribute ambient = lights.get(ColorAttribute.class,ColorAttribute.AmbientLight);
         if(ambient != null)
             binder.setUniform("ambientLight", ambient.color);
 
-        final FloatAttribute shiny = attributes.get(FloatAttribute.class,FloatAttribute.Shininess);
+        // todo should be at material level
+        final FloatAttribute shiny = lights.get(FloatAttribute.class,FloatAttribute.Shininess);
         if(shiny != null)
             binder.setUniform("shininess", shiny.value);
 

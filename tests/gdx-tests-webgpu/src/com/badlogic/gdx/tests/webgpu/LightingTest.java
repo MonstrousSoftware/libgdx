@@ -121,7 +121,8 @@ public class LightingTest extends GdxTest {
 
 		WebGPUG3dModelLoader loader = new WebGPUG3dModelLoader(new UBJsonReader());
 		// these assets need to be put in the class path...
-		model = loader.loadModel(Gdx.files.internal("data/g3d/teapot.g3db"));
+		model = loader.loadModel(Gdx.files.internal("data/g3d/head.g3db"));
+
 		instance = new ModelInstance(model, 0, -1, 0);
 
 		controller = new PerspectiveCamController(cam);

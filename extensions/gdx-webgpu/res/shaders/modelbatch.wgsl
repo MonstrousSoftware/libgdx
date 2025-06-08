@@ -25,14 +25,16 @@ struct FrameUniforms {
 struct ModelUniforms {
     modelMatrix: mat4x4f,
 };
-//struct MaterialUniforms {
-//    shininess: f32
-//};
+
+struct MaterialUniforms {
+    diffuseColor: vec4f
+    //shininess: f32
+};
 
 @group(0) @binding(0) var<uniform> uFrame: FrameUniforms;
-//@group(1) @binding(0) var<uniform> material: MaterialUniforms;
-@group(1) @binding(1) var diffuseTexture:        texture_2d<f32>;
-@group(1) @binding(2) var diffuseSampler:       sampler;
+@group(1) @binding(0) var<storage, read> material: MaterialUniforms;
+@group(1) @binding(1) var diffuseTexture: texture_2d<f32>;
+@group(1) @binding(2) var diffuseSampler: sampler;
 @group(2) @binding(0) var<storage, read> instances: array<ModelUniforms>;
 
 
@@ -70,11 +72,13 @@ fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOut
 #else
    out.uv = vec2f(0);
 #endif
+   var diffuseColor = vec4f(1); // default white
 #ifdef COLOR
-   out.color = in.color;
-#else
-   out.color = vec4f(1);
+   diffuseColor = in.color;
 #endif
+   diffuseColor *= vec4f(material.diffuseColor.rgb, 1.0);
+   out.color = diffuseColor;
+
 #ifdef NORMAL
    // transform model normal to world space
    let normal = normalize((instances[instance].modelMatrix * vec4f(in.normal, 0.0)).xyz);
@@ -141,5 +145,6 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
 
     //return vec4f(in.normal, 1.0);
     //return vec4f(uFrame.ambientLight.rgb, 1.0);
+    //return material.diffuseColor;
     return color;
 };

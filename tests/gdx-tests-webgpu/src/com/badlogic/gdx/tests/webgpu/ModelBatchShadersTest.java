@@ -17,6 +17,7 @@
 package com.badlogic.gdx.tests.webgpu;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
 import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
 import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUBitmapFont;
@@ -139,6 +140,7 @@ public class ModelBatchShadersTest extends GdxTest {
 			WebGPUTexture texture1 = new WebGPUTexture(Gdx.files.internal("data/planet_earth.png"), true);
 			texture1.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
 			mat2 = new Material(TextureAttribute.createDiffuse(texture1));
+			mat2.set(ColorAttribute.createDiffuse(Color.GREEN));
 
 
 			VertexAttributes attr1 = WebGPUMeshBuilder.createAttributes(VertexAttributes.Usage.Position | VertexAttributes.Usage.TextureCoordinates);
