@@ -35,7 +35,7 @@ import java.io.File;
 import static org.lwjgl.glfw.GLFW.GLFW_CLIENT_API;
 import static org.lwjgl.glfw.GLFW.GLFW_NO_API;
 
-public class WebGPUApplication implements WebGPUApplicationBase {
+public class  WebGPUApplication implements WebGPUApplicationBase {
 	private final WebGPUApplicationConfiguration config;
 	final Array<WebGPUWindow> windows = new Array<WebGPUWindow>();
 	private volatile WebGPUWindow currentWindow;
