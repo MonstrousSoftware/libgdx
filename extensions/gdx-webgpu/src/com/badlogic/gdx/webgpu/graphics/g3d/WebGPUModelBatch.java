@@ -30,6 +30,10 @@ public class WebGPUModelBatch implements Disposable {
     protected final RenderablePool renderablesPool = new RenderablePool();
     private Camera camera;
     private RenderableSorter sorter;
+    public int numRenderables;
+    public int drawCalls;
+    public int shaderSwitches;
+    public int numMaterials;
 
 
     protected static class RenderablePool extends FlushablePool<Renderable> {
@@ -81,6 +85,9 @@ public class WebGPUModelBatch implements Disposable {
         renderPass = RenderPassBuilder.create(null, gfx.getSamples());
 
         renderables.clear();
+        shaderSwitches = 0;
+        drawCalls = 0;
+        numMaterials = 0;
     }
 
 
@@ -109,6 +116,16 @@ public class WebGPUModelBatch implements Disposable {
         }
     }
 
+    public <T extends RenderableProvider> void render (final Iterable<T> renderableProviders) {
+        for (final RenderableProvider renderableProvider : renderableProviders)
+            render(renderableProvider);
+    }
+
+    public <T extends RenderableProvider> void render (final Iterable<T> renderableProviders, final Environment environment) {
+        for (final RenderableProvider renderableProvider : renderableProviders)
+            render(renderableProvider, environment);
+    }
+
     // todo add other render() combinations
 
     public void flush() {
@@ -121,14 +138,25 @@ public class WebGPUModelBatch implements Disposable {
         WebGPUDefaultShader currentShader = null;
         for(Renderable renderable : renderables) {
             if (currentShader != renderable.shader) {
-                if (currentShader != null) currentShader.end();
+                if (currentShader != null) {
+                    numMaterials += currentShader.numMaterials;
+
+                    currentShader.end();
+                    drawCalls += currentShader.drawCalls;
+                    shaderSwitches++;
+                }
                 currentShader = (WebGPUDefaultShader) renderable.shader;
                 currentShader.begin(camera, renderable, renderPass);
             }
             currentShader.render(renderable);
         }
-        if (currentShader != null) currentShader.end();
+        if (currentShader != null){
+            numMaterials += currentShader.numMaterials;
+            currentShader.end();
+            drawCalls += currentShader.drawCalls;
+        }
         renderablesPool.flush();
+        numRenderables = renderables.size;
         renderables.clear();
     }
 

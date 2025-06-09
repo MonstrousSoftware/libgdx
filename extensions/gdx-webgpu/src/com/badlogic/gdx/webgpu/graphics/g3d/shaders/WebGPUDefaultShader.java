@@ -32,6 +32,7 @@ public class WebGPUDefaultShader implements Shader {
     public int numMaterials;
     private final WebGPUPipeline pipeline;            // a shader has one pipeline
     public int numRenderables;
+    public int drawCalls;
     private WebGPUTexture lastDiffuseTexture;
     private WebGPURenderPass renderPass;
     private final VertexAttributes vertexAttributes;
@@ -207,6 +208,8 @@ public class WebGPUDefaultShader implements Shader {
         numRenderables = 0;
         lastDiffuseTexture = null;     // force a texture bind on the first texture we encounter
         numMaterials = 0;
+        prevMeshPart = null;
+        drawCalls = 0;
 
         renderPass.setPipeline(pipeline.getHandle());
     }
@@ -236,6 +239,10 @@ public class WebGPUDefaultShader implements Shader {
         render(renderable, combinedAttributes);
     }
 
+    private MeshPart prevMeshPart;
+    private int firstInstance;
+    private int instanceCount;
+
     public void render (Renderable renderable, Attributes attributes) {
         if(numRenderables > config.maxInstances) {
             Gdx.app.error("WebGPUModelBatch", "Too many instances, max is " + config.maxInstances);
@@ -255,20 +262,33 @@ public class WebGPUDefaultShader implements Shader {
         final MeshPart meshPart = renderable.meshPart;
         if (!(meshPart.mesh instanceof WebGPUMesh))
             throw new RuntimeException("WebGPUMeshPart supports only WebGPUMesh");
+        if(prevMeshPart != null && meshPart.id.contentEquals(prevMeshPart.id)){     // hack: should compare mesh parts not just id
+            instanceCount++;
+        } else {
+            if(prevMeshPart != null)
+                renderBatch(prevMeshPart, instanceCount, firstInstance);
+            instanceCount = 1;
+            firstInstance = numRenderables;
+            prevMeshPart = meshPart;
+        }
+        numRenderables++;
+    }
+
+    // to combine instances in single draw call if they have same mesh part
+    private void renderBatch(MeshPart meshPart, int numInstances, int numRenderables){
+        //System.out.println("numInstances: "+numInstances);
         final WebGPUMesh mesh = (WebGPUMesh) meshPart.mesh;
-
         // use an instance offset to find the right modelMatrix in the instanceBuffer
-        mesh.render(renderPass, meshPart.primitiveType, meshPart.offset, meshPart.size, 1, numRenderables);
-
+        mesh.render(renderPass, meshPart.primitiveType, meshPart.offset, meshPart.size, numInstances, numRenderables);
         // we can't use the following statement, because meshPart was unmodified and doesn't know about WebGPUMesh
         // and we're not using WebGPUMeshPart because then we need to modify Renderable.
         //renderable.meshPart.render(renderPass);
-
-        numRenderables++;
-
+        drawCalls++;
     }
 
     public void end(){
+        if(prevMeshPart != null)
+            renderBatch(prevMeshPart, instanceCount, firstInstance);
         instanceBuffer.flush();
     }
 

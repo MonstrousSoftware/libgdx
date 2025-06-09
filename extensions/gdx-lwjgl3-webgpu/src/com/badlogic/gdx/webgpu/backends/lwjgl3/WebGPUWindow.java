@@ -51,8 +51,6 @@ public class WebGPUWindow implements Disposable {
 	private boolean requestRendering = false;
 	private WebGPU_JNI webGPU;
 
-	private final boolean vsyncEnabled = true;	// per window?? todo read from config
-
 	private final GLFWWindowFocusCallback focusCallback = new GLFWWindowFocusCallback() {
 		@Override
 		public void invoke (long windowHandle, final boolean focused) {

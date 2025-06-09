@@ -20,8 +20,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
-import com.badlogic.gdx.graphics.VertexAttribute;
-import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
@@ -30,16 +28,17 @@ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
-import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.CheckBox;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Slider;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.tests.utils.GdxTest;
 import com.badlogic.gdx.tests.utils.PerspectiveCamController;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.UBJsonReader;
 import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
 import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
@@ -48,7 +47,6 @@ import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
 import com.badlogic.gdx.webgpu.graphics.g3d.WebGPUModelBatch;
 import com.badlogic.gdx.webgpu.graphics.g3d.loaders.WebGPUG3dModelLoader;
 import com.badlogic.gdx.webgpu.graphics.g3d.loaders.WebGPUObjLoader;
-import com.badlogic.gdx.webgpu.graphics.g3d.shaders.WebGPUDefaultShader;
 import com.badlogic.gdx.webgpu.graphics.utils.WebGPUScreenUtils;
 import com.badlogic.gdx.webgpu.graphics.viewport.WebGPUScreenViewport;
 import com.badlogic.gdx.webgpu.scene2d.WebGPUSkin;
@@ -59,7 +57,7 @@ import com.badlogic.gdx.webgpu.scene2d.WebGPUStage;
  * */
 
 
-public class LightingTest extends GdxTest {
+public class InstancingTest extends GdxTest {
 
 	WebGPUModelBatch modelBatch;
 	PerspectiveCamera cam;
@@ -80,27 +78,37 @@ public class LightingTest extends GdxTest {
 		config.setWindowedMode(640, 480);
 		config.setTitle("WebGPUTest");
 
-		new WebGPUApplication(new LightingTest(), config);
+		new WebGPUApplication(new InstancingTest(), config);
 	}
 
 	// application
 	public void create () {
 		modelBatch = new WebGPUModelBatch();
 		cam = new PerspectiveCamera(50, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		cam.position.set(0, -0.5f, 2.5f);
+		cam.position.set(0, 1.f, 2.5f);
 		cam.lookAt(0,0,0);
 		cam.near = 0.1f;
 
 		// create a model instance
 		instances = new Array<>();
-		WebGPUG3dModelLoader loader = new WebGPUG3dModelLoader(new UBJsonReader());
-		model = loader.loadModel(Gdx.files.internal("data/g3d/head.g3db"));
+		//WebGPUG3dModelLoader loader = new WebGPUG3dModelLoader(new UBJsonReader());
+		WebGPUObjLoader loader = new WebGPUObjLoader();
+		model = loader.loadModel(Gdx.files.internal("data/g3d/ducky.obj"), true);
 		ModelInstance instance = new ModelInstance(model, 0, -1, 0);
 
 		FloatAttribute matShininess =  FloatAttribute.createShininess(1.0f);
 		for(Material mat : instance.materials)
 			mat.set(matShininess);
 		instances.add(instance);
+
+		for(float z = -3; z > -20; z-= 2) {
+            for (float x = -5; x < 5; x += 1) {
+                instance = new ModelInstance(model, x, -1, z);
+				instance.transform.rotate(Vector3.Y, (float)Math.random() * 360f);
+                instances.add(instance);
+
+            }
+		}
 
 		// Create an environment with lights
 		environment = new Environment();
@@ -276,7 +284,10 @@ public class LightingTest extends GdxTest {
 
 
 		batch.begin();
-		font.draw(batch, "Demonstration of lighting" , 0, 20);
+		int y = 120;
+		font.draw(batch, "Draw calls: "+modelBatch.drawCalls+" shader switches: "+modelBatch.shaderSwitches,0, y -= 20);
+		font.draw(batch, "numRenderables: "+modelBatch.numRenderables ,0, y -= 20);
+		font.draw(batch, "Materials: "+modelBatch.numMaterials ,0, y -= 20);
 		batch.end();
 
 		stage.act();
