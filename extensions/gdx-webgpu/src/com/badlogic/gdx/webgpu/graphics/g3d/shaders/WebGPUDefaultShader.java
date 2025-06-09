@@ -33,7 +33,6 @@ public class WebGPUDefaultShader implements Shader {
     private final WebGPUPipeline pipeline;            // a shader has one pipeline
     public int numRenderables;
     public int drawCalls;
-    private WebGPUTexture lastDiffuseTexture;
     private WebGPURenderPass renderPass;
     private final VertexAttributes vertexAttributes;
 
@@ -206,10 +205,10 @@ public class WebGPUDefaultShader implements Shader {
         bindLights(renderable.environment);
 
         numRenderables = 0;
-        lastDiffuseTexture = null;     // force a texture bind on the first texture we encounter
         numMaterials = 0;
         prevMeshPart = null;
         drawCalls = 0;
+        prevMaterial = null;
 
         renderPass.setPipeline(pipeline.getHandle());
     }
@@ -292,9 +291,16 @@ public class WebGPUDefaultShader implements Shader {
         instanceBuffer.flush();
     }
 
-    private ColorAttribute prevDiffuseColor;
+    private Material prevMaterial;
 
     private void applyMaterial(Material material){
+
+        // is this material the same as the previous? then we are done.
+        if(prevMaterial != null && material.attributesHash() == prevMaterial.attributesHash())  // store hash instead of prev mat?
+            return;
+
+        if(numMaterials >= config.maxMaterials)
+            throw new RuntimeException("Too many materials (> "+config.maxMaterials+"). Increase shader.maxMaterials");
 
         // diffuse color
         ColorAttribute diffuse = (ColorAttribute) material.get(ColorAttribute.Diffuse);
@@ -315,14 +321,15 @@ public class WebGPUDefaultShader implements Shader {
             diffuseTexture = defaultTexture;
         }
 
-            binder.setTexture("diffuseTexture", diffuseTexture.getTextureView());
-            binder.setSampler("diffuseSampler", diffuseTexture.getSampler());
-            lastDiffuseTexture = diffuseTexture;
-
-
+        binder.setTexture("diffuseTexture", diffuseTexture.getTextureView());
+        binder.setSampler("diffuseSampler", diffuseTexture.getSampler());
 
         binder.bindGroup(renderPass, 1, numMaterials*materialSize);
+
         numMaterials++;
+
+        prevMaterial = material;
+
     }
 
     private WebGPUBindGroupLayout createFrameBindGroupLayout(int uniformBufferSize) {

@@ -51,9 +51,9 @@ import com.badlogic.gdx.webgpu.graphics.utils.WebGPUScreenUtils;
 import com.badlogic.gdx.webgpu.graphics.viewport.WebGPUScreenViewport;
 import com.badlogic.gdx.webgpu.scene2d.WebGPUSkin;
 import com.badlogic.gdx.webgpu.scene2d.WebGPUStage;
+import com.badlogic.gdx.webgpu.webgpu.WGPUBackendType;
 
-/** Test lights in environment
- * - directional lights, point lights, ambient light
+/** Test renderable instancing - reducing the number of draw calls if renderables use the same mesh part.
  * */
 
 
@@ -77,6 +77,8 @@ public class InstancingTest extends GdxTest {
 		WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
 		config.setWindowedMode(640, 480);
 		config.setTitle("WebGPUTest");
+		config.useVsync(false);
+		config.backend = WGPUBackendType.Vulkan;
 
 		new WebGPUApplication(new InstancingTest(), config);
 	}
@@ -96,13 +98,10 @@ public class InstancingTest extends GdxTest {
 		model = loader.loadModel(Gdx.files.internal("data/g3d/ducky.obj"), true);
 		ModelInstance instance = new ModelInstance(model, 0, -1, 0);
 
-		FloatAttribute matShininess =  FloatAttribute.createShininess(1.0f);
-		for(Material mat : instance.materials)
-			mat.set(matShininess);
 		instances.add(instance);
 
-		for(float z = -3; z > -20; z-= 2) {
-            for (float x = -5; x < 5; x += 1) {
+		for(float z = -3; z > -40; z-= 2) {
+            for (float x = -25; x < 25; x += 1) {
                 instance = new ModelInstance(model, x, -1, z);
 				instance.transform.rotate(Vector3.Y, (float)Math.random() * 360f);
                 instances.add(instance);
@@ -205,13 +204,6 @@ public class InstancingTest extends GdxTest {
 			}
 		});
 
-		Slider shinySlider = new Slider(0.1f, 256.0f, 1f, false, skin);
-		shinySlider.addListener(new ChangeListener() {
-			public void changed (ChangeEvent event, Actor actor) {
-				System.out.println("Shininess: " + shinySlider.getValue());
-				matShininess.value = shinySlider.getValue();
-			}
-		});
 
 		CheckBox checkBox4 = new CheckBox("purple point light", skin);
 		checkBox4.addListener(new ChangeListener() {
@@ -254,8 +246,6 @@ public class InstancingTest extends GdxTest {
 		controls.add(checkBox3).align(Align.left).row();
 		controls.add(new Label("ambient:", skin)).align(Align.left).row();
 		controls.add(ambientSlider).align(Align.left).row();
-		controls.add(new Label("shininess:", skin)).align(Align.left).row();
-		controls.add(shinySlider).align(Align.left).row();
 		controls.add(checkBox4).align(Align.left).row();
 		controls.add(checkBox5).align(Align.left).row();
 		controls.add(new Label("point lights intensity:", skin)).align(Align.left).row();
@@ -288,6 +278,7 @@ public class InstancingTest extends GdxTest {
 		font.draw(batch, "Draw calls: "+modelBatch.drawCalls+" shader switches: "+modelBatch.shaderSwitches,0, y -= 20);
 		font.draw(batch, "numRenderables: "+modelBatch.numRenderables ,0, y -= 20);
 		font.draw(batch, "Materials: "+modelBatch.numMaterials ,0, y -= 20);
+		font.draw(batch, "FPS: "+Gdx.graphics.getFramesPerSecond() ,0, y -= 20);
 		batch.end();
 
 		stage.act();
