@@ -14,8 +14,9 @@ import static com.badlogic.gdx.webgpu.utils.JavaWebGPU.createIntegerArrayPointer
 public class WebGPUDevice implements Disposable {
     private final Pointer device;
     private final WebGPU_JNI webGPU;
+    private final WGPUSupportedLimits supportedLimits;
 
-    public WebGPUDevice(WebGPUAdapter adapter) {
+    public WebGPUDevice(WebGPUAdapter adapter, boolean gpuTimingEnabled) {
         WebGPUGraphicsBase gfx = (WebGPUGraphicsBase) Gdx.graphics;
         webGPU = gfx.getWebGPU();
 
@@ -49,7 +50,7 @@ public class WebGPUDevice implements Disposable {
 
 
         // required feature to do timestamp queries
-        if(gfx.getGPUtimingEnabled()){
+        if(gpuTimingEnabled){
             int[] featureValues = new int[1];
             featureValues[0] = WGPUFeatureName.TimestampQuery;
             Pointer requiredFeatures = createIntegerArrayPointer(featureValues);
@@ -72,18 +73,23 @@ public class WebGPUDevice implements Disposable {
 
         // Collect the device limits which may be more constrained than the adapter limits
         // e.g. getMinUniformBufferOffsetAlignment maybe becomes 256 on the device instead of 64 on the adapter.
-//        webGPU.wgpuDeviceGetLimits(device, LibGPU.supportedLimits);
-//        System.out.println("device maxVertexAttributes " + supportedLimits.getLimits().getMaxVertexAttributes());
-//
-//        System.out.println("maxTextureDimension1D " + supportedLimits.getLimits().getMaxTextureDimension1D());
-//        System.out.println("maxTextureDimension2D " + supportedLimits.getLimits().getMaxTextureDimension2D());
-//        System.out.println("maxTextureDimension3D " + supportedLimits.getLimits().getMaxTextureDimension3D());
-//        System.out.println("maxTextureArrayLayers " + supportedLimits.getLimits().getMaxTextureArrayLayers());
+        supportedLimits = WGPUSupportedLimits.createDirect();
+        webGPU.wgpuDeviceGetLimits(device, supportedLimits);
+        System.out.println("device maxVertexAttributes " + supportedLimits.getLimits().getMaxVertexAttributes());
+
+        System.out.println("maxTextureDimension1D " + supportedLimits.getLimits().getMaxTextureDimension1D());
+        System.out.println("maxTextureDimension2D " + supportedLimits.getLimits().getMaxTextureDimension2D());
+        System.out.println("maxTextureDimension3D " + supportedLimits.getLimits().getMaxTextureDimension3D());
+        System.out.println("maxTextureArrayLayers " + supportedLimits.getLimits().getMaxTextureArrayLayers());
 
 
-        if (gfx.getGPUtimingEnabled() && !webGPU.wgpuDeviceHasFeature(device, WGPUFeatureName.TimestampQuery)) {
+        if (gpuTimingEnabled && !webGPU.wgpuDeviceHasFeature(device, WGPUFeatureName.TimestampQuery)) {
             System.out.println("** Requested timestamp queries are not supported!");
         }
+    }
+
+    public WGPUSupportedLimits getSupportedLimits(){
+        return supportedLimits;
     }
 
     private Pointer getDeviceSync(WebGPUAdapter adapter, WGPUDeviceDescriptor deviceDescriptor){

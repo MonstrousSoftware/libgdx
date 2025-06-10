@@ -261,7 +261,8 @@ public class WebGPUDefaultShader implements Shader {
         final MeshPart meshPart = renderable.meshPart;
         if (!(meshPart.mesh instanceof WebGPUMesh))
             throw new RuntimeException("WebGPUMeshPart supports only WebGPUMesh");
-        if(prevMeshPart != null && meshPart.id.contentEquals(prevMeshPart.id)){     // hack: should compare mesh parts not just id
+        if(prevMeshPart != null && meshPart.id.contentEquals(prevMeshPart.id)){     // todo: should compare mesh parts not just id which is even optional
+            // note that renderables get a copy of a mesh part not a reference to the Model's mesh part, so you can just compare references.
             instanceCount++;
         } else {
             if(prevMeshPart != null)

@@ -16,18 +16,15 @@ public interface WebGPUGraphicsBase {
 
     WebGPUDevice getDevice ();
     WebGPUQueue getQueue ();
-    Pointer getSurface ();
+//    Pointer getSurface ();
     WGPUTextureFormat getSurfaceFormat ();
     Pointer getTargetView ();
     WebGPUCommandEncoder getCommandEncoder ();
     WebGPUTexture getDepthTexture ();
-//    WebGPUTextureView getDepthTextureView ();
-//    WGPUTextureFormat getDepthTextureFormat ();
-    boolean getGPUtimingEnabled();
+//    boolean getGPUtimingEnabled();
     WGPUBackendType getRequestedBackendType();
     int getSamples();
-    WGPUSupportedLimits getSupportedLimits();
-    void setSupportedLimits(WGPUSupportedLimits supportedLimits);
+
     WebGPUTexture getMultiSamplingTexture();
 
 }

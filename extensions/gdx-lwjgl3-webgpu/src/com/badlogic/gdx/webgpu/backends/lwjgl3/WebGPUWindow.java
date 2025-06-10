@@ -202,7 +202,6 @@ public class WebGPUWindow implements Disposable {
 		this.input = application.createInput(this);
 		long win32handle = GLFWNativeWin32.glfwGetWin32Window(getWindowHandle());
 
-		//initWebGPU(win32Handle, getGraphics().getWidth(), getGraphics().getHeight());
 		this.graphics = new WebGPUGraphics(this, application.getWebGPU(), win32handle);
 
 		GLFW.glfwSetWindowFocusCallback(windowHandle, focusCallback);
@@ -436,7 +435,7 @@ public class WebGPUWindow implements Disposable {
 		if (shouldRender) {
 			graphics.update();
 			// listener.render();
-			renderFrame();
+			graphics.context.renderFrame(listener);
 
 			// GLFW.glfwSwapBuffers(windowHandle);
 		}
@@ -446,63 +445,63 @@ public class WebGPUWindow implements Disposable {
 		return shouldRender;
 	}
 
-	public void renderFrame () {
-
-		graphics.targetView = getNextSurfaceTextureView();
-		if (graphics.targetView.address() == 0) {
-			System.out.println("*** Invalid target view");
-			return;
-		}
-
-		// obtain a command encoder
-		graphics.commandEncoder = new WebGPUCommandEncoder(graphics.getDevice());
-
-		listener.render();	// call user code
-
-		// finish command encoder to get a command buffer
-		WebGPUCommandBuffer commandBuffer = graphics.commandEncoder.finish();
-		graphics.commandEncoder.dispose();
-		graphics.commandEncoder = null;
-		graphics.queue.submit(commandBuffer);	// submit command buffer
-		commandBuffer.dispose();
-
-		// At the end of the frame
-		webGPU.wgpuTextureViewRelease(graphics.targetView);
-		webGPU.wgpuSurfacePresent(graphics.surface);
-		graphics.targetView = null;
-		graphics.device.tick();
-
-	}
-
-	private Pointer getNextSurfaceTextureView () {
-		// [...] Get the next surface texture
-		WGPUSurfaceTexture surfaceTexture = WGPUSurfaceTexture.createDirect();
-		webGPU.wgpuSurfaceGetCurrentTexture(graphics.surface, surfaceTexture);
-		// System.out.println("get current texture: "+surfaceTexture.status.get());
-		if (surfaceTexture.getStatus() != WGPUSurfaceGetCurrentTextureStatus.Success) {
-			System.out.println("*** No current texture");
-			return JavaWebGPU.createNullPointer();
-		}
-		// [...] Create surface texture view
-		WGPUTextureViewDescriptor viewDescriptor = WGPUTextureViewDescriptor.createDirect();
-		viewDescriptor.setNextInChain();
-		viewDescriptor.setLabel("Surface texture view");
-		Pointer tex = surfaceTexture.getTexture();
-		WGPUTextureFormat format = webGPU.wgpuTextureGetFormat(tex);
-		// System.out.println("Set format "+format);
-		viewDescriptor.setFormat(format);
-		viewDescriptor.setDimension(WGPUTextureViewDimension._2D);
-		viewDescriptor.setBaseMipLevel(0);
-		viewDescriptor.setMipLevelCount(1);
-		viewDescriptor.setBaseArrayLayer(0);
-		viewDescriptor.setArrayLayerCount(1);
-		viewDescriptor.setAspect(WGPUTextureAspect.All);
-		Pointer view = webGPU.wgpuTextureCreateView(surfaceTexture.getTexture(), viewDescriptor);
-
-		// we can release the texture now as the texture view now has its own reference to it
-		webGPU.wgpuTextureRelease(surfaceTexture.getTexture());
-		return view;
-	}
+//	public void renderFrame () {
+//
+//		graphics.targetView = getNextSurfaceTextureView();
+//		if (graphics.targetView.address() == 0) {
+//			System.out.println("*** Invalid target view");
+//			return;
+//		}
+//
+//		// obtain a command encoder
+//		graphics.commandEncoder = new WebGPUCommandEncoder(graphics.getDevice());
+//
+//		listener.render();	// call user code
+//
+//		// finish command encoder to get a command buffer
+//		WebGPUCommandBuffer commandBuffer = graphics.commandEncoder.finish();
+//		graphics.commandEncoder.dispose();
+//		graphics.commandEncoder = null;
+//		graphics.queue.submit(commandBuffer);	// submit command buffer
+//		commandBuffer.dispose();
+//
+//		// At the end of the frame
+//		webGPU.wgpuTextureViewRelease(graphics.targetView);
+//		webGPU.wgpuSurfacePresent(graphics.surface);
+//		graphics.targetView = null;
+//		graphics.device.tick();
+//
+//	}
+//
+//	private Pointer getNextSurfaceTextureView () {
+//		// [...] Get the next surface texture
+//		WGPUSurfaceTexture surfaceTexture = WGPUSurfaceTexture.createDirect();
+//		webGPU.wgpuSurfaceGetCurrentTexture(graphics.surface, surfaceTexture);
+//		// System.out.println("get current texture: "+surfaceTexture.status.get());
+//		if (surfaceTexture.getStatus() != WGPUSurfaceGetCurrentTextureStatus.Success) {
+//			System.out.println("*** No current texture");
+//			return JavaWebGPU.createNullPointer();
+//		}
+//		// [...] Create surface texture view
+//		WGPUTextureViewDescriptor viewDescriptor = WGPUTextureViewDescriptor.createDirect();
+//		viewDescriptor.setNextInChain();
+//		viewDescriptor.setLabel("Surface texture view");
+//		Pointer tex = surfaceTexture.getTexture();
+//		WGPUTextureFormat format = webGPU.wgpuTextureGetFormat(tex);
+//		// System.out.println("Set format "+format);
+//		viewDescriptor.setFormat(format);
+//		viewDescriptor.setDimension(WGPUTextureViewDimension._2D);
+//		viewDescriptor.setBaseMipLevel(0);
+//		viewDescriptor.setMipLevelCount(1);
+//		viewDescriptor.setBaseArrayLayer(0);
+//		viewDescriptor.setArrayLayerCount(1);
+//		viewDescriptor.setAspect(WGPUTextureAspect.All);
+//		Pointer view = webGPU.wgpuTextureCreateView(surfaceTexture.getTexture(), viewDescriptor);
+//
+//		// we can release the texture now as the texture view now has its own reference to it
+//		webGPU.wgpuTextureRelease(surfaceTexture.getTexture());
+//		return view;
+//	}
 
 
 

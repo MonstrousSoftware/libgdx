@@ -380,6 +380,10 @@ Refactored as extension gdx-webgpu instead of as backend.
 Added support for (up to 3) directional lights in Environment plus ambient light.
 Added support for FloatAttribute.shininess and specular lighting
 
+10/6/2025:
+Added support for auto-instancing, i.e. ModelBatch will recognize when renderables use the same mesh part and use an instanced draw call.
+Reduced number of material switches by comparing to previous material.
+
 
 
 

@@ -11,18 +11,19 @@ import jnr.ffi.Pointer;
 public class WebGPUAdapter implements Disposable {
     private final WebGPU_JNI webGPU;
     private Pointer adapter;
+    private final WGPUSupportedLimits supportedLimits;
 
-    public WebGPUAdapter(Pointer instance, Pointer surface) {
+    public WebGPUAdapter(Pointer instance, Pointer surface, WGPUBackendType backendType, WGPUPowerPreference powerPreference) {
         WebGPUGraphicsBase gfx = (WebGPUGraphicsBase)Gdx.graphics;
         webGPU = gfx.getWebGPU();
 
         WGPURequestAdapterOptions options = WGPURequestAdapterOptions.createDirect();
         options.setNextInChain();
         options.setCompatibleSurface(surface);
-        options.setBackendType(gfx.getRequestedBackendType());
-        options.setPowerPreference(WGPUPowerPreference.HighPerformance);
+        options.setBackendType(backendType);
+        options.setPowerPreference(powerPreference);
 
-        if(gfx.getRequestedBackendType() == WGPUBackendType.Null)
+        if(backendType == WGPUBackendType.Null)
             throw new IllegalStateException("Request Adapter: Back end 'Null' only valid if config.noWindow is true");
 
         // Get Adapter
@@ -30,13 +31,11 @@ public class WebGPUAdapter implements Disposable {
         if(adapter == null){
             System.out.println("Configured adapter back end ("+ gfx.getRequestedBackendType()+") not available, requesting fallback");
             options.setBackendType(WGPUBackendType.Undefined);
-            options.setPowerPreference(WGPUPowerPreference.HighPerformance);
+            options.setPowerPreference(powerPreference);
             adapter = getAdapterSync(instance, options);
         }
 
-
-        gfx.setSupportedLimits(WGPUSupportedLimits.createDirect());
-        WGPUSupportedLimits supportedLimits = gfx.getSupportedLimits();
+        supportedLimits = WGPUSupportedLimits.createDirect();
         gfx.getWebGPU().wgpuAdapterGetLimits(adapter, supportedLimits);
 //        System.out.println("adapter maxVertexAttributes " + supportedLimits.getLimits().getMaxVertexAttributes());
 //        System.out.println("adapter maxBindGroups " + supportedLimits.getLimits().getMaxBindGroups());
@@ -56,6 +55,10 @@ public class WebGPUAdapter implements Disposable {
         System.out.println("Device ID: " + adapterProperties.getDeviceID());
         System.out.println("Back end: " + adapterProperties.getBackendType());
         System.out.println("Description: " + adapterProperties.getDriverDescription());
+    }
+
+    public WGPUSupportedLimits getSupportedLimits(){
+        return supportedLimits;
     }
 
     public Pointer getHandle(){

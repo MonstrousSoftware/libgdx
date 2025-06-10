@@ -71,7 +71,7 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
         int stride = 0;
         if(maxSlices > 1) { // do we use dynamic offsets?
             WebGPUGraphicsBase gfx = (WebGPUGraphicsBase) Gdx.graphics;
-            int uniformAlignment = (int) gfx.getSupportedLimits().getLimits().getMinUniformBufferOffsetAlignment();
+            int uniformAlignment = (int) gfx.getDevice().getSupportedLimits().getLimits().getMinUniformBufferOffsetAlignment();
             stride = ceilToNextMultiple(contentSize, uniformAlignment);
         }
         return stride;
