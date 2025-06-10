@@ -79,6 +79,7 @@ public class InstancingTest extends GdxTest {
 		config.setTitle("WebGPUTest");
 		config.useVsync(false);
 		config.backend = WGPUBackendType.Vulkan;
+		config.enableGPUtiming = false;
 
 		new WebGPUApplication(new InstancingTest(), config);
 	}

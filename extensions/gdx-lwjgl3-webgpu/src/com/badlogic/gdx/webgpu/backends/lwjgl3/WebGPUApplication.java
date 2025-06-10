@@ -100,7 +100,9 @@ public class  WebGPUApplication implements WebGPUApplicationBase {
 		}
 		Gdx.audio = audio;
 		this.files = Gdx.files = createFiles();
-		this.net = Gdx.net = new WebGPUNet(config);
+		Lwjgl3ApplicationConfiguration lwConfig = new Lwjgl3ApplicationConfiguration();
+		lwConfig.setMaxNetThreads(config.maxNetThreads);
+		this.net = Gdx.net = new Lwjgl3Net(lwConfig);
 		this.clipboard = new Lwjgl3Clipboard();
 
 		this.sync = new Sync();

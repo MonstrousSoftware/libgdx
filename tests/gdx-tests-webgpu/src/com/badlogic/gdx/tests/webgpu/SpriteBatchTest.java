@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
 import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
 import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
+import com.badlogic.gdx.webgpu.webgpu.WGPUBackendType;
 import com.badlogic.gdx.webgpu.wrappers.WebGPUTexture;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Sprite;
@@ -35,8 +36,10 @@ public class SpriteBatchTest extends GdxTest {
         WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
         config.setWindowedMode(640, 480);
         config.setTitle("WebGPUTest");
+        //config.backend = WGPUBackendType.Vulkan;
         //config.backend = WGPUBackendType.D3D12;
         config.enableGPUtiming = false;
+        config.useVsync(false);
 
         new WebGPUApplication(new SpriteBatchTest(), config);
     }

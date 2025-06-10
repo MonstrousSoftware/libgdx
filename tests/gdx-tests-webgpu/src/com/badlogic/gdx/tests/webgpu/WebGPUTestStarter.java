@@ -34,6 +34,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.tests.utils.CommandLineOptions;
 import com.badlogic.gdx.tests.utils.GdxTestWrapper;
+import com.badlogic.gdx.webgpu.webgpu.WGPUBackendType;
 
 
 // test starter
@@ -51,7 +52,7 @@ public class WebGPUTestStarter {
 
 		WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
 		config.setWindowedMode(320, 480);
-		//config.backend = WGPUBackendType.Vulkan;
+		config.backend = WGPUBackendType.Vulkan;
 
 //		if (options.startupTestName != null) {
 //			ApplicationListener test = GdxTests.newTest(options.startupTestName);
