@@ -27,17 +27,13 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
 
     public static class Configuration {
         public long windowHandle;
-        public int width;
-        public int height;
         public int numSamples;
         public boolean vSyncEnabled;
         public boolean gpuTimingEnabled;
         public WGPUBackendType requestedBackendType;
 
-        public Configuration(long windowHandle, int width, int height, int numSamples, boolean vSyncEnabled, boolean gpuTimingEnabled, WGPUBackendType requestedBackendType) {
+        public Configuration(long windowHandle, int numSamples, boolean vSyncEnabled, boolean gpuTimingEnabled, WGPUBackendType requestedBackendType) {
             this.windowHandle = windowHandle;
-            this.width = width;
-            this.height = height;
             this.numSamples = numSamples;
             this.vSyncEnabled = vSyncEnabled;
             this.gpuTimingEnabled = gpuTimingEnabled;
@@ -69,12 +65,7 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
 
         queue = new WebGPUQueue(device);
 
-//        initSwapChain(config.width, config.height, config.vSyncEnabled);
-//        initDepthBuffer(config.width, config.height, config.numSamples);
-//
-//        if (config.numSamples > 1) {
-//            multiSamplingTexture = new WebGPUTexture("multisampling", config.width, config.height, false, true, surfaceFormat, config.numSamples);
-//        }
+        // create a swap chain via resize
     }
 
 
@@ -136,6 +127,8 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
     }
 
     public void resize(int width, int height){
+        if(width * height == 0 )   // on minimize, don't create zero sized textures
+            return;
         terminateDepthBuffer();
         if(surface != null)
             webGPU.wgpuSurfaceUnconfigure(surface);

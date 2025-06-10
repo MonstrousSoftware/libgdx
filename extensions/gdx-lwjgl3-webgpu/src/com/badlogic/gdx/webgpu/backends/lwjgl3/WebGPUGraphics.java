@@ -62,19 +62,9 @@ public class WebGPUGraphics extends AbstractGraphics implements WebGPUGraphicsBa
 	private int windowWidthBeforeFullscreen;
 	private int windowHeightBeforeFullscreen;
 	private DisplayMode displayModeBeforeFullscreen = null;
-	public final WebGPUGraphicsContext context;
 	private final WebGPU_JNI webGPU;
-//	public WebGPUDevice device;
-//	public WebGPUQueue queue;
-//	public Pointer surface;
-//	public WGPUTextureFormat surfaceFormat;
-//	public Pointer targetView;
-//	public WebGPUCommandEncoder commandEncoder;
-//	//public WGPUTextureFormat depthTextureFormat;
-//	public WebGPUTexture depthTexture;
-//	//public WebGPUTextureView depthTextureView;
-//	private WGPUSupportedLimits supportedLimits;
-//	private WebGPUTexture multiSamplingTexture;
+	public final WebGPUGraphicsContext context;
+
 
 	IntBuffer tmpBuffer = BufferUtils.createIntBuffer(1);
 	IntBuffer tmpBuffer2 = BufferUtils.createIntBuffer(1);
@@ -95,12 +85,6 @@ public class WebGPUGraphics extends AbstractGraphics implements WebGPUGraphicsBa
 				//window.renderFrame();
 				// window.getListener().render();
 				// GLFW.glfwSwapBuffers(windowHandle);
-				WebGPUApplication app = (WebGPUApplication) Gdx.app;
-//				if(app.getConfiguration().samples > 1 ) {
-//					if(multiSamplingTexture != null)
-//						multiSamplingTexture.dispose();
-//					multiSamplingTexture = new WebGPUTexture("multisampling", width, height, false, true, surfaceFormat, app.getConfiguration().samples);
-//				}
 			} else {
 				window.asyncResized = true;
 			}
@@ -120,7 +104,7 @@ public class WebGPUGraphics extends AbstractGraphics implements WebGPUGraphicsBa
 		app = (WebGPUApplication) Gdx.app;
 		Gdx.graphics = this;
 
-		WebGPUGraphicsContext.Configuration config = new WebGPUGraphicsContext.Configuration(win32handle, getWidth(), getHeight(), app.getConfiguration().samples,
+		WebGPUGraphicsContext.Configuration config = new WebGPUGraphicsContext.Configuration(win32handle, app.getConfiguration().samples,
 				app.getConfiguration().vSyncEnabled,app.getConfiguration().enableGPUtiming, app.getConfiguration().backend);
 
 
@@ -128,15 +112,17 @@ public class WebGPUGraphics extends AbstractGraphics implements WebGPUGraphicsBa
 		context.resize(getWidth(), getHeight());
 
 
-
 		// initiateGL();
 
 		GLFW.glfwSetFramebufferSizeCallback(window.getWindowHandle(), resizeCallback);
 	}
 
+
 	public WebGPU_JNI getWebGPU () {
 		return webGPU;
 	}
+
+	// the following getters are forwarded to context
 
 	@Override
 	public WebGPUDevice getDevice() {
@@ -170,11 +156,6 @@ public class WebGPUGraphics extends AbstractGraphics implements WebGPUGraphicsBa
 		return context.getMultiSamplingTexture();
 	}
 
-//	@Override
-//	public boolean getGPUtimingEnabled() {
-//		return app.getConfiguration().enableGPUtiming;
-//	}
-//
 	@Override
 	public WGPUBackendType getRequestedBackendType() {
 		return context.getRequestedBackendType();
@@ -184,88 +165,6 @@ public class WebGPUGraphics extends AbstractGraphics implements WebGPUGraphicsBa
 	public int getSamples() {
 		return app.getConfiguration().samples;
 	}
-
-//	private void initWebGPU (long windowHandle, int width, int height, int samples, boolean vsync) {
-//
-//		Pointer instance = webGPU.wgpuCreateInstance(null);
-//
-//		surface = JavaWebGPU.getUtils().glfwGetWGPUSurface(instance, windowHandle);
-//		WebGPUAdapter adapter = new WebGPUAdapter(instance, surface);
-//
-//		device = new WebGPUDevice(adapter);
-//
-//		// Find out the preferred surface format of the window
-//		WGPUSurfaceCapabilities caps = WGPUSurfaceCapabilities.createDirect();
-//		webGPU.wgpuSurfaceGetCapabilities(surface, adapter.getHandle(), caps);
-//		Pointer formats = caps.getFormats();
-//		int format = formats.getInt(0);
-//		surfaceFormat = WGPUTextureFormat.values()[format];
-//
-//		adapter.dispose();  // finished with adapter now that we have a device
-//
-//
-//		//device = initDevice(instance, surface);
-//
-//		webGPU.wgpuInstanceRelease(instance); // we can release the instance now that we have the device
-//
-//		queue = new WebGPUQueue(device);
-//
-//		initSwapChain(width, height, vsync);
-//		initDepthBuffer(width, height, samples);
-//	}
-
-//	private void onResize(){
-//		terminateDepthBuffer();
-//		webGPU.wgpuSurfaceUnconfigure(surface);
-//
-//		initSwapChain(getWidth(), getHeight(), app.getConfiguration().vSyncEnabled);
-//		initDepthBuffer(getWidth(), getHeight(), getSamples());
-//	}
-
-
-//	// todo handle resize
-//	// or call this from resize event rather than constructor
-//	private void initDepthBuffer(int width, int height, int samples){
-//
-//		//depthTextureFormat = WGPUTextureFormat.Depth24Plus;
-//
-//		depthTexture = new WebGPUTexture("depth texture", width, height, 1, WGPUTextureUsage.RenderAttachment,
-//				WGPUTextureFormat.Depth24Plus, samples, WGPUTextureFormat.Depth24Plus );
-//
-//		// Create the view of the depth texture manipulated by the rasterizer
-//		//depthTextureView = new WebGPUTextureView(depthTexture, WGPUTextureAspect.DepthOnly, WGPUTextureViewDimension._2D,depthTextureFormat, 0, 1, 0, 1 );
-//	}
-
-//	private void terminateDepthBuffer(){
-//		// Destroy the depth texture
-//		if(depthTexture != null) {
-//			depthTexture.dispose();
-//		}
-//		depthTexture = null;
-//	}
-
-//	private void initSwapChain (int width, int height, boolean vsyncEnabled) {
-//		// configure the surface
-//		WGPUSurfaceConfiguration config = WGPUSurfaceConfiguration.createDirect();
-//		config.setNextInChain().setWidth(width).setHeight(height).setFormat(surfaceFormat).setViewFormatCount(0)
-//				.setViewFormats(JavaWebGPU.createNullPointer()).setUsage(WGPUTextureUsage.RenderAttachment).setDevice(device.getHandle())
-//				.setPresentMode(vsyncEnabled ? WGPUPresentMode.Fifo : WGPUPresentMode.Immediate)
-//				.setAlphaMode(WGPUCompositeAlphaMode.Auto);
-//
-//		webGPU.wgpuSurfaceConfigure(surface, config);
-//	}
-
-//	private void exitWebGPU () {
-//		webGPU.wgpuSurfaceUnconfigure(surface);
-//		queue.dispose();
-//		device.dispose();
-////
-////		webGPU.wgpuQueueRelease(queue);
-////		webGPU.wgpuDeviceRelease(device);
-//		webGPU.wgpuSurfaceRelease(surface);
-//
-//		terminateDepthBuffer();
-//	}
 
 
 	public WebGPUWindow getWindow () {

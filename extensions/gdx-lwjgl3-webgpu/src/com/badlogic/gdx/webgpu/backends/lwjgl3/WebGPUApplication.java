@@ -84,7 +84,7 @@ public class  WebGPUApplication implements WebGPUApplicationBase {
 		setApplicationLogger(new Lwjgl3ApplicationLogger());
 		webGPU = JavaWebGPU.init();
 
-		this.config = config = WebGPUApplicationConfiguration.copy(config);
+		this.config = config; // = WebGPUApplicationConfiguration.copy(config);
 		if (config.title == null) config.title = listener.getClass().getSimpleName();
 
 		Gdx.app = this;
