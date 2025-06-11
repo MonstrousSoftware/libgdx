@@ -30,16 +30,14 @@ import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.ui.CheckBox;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.Slider;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.tests.utils.GdxTest;
 import com.badlogic.gdx.tests.utils.PerspectiveCamController;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.UBJsonReader;
+import com.badlogic.gdx.webgpu.assets.WebGPUAssetManager;
 import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
 import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
 import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUBitmapFont;
@@ -58,6 +56,10 @@ import com.badlogic.gdx.webgpu.webgpu.WGPUBackendType;
 
 
 public class InstancingTest extends GdxTest {
+	final static String[] fileNames = {  "data/g3d/ducky.obj", "data/g3d/head.g3db",
+			"data/g3d/monkey.g3db", "data/g3d/teapot.g3db", "data/g3d/cube.g3dj",
+			"data/g3d/ship.obj"
+	};
 
 	WebGPUModelBatch modelBatch;
 	PerspectiveCamera cam;
@@ -70,6 +72,8 @@ public class InstancingTest extends GdxTest {
 	WebGPUScreenViewport viewport;
 	WebGPUStage stage;
 	WebGPUSkin skin;
+	WebGPUAssetManager assets;
+
 
 	// launcher
 	public static void main (String[] argv) {
@@ -87,33 +91,44 @@ public class InstancingTest extends GdxTest {
 	// application
 	public void create () {
 		modelBatch = new WebGPUModelBatch();
-		cam = new PerspectiveCamera(50, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		cam.position.set(0, 1.f, 2.5f);
 		cam.lookAt(0,0,0);
 		cam.near = 0.1f;
 
 		// create a model instance
 		instances = new Array<>();
-		//WebGPUG3dModelLoader loader = new WebGPUG3dModelLoader(new UBJsonReader());
-		WebGPUObjLoader loader = new WebGPUObjLoader();
-		model = loader.loadModel(Gdx.files.internal("data/g3d/ducky.obj"), true);
+
+		// queue for asynchronous loading
+		assets = new WebGPUAssetManager();
+		for(String fileName : fileNames)
+			assets.load(fileName, Model.class);
+		assets.finishLoading();
+
+//		WebGPUG3dModelLoader loader = new WebGPUG3dModelLoader(new UBJsonReader());
+//		model = loader.loadModel(Gdx.files.internal("data/g3d/head.g3db"));
+
+//		WebGPUObjLoader loader = new WebGPUObjLoader();
+//		model = loader.loadModel(Gdx.files.internal("data/g3d/ducky.obj"), true);
+
+		model = assets.get(fileNames[0]);
 		ModelInstance instance = new ModelInstance(model, 0, -1, 0);
 
 		instances.add(instance);
 
-		for(float z = -3; z > -40; z-= 2) {
+		for(float z = -3; z > -20; z-= 2) {
             for (float x = -25; x < 25; x += 1) {
                 instance = new ModelInstance(model, x, -1, z);
 				instance.transform.rotate(Vector3.Y, (float)Math.random() * 360f);
                 instances.add(instance);
-
             }
 		}
 
 		// Create an environment with lights
 		environment = new Environment();
 
-		ColorAttribute ambient =  ColorAttribute.createAmbientLight(0.0f, 0f, 0f, 1f);
+		float ambientLevel = 0.7f;
+		ColorAttribute ambient =  ColorAttribute.createAmbientLight(ambientLevel, ambientLevel, ambientLevel, 1f);
 		environment.set(ambient);
 
 		DirectionalLight dirLight1 = new DirectionalLight();
@@ -158,6 +173,32 @@ public class InstancingTest extends GdxTest {
 		im.addProcessor(controller);
 
 		skin = new WebGPUSkin(Gdx.files.internal("data/uiskin.json"));
+
+		SelectBox<String> selectBox = new SelectBox<>(skin);
+		// Add a listener to the button. ChangeListener is fired when the button's checked state changes, eg when clicked,
+		// Button#setChecked() is called, via a key press, etc. If the event.cancel() is called, the checked state will be reverted.
+		// ClickListener could have been used, but would only fire when clicked. Also, canceling a ClickListener event won't
+		// revert the checked state.
+		selectBox.addListener(new ChangeListener() {
+			public void changed (ChangeEvent event, Actor actor) {
+				System.out.println("Clicked! Is checked: " + selectBox.getSelected());
+
+					model = assets.get(selectBox.getSelected(), Model.class);
+					instances.clear();
+						for(float z = -3; z > -20; z-= 3) {
+						for (float x = -25; x < 25; x += 3) {
+							ModelInstance instance = new ModelInstance(model, x, -1, z);
+							instance.transform.rotate(Vector3.Y, (float)Math.random() * 360f);
+							instances.add(instance);
+						}
+					}
+
+			}
+		});
+
+		selectBox.setItems(fileNames );
+
+
 		CheckBox checkBox1 = new CheckBox("blue directional light", skin);
 		checkBox1.setChecked(true);
 		environment.add(dirLight1);
@@ -242,6 +283,7 @@ public class InstancingTest extends GdxTest {
 		Table screenTable = new Table();
 		screenTable.setFillParent(true);
 		Table controls = new Table();
+		controls.add(selectBox).align(Align.left).row();
 		controls.add(checkBox1).align(Align.left).row();
 		controls.add(checkBox2).align(Align.left).row();
 		controls.add(checkBox3).align(Align.left).row();
