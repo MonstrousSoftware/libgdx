@@ -45,6 +45,7 @@ import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
 import com.badlogic.gdx.webgpu.graphics.g3d.WebGPUModelBatch;
 import com.badlogic.gdx.webgpu.graphics.g3d.loaders.WebGPUG3dModelLoader;
 import com.badlogic.gdx.webgpu.graphics.g3d.loaders.WebGPUObjLoader;
+import com.badlogic.gdx.webgpu.graphics.g3d.shaders.WebGPUDefaultShader;
 import com.badlogic.gdx.webgpu.graphics.utils.WebGPUScreenUtils;
 import com.badlogic.gdx.webgpu.graphics.viewport.WebGPUScreenViewport;
 import com.badlogic.gdx.webgpu.scene2d.WebGPUSkin;
@@ -56,6 +57,8 @@ import com.badlogic.gdx.webgpu.webgpu.WGPUBackendType;
 
 
 public class InstancingTest extends GdxTest {
+	final static int MAX_INSTANCES = 10000;
+
 	final static String[] fileNames = {  "data/g3d/ducky.obj", "data/g3d/head.g3db",
 			"data/g3d/monkey.g3db", "data/g3d/teapot.g3db", "data/g3d/cube.g3dj",
 			"data/g3d/ship.obj"
@@ -90,7 +93,11 @@ public class InstancingTest extends GdxTest {
 
 	// application
 	public void create () {
-		modelBatch = new WebGPUModelBatch();
+
+		WebGPUDefaultShader.Config config = new WebGPUDefaultShader.Config();
+		config.maxInstances = MAX_INSTANCES;
+		modelBatch = new WebGPUModelBatch(config);
+
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		cam.position.set(0, 1.f, 2.5f);
 		cam.lookAt(0,0,0);
@@ -104,12 +111,6 @@ public class InstancingTest extends GdxTest {
 		for(String fileName : fileNames)
 			assets.load(fileName, Model.class);
 		assets.finishLoading();
-
-//		WebGPUG3dModelLoader loader = new WebGPUG3dModelLoader(new UBJsonReader());
-//		model = loader.loadModel(Gdx.files.internal("data/g3d/head.g3db"));
-
-//		WebGPUObjLoader loader = new WebGPUObjLoader();
-//		model = loader.loadModel(Gdx.files.internal("data/g3d/ducky.obj"), true);
 
 		model = assets.get(fileNames[0]);
 		ModelInstance instance = new ModelInstance(model, 0, -1, 0);
@@ -280,6 +281,27 @@ public class InstancingTest extends GdxTest {
 			}
 		});
 
+
+		Slider instancesSlider = new Slider(1, MAX_INSTANCES, 10, false, skin);
+		instancesSlider.addListener(new ChangeListener() {
+			public void changed (ChangeEvent event, Actor actor) {
+				System.out.println("Instances: " + instancesSlider.getValue());
+				float n = instancesSlider.getValue();
+				int nn = (int) Math.sqrt(n);
+				instances.clear();
+				int rz = 3*nn;
+				int rx = 3*nn/2;
+				for(float z = -3; z > -(3+rz); z-= 3) {
+					for (float x = -rx; x < rx; x += 3) {
+						ModelInstance instance = new ModelInstance(model, x, -1, z);
+						instance.transform.rotate(Vector3.Y, (float)Math.random() * 360f);
+						instances.add(instance);
+					}
+				}
+
+			}
+		});
+
 		Table screenTable = new Table();
 		screenTable.setFillParent(true);
 		Table controls = new Table();
@@ -289,10 +311,12 @@ public class InstancingTest extends GdxTest {
 		controls.add(checkBox3).align(Align.left).row();
 		controls.add(new Label("ambient:", skin)).align(Align.left).row();
 		controls.add(ambientSlider).align(Align.left).row();
-		controls.add(checkBox4).align(Align.left).row();
-		controls.add(checkBox5).align(Align.left).row();
-		controls.add(new Label("point lights intensity:", skin)).align(Align.left).row();
-		controls.add(intensitySlider).align(Align.left).row();
+//		controls.add(checkBox4).align(Align.left).row();
+//		controls.add(checkBox5).align(Align.left).row();
+//		controls.add(new Label("point lights intensity:", skin)).align(Align.left).row();
+//		controls.add(intensitySlider).align(Align.left).row();
+		controls.add(new Label("numInstances:", skin)).align(Align.left).row();
+		controls.add(instancesSlider).align(Align.left).row();
 		screenTable.add(controls).left().top().expand();
 
 
