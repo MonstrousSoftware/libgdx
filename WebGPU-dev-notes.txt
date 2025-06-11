@@ -384,6 +384,10 @@ Added support for FloatAttribute.shininess and specular lighting
 Added support for auto-instancing, i.e. ModelBatch will recognize when renderables use the same mesh part and use an instanced draw call.
 Reduced number of material switches by comparing to previous material.
 
+11/6/2025:
+Added new renderable sorter to keep identical mesh parts together. Esp. important for model instances with multiple mesh parts, e.g. head.g3db.
+To do: sort blended renderables on distance.
+
 
 
 

@@ -11,8 +11,8 @@ import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
 import com.badlogic.gdx.webgpu.wrappers.WebGPUTexture;
 import com.badlogic.gdx.graphics.Color;
 
-// demonstrates the use of ShaderProgram in combination with SpriteBatch
-//
+/** Demonstrates the use of ShaderProgram in combination with SpriteBatch, using a shader coded in WGSL shading language.
+*/
 public class WebGPUShaderTest {
 
 	// launcher
