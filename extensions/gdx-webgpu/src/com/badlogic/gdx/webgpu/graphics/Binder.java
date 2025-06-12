@@ -180,6 +180,7 @@ public class Binder implements Disposable {
     public void setUniform(String name, Color col) {
         setUniform(name, col, 0);
     }
+
     public void setUniform(String name, Color col, int offset){
         BindingDictionary.BindingMap mapping = bindMap.findUniform(name);
         if(mapping == null) throw new RuntimeException("Uniform name "+name+" not defined.");

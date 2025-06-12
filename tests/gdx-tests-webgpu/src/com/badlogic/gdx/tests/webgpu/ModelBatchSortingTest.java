@@ -19,6 +19,7 @@ package com.badlogic.gdx.tests.webgpu;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.*;
+import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
@@ -85,27 +86,24 @@ public class ModelBatchSortingTest extends GdxTest {
 		WebGPUTexture texture2 = new WebGPUTexture(Gdx.files.internal("data/badlogic.jpg"), true);
 		texture2.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
 		Material mat = new Material(TextureAttribute.createDiffuse(texture2));
-		long attribs = VertexAttributes.Usage.Position | VertexAttributes.Usage.TextureCoordinates;
+		Material mat2 = new Material(ColorAttribute.createDiffuse(new Color(0,1, 0, 0.5f)));
+		BlendingAttribute blendingAttribute = new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+		blendingAttribute.opacity = 0.25f;
+		mat.set(blendingAttribute);
+		long attribs = VertexAttributes.Usage.Position | VertexAttributes.Usage.TextureCoordinates | VertexAttributes.Usage.ColorPacked;
 		model = modelBuilder.createBox(1, 1, 1, mat, attribs);
 		//model = modelBuilder.createCone(1, 1, 1, 12, mat, attribs);
 		//model = modelBuilder.createSphere(1, 1, 1, 12, 12, mat, attribs);
 		//model = modelBuilder.createXYZCoordinates(10, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.ColorPacked);
 		//model = modelBuilder.createLineGrid(1, 1, 10, 10, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.ColorPacked);
 
-//		WebGPUTexture texture1 = new WebGPUTexture(Gdx.files.internal("data/planet_earth.png"), true);
-//		texture1.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
-//		mat2 = new Material(TextureAttribute.createDiffuse(texture1));
-//		mat2.set(ColorAttribute.createDiffuse(Color.GREEN));
-//
-//		mat3 = new Material(ColorAttribute.createDiffuse(Color.ORANGE),TextureAttribute.createDiffuse(texture1));
-//
-//		VertexAttributes attr1 = WebGPUMeshBuilder.createAttributes(VertexAttributes.Usage.Position | VertexAttributes.Usage.TextureCoordinates);
-//		meshPart1 = createMeshPart(attr1);
-//
-//		VertexAttributes attr2 = WebGPUMeshBuilder.createAttributes(VertexAttributes.Usage.Position | VertexAttributes.Usage.ColorPacked);
-//		meshPart2 = createMeshPart(attr2);
+		for(int x = -5; x < 5; x += 4){
+			for(int z = -5; z > -20; z -= 4){
+				instances.add(new ModelInstance(model, x, 0, z));
+			}
+		}
 
-		instances.add(new ModelInstance(model));
+
 
 	}
 

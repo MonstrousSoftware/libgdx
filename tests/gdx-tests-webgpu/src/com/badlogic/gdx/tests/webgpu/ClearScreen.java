@@ -10,6 +10,9 @@ import com.badlogic.gdx.tests.utils.GdxTest;
 //
 public class ClearScreen extends GdxTest {
 
+	public static void main (String[] args) {
+		new ClearScreen();
+	}
 
 	@Override
 	public void render () {
